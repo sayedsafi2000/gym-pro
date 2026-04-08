@@ -2,12 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
+const { seedProducts } = require('./controllers/productController');
+const { seedAdmin } = require('./controllers/authController');
 
 // Load env vars
 dotenv.config();
-
-// Connect to MongoDB
-connectDB();
 
 const app = express();
 
@@ -28,9 +27,18 @@ app.use('/api/dashboard', protect, require('./routes/dashboardRoutes'));
 app.use('/api/members', protect, require('./routes/memberRoutes'));
 app.use('/api/packages', protect, require('./routes/packageRoutes'));
 app.use('/api/payments', protect, require('./routes/paymentRoutes'));
+app.use('/api/products', protect, require('./routes/productRoutes'));
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+connectDB()
+  .then(async () => {
+    await seedProducts();
+    await seedAdmin();
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Server startup failed:', error.message);
+  });

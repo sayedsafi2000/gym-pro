@@ -7,6 +7,7 @@ import AddMember from './pages/AddMember';
 import EditMember from './pages/EditMember';
 import Packages from './pages/Packages';
 import Payments from './pages/Payments';
+import Store from './pages/Store';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PrivateRoute from './components/PrivateRoute';
@@ -23,8 +24,7 @@ function App() {
             <Route path="members" element={<MembersList />} />
             <Route path="members/add" element={<AddMember />} />
             <Route path="members/:id/edit" element={<EditMember />} />
-            <Route path="packages" element={<Packages />} />
-            <Route path="payments" element={<Payments />} />
+            <Route path="packages" element={<Packages />} />              <Route path="store" element={<Store />} />            <Route path="payments" element={<Payments />} />
           </Route>
         </Route>
       </Routes>

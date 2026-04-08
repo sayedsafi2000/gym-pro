@@ -184,7 +184,7 @@ const AddMember = () => {
                   <option value="">Select Package</option>
                   {packages.map((pkg) => (
                     <option key={pkg._id} value={pkg._id}>
-                      {pkg.name} - ${pkg.price} ({pkg.duration} days)
+                      {pkg.name} - ৳{pkg.price} ({pkg.duration} days)
                     </option>
                   ))}
                 </select>
@@ -273,7 +273,7 @@ const AddMember = () => {
                   />
                   {packages.find(p => p._id === formData.packageId) && (
                     <p className="text-sm text-gray-600 mt-1">
-                      Maximum amount: ${packages.find(p => p._id === formData.packageId).price}
+                      Maximum amount: ৳{packages.find(p => p._id === formData.packageId).price}
                     </p>
                   )}
                 </div>
@@ -302,7 +302,7 @@ const AddMember = () => {
                 <div className="bg-white p-4 rounded-[5px]">
                   <span className="text-gray-500">Package Price:</span>
                   <span className="font-semibold text-green-600 ml-2">
-                    ${packages.find(p => p._id === formData.packageId)?.price || 0}
+                    ৳{packages.find(p => p._id === formData.packageId)?.price || 0}
                   </span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
@@ -311,9 +311,9 @@ const AddMember = () => {
                     formData.paymentType === 'full' ? 'text-green-600' :
                     formData.paymentType === 'partial' ? 'text-blue-600' : 'text-orange-600'
                   }`}>
-                    {formData.paymentType === 'full' && `Paid: $${packages.find(p => p._id === formData.packageId)?.price || 0}`}
-                    {formData.paymentType === 'partial' && `Paid: $${formData.initialPayment || 0}, Due: $${(packages.find(p => p._id === formData.packageId)?.price || 0) - (parseFloat(formData.initialPayment) || 0)}`}
-                    {formData.paymentType === 'due' && `Due: $${packages.find(p => p._id === formData.packageId)?.price || 0}`}
+                    {formData.paymentType === 'full' && `Paid: ৳${packages.find(p => p._id === formData.packageId)?.price || 0}`}
+                    {formData.paymentType === 'partial' && `Paid: ৳${formData.initialPayment || 0}, Due: ৳${(packages.find(p => p._id === formData.packageId)?.price || 0) - (parseFloat(formData.initialPayment) || 0)}`}
+                    {formData.paymentType === 'due' && `Due: ৳${packages.find(p => p._id === formData.packageId)?.price || 0}`}
                   </span>
                 </div>
               </div>

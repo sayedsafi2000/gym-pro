@@ -84,7 +84,7 @@ const EditMember = () => {
           return;
         }
         if (paymentAmount > formData.dueAmount) {
-          alert(`Payment amount cannot exceed due amount of $${formData.dueAmount}`);
+          alert(`Payment amount cannot exceed due amount of ৳${formData.dueAmount}`);
           setSubmitting(false);
           return;
         }
@@ -228,7 +228,7 @@ const EditMember = () => {
                   <option value="">Select Package</option>
                   {packages.map((pkg) => (
                     <option key={pkg._id} value={pkg._id}>
-                      {pkg.name} - ${pkg.price} ({pkg.duration} days)
+                      {pkg.name} - ৳{pkg.price} ({pkg.duration} days)
                     </option>
                   ))}
                 </select>
@@ -259,7 +259,7 @@ const EditMember = () => {
                     <div className="p-4 border-2 border-gray-200 rounded-[5px] cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-200 hover:border-green-300">
                       <div className="text-center">
                         <div className="text-lg font-semibold text-gray-800">Pay Full Due</div>
-                        <div className="text-sm text-gray-600">Pay remaining ${formData.dueAmount || 0}</div>
+                        <div className="text-sm text-gray-600">Pay remaining ৳{formData.dueAmount || 0}</div>
                       </div>
                     </div>
                   </label>
@@ -316,7 +316,7 @@ const EditMember = () => {
                     required={formData.paymentType === 'partial' || formData.paymentType === 'full'}
                   />
                   <p className="text-sm text-gray-600 mt-1">
-                    Maximum amount: ${formData.dueAmount || 0}
+                    Maximum amount: ৳{formData.dueAmount || 0}
                   </p>
                 </div>
               )}
@@ -340,19 +340,19 @@ const EditMember = () => {
                 <div className="bg-white p-4 rounded-[5px]">
                   <span className="text-gray-500">Package Price:</span>
                   <span className="font-semibold text-green-600 ml-2">
-                    ${packages.find(p => p._id === formData.packageId)?.price || 0}
+                    ৳{packages.find(p => p._id === formData.packageId)?.price || 0}
                   </span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
                   <span className="text-gray-500">Paid Amount:</span>
                   <span className="font-semibold text-blue-600 ml-2">
-                    ${formData.paidAmount || 0}
+                    ৳{formData.paidAmount || 0}
                   </span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
                   <span className="text-gray-500">Due Amount:</span>
                   <span className={`font-semibold ml-2 ${formData.dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    ${formData.dueAmount || 0}
+                    ৳{formData.dueAmount || 0}
                   </span>
                 </div>
               </div>

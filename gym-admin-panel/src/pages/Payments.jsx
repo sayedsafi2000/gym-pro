@@ -123,7 +123,7 @@ const Payments = () => {
       finalAmount = Math.max(0, finalAmount);
 
       if (selectedMember && finalAmount > selectedMember.dueAmount) {
-        throw new Error(`Payment amount (${finalAmount}) cannot exceed due amount of $${selectedMember.dueAmount}`);
+        throw new Error(`Payment amount (${finalAmount}) cannot exceed due amount of ৳${selectedMember.dueAmount}`);
       }
 
       const submitData = {
@@ -183,13 +183,13 @@ const Payments = () => {
           <div class="details">
             <p><span class="label">Member:</span><span class="value">${payment.memberId.name} (${payment.memberId.memberId})</span></p>
             <p><span class="label">Package:</span><span class="value">${getPackageLabel(payment)}</span></p>
-            <p><span class="label">Original Amount:</span><span class="value">$${payment.originalAmount || payment.amount || 0}</span></p>
+            <p><span class="label">Original Amount:</span><span class="value">৳${payment.originalAmount || payment.amount || 0}</span></p>
             ${
               payment.discountAmount > 0 && payment.originalAmount
                 ? `<p><span class="label">Discount:</span><span class="value">${
                     payment.discountType === 'percentage'
                       ? `${payment.discountAmount}%`
-                      : `$${payment.discountAmount}`
+                      : `৳${payment.discountAmount}`
                   }</span></p>`
                 : ''
             }

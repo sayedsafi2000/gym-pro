@@ -82,15 +82,80 @@ const Dashboard = () => {
         {/* Monthly Income */}
         <div className="bg-white border border-slate-200 p-6 shadow-sm">
           <p className="text-sm text-slate-500 uppercase tracking-wide">This Month</p>
-          <p className="mt-4 text-3xl font-semibold text-slate-900">${summary?.monthlyIncome || 0}</p>
+          <p className="mt-4 text-3xl font-semibold text-slate-900">৳{summary?.monthlyIncome || 0}</p>
           <p className="mt-2 text-xs text-slate-500">Total income</p>
         </div>
 
         {/* Total Due */}
         <div className="bg-white border border-slate-200 p-6 shadow-sm">
           <p className="text-sm text-slate-500 uppercase tracking-wide">Total Due</p>
-          <p className="mt-4 text-3xl font-semibold text-red-600">${summary?.totalDueAmount || 0}</p>
+          <p className="mt-4 text-3xl font-semibold text-red-600">৳{summary?.totalDueAmount || 0}</p>
           <p className="mt-2 text-xs text-slate-500">Outstanding payments</p>
+        </div>
+      </section>
+
+      {/* Product Analytics Section */}
+      <section className="space-y-4">
+        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Store Analytics</h2>
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm text-slate-500">Product inventory and sales performance</p>
+            <a
+              href="/store"
+              className="text-sm text-slate-600 hover:text-slate-900 underline"
+            >
+              Manage Store →
+            </a>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Products */}
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-[5px]">
+              <p className="text-sm text-slate-500 uppercase tracking-wide">Total Products</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-900">{summary?.totalProducts || 0}</p>
+            </div>
+
+            {/* Low Stock Products */}
+            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-[5px]">
+              <p className="text-sm text-yellow-600 uppercase tracking-wide">Low Stock</p>
+              <p className="mt-2 text-2xl font-semibold text-yellow-700">{summary?.lowStockProducts || 0}</p>
+              <p className="mt-1 text-xs text-yellow-600">Under 10 units</p>
+            </div>
+
+            {/* Out of Stock */}
+            <div className="bg-red-50 border border-red-200 p-4 rounded-[5px]">
+              <p className="text-sm text-red-600 uppercase tracking-wide">Out of Stock</p>
+              <p className="mt-2 text-2xl font-semibold text-red-700">{summary?.outOfStockProducts || 0}</p>
+              <p className="mt-1 text-xs text-red-600">Need restocking</p>
+            </div>
+
+            {/* Monthly Product Revenue */}
+            <div className="bg-green-50 border border-green-200 p-4 rounded-[5px]">
+              <p className="text-sm text-green-600 uppercase tracking-wide">Monthly Revenue</p>
+              <p className="mt-2 text-2xl font-semibold text-green-700">৳{summary?.monthlyProductRevenue || 0}</p>
+              <p className="mt-1 text-xs text-green-600">Store sales</p>
+            </div>
+          </div>
+
+          {/* Product Sales Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            <div className="bg-blue-50 border border-blue-200 p-4 rounded-[5px]">
+              <p className="text-sm text-blue-600 uppercase tracking-wide">Today Sold</p>
+              <p className="mt-2 text-xl font-semibold text-blue-700">{summary?.todayProductSold || 0}</p>
+              <p className="mt-1 text-xs text-blue-600">Units sold today</p>
+            </div>
+
+            <div className="bg-purple-50 border border-purple-200 p-4 rounded-[5px]">
+              <p className="text-sm text-purple-600 uppercase tracking-wide">Monthly Sold</p>
+              <p className="mt-2 text-xl font-semibold text-purple-700">{summary?.monthlyProductSold || 0}</p>
+              <p className="mt-1 text-xs text-purple-600">Units this month</p>
+            </div>
+
+            <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-[5px]">
+              <p className="text-sm text-indigo-600 uppercase tracking-wide">Total Revenue</p>
+              <p className="mt-2 text-xl font-semibold text-indigo-700">৳{summary?.totalProductRevenue || 0}</p>
+              <p className="mt-1 text-xs text-indigo-600">All time sales</p>
+            </div>
+          </div>
         </div>
       </section>
 

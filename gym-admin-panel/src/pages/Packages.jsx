@@ -124,7 +124,7 @@ const Packages = () => {
                 <tr key={pkg._id} className="hover:bg-slate-50 transition duration-200">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{pkg.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{pkg.duration} days</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">${pkg.price}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">৳{pkg.price}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button onClick={() => handleEdit(pkg)} className="text-slate-900 hover:text-slate-700 mr-4">
                       Edit

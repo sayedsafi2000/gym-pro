@@ -162,16 +162,16 @@ const MembersList = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-slate-900">{member.packageId?.name}</div>
-                      <div className="text-xs text-slate-500">${member.packageId?.price}</div>
+                      <div className="text-xs text-slate-500">৳{member.packageId?.price}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="space-y-1">
                         <div className="text-sm text-slate-900">
-                          Paid: <span className="font-semibold text-green-600">${member.paidAmount || 0}</span>
+                          Paid: <span className="font-semibold text-green-600">৳{member.paidAmount || 0}</span>
                         </div>
                         <div className="text-sm text-slate-900">
                           Due: <span className={`font-semibold ${member.dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            ${member.dueAmount || 0}
+                            ৳{member.dueAmount || 0}
                           </span>
                         </div>
                         <div className={`inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border ${

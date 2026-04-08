@@ -1,5 +1,6 @@
 const Member = require('../models/Member');
 const Payment = require('../models/Payment');
+const Product = require('../models/Product');
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -117,6 +118,69 @@ exports.getDashboardStats = async (req, res) => {
 
     const totalPaidAmount = paidAmountResult.length > 0 ? paidAmountResult[0].totalPaid : 0;
 
+    // Product analytics
+    const totalProducts = await Product.countDocuments();
+    const lowStockProducts = await Product.countDocuments({ stock: { $lt: 10 } });
+    const outOfStockProducts = await Product.countDocuments({ stock: 0 });
+
+    // Get today's product sales
+    const todayProductSales = await Product.aggregate([
+      {
+        $match: {
+          updatedAt: {
+            $gte: startOfDay,
+            $lt: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSold: { $sum: '$soldCount' },
+          totalRevenue: { $sum: { $multiply: ['$soldCount', '$price'] } },
+        },
+      },
+    ]);
+
+    const todayProductSold = todayProductSales.length > 0 ? todayProductSales[0].totalSold : 0;
+    const todayProductRevenue = todayProductSales.length > 0 ? todayProductSales[0].totalRevenue : 0;
+
+    // Get monthly product sales
+    const monthlyProductSales = await Product.aggregate([
+      {
+        $match: {
+          updatedAt: {
+            $gte: startOfMonth,
+            $lt: new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 1),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSold: { $sum: '$soldCount' },
+          totalRevenue: { $sum: { $multiply: ['$soldCount', '$price'] } },
+        },
+      },
+    ]);
+
+    const monthlyProductSold = monthlyProductSales.length > 0 ? monthlyProductSales[0].totalSold : 0;
+    const monthlyProductRevenue = monthlyProductSales.length > 0 ? monthlyProductSales[0].totalRevenue : 0;
+
+    // Get total product revenue and sales
+    const totalProductStats = await Product.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalSold: { $sum: '$soldCount' },
+          totalRevenue: { $sum: { $multiply: ['$soldCount', '$price'] } },
+        },
+      },
+    ]);
+
+    const totalProductSold = totalProductStats.length > 0 ? totalProductStats[0].totalSold : 0;
+    const totalProductRevenue = totalProductStats.length > 0 ? totalProductStats[0].totalRevenue : 0;
+
     res.json({
       success: true,
       data: {
@@ -129,6 +193,16 @@ exports.getDashboardStats = async (req, res) => {
           monthlyIncome,
           totalDueAmount,
           totalPaidAmount,
+          // Product stats
+          totalProducts,
+          lowStockProducts,
+          outOfStockProducts,
+          todayProductSold,
+          todayProductRevenue,
+          monthlyProductSold,
+          monthlyProductRevenue,
+          totalProductSold,
+          totalProductRevenue,
         },
         chartData: {
           dailyIncome: dailyIncomeData,

@@ -1,15 +1,48 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { removeToken } from '../utils/auth';
 
 const Layout = () => {
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [installed, setInstalled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    const appInstalled = () => {
+      setInstalled(true);
+      setInstallPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', appInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', appInstalled);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const choiceResult = await installPrompt.userChoice;
+    if (choiceResult.outcome === 'accepted') {
+      setInstalled(true);
+      setInstallPrompt(null);
+    }
+  };
 
   const navigation = [
     { name: 'Dashboard', href: '/' },
     { name: 'Members', href: '/members' },
     { name: 'Packages', href: '/packages' },
+    { name: 'Store', href: '/store' },
     { name: 'Payments', href: '/payments' },
   ];
 
@@ -36,6 +69,15 @@ const Layout = () => {
                   {item.name}
                 </Link>
               ))}
+              {installPrompt && !installed && (
+                <button
+                  type="button"
+                  onClick={handleInstall}
+                  className="px-4 py-2 rounded-[5px] bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition duration-200"
+                >
+                  Install App
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {

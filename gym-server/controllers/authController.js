@@ -61,3 +61,15 @@ exports.registerAdmin = async (req, res) => {
     res.status(500).json({ success: false, message: error.message || 'Server error' });
   }
 };
+
+exports.seedAdmin = async () => {
+  try {
+    const existingAdmin = await Admin.findOne({ email: 'admin@gym.com' });
+    if (!existingAdmin) {
+      await Admin.create({ email: 'admin@gym.com', password: 'Password123' });
+      console.log('Seeded default admin: admin@gym.com / Password123');
+    }
+  } catch (error) {
+    console.error('Admin seed failed:', error.message);
+  }
+};

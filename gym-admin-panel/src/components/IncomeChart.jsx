@@ -32,7 +32,7 @@ const IncomeChart = ({ data, monthlyIncome }) => {
       return (
         <div className="bg-slate-900 text-white px-3 py-2 rounded-[5px] text-sm border border-slate-700">
           <p className="font-medium">{payload[0].payload.date}</p>
-          <p className="text-green-400">${payload[0].value}</p>
+          <p className="text-green-400">৳{payload[0].value}</p>
         </div>
       );
     }
@@ -47,11 +47,11 @@ const IncomeChart = ({ data, monthlyIncome }) => {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-4">
           <p className="text-xs text-slate-500 uppercase tracking-wide">Total (30 Days)</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">${monthlyIncome || 0}</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">৳{monthlyIncome || 0}</p>
         </div>
         <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-4">
           <p className="text-xs text-slate-500 uppercase tracking-wide">Daily Average</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">${avgIncome}</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">৳{avgIncome}</p>
         </div>
         <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-4">
           <p className="text-xs text-slate-500 uppercase tracking-wide">Days Recorded</p>
