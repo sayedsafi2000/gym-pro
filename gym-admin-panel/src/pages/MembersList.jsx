@@ -139,6 +139,9 @@ const MembersList = () => {
                     Status
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Fingerprint
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -151,11 +154,15 @@ const MembersList = () => {
                         <div className="w-8 h-8 bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-700">
                           {member.memberId ? member.memberId.slice(-1) : member.name?.charAt(0).toUpperCase() || '-'}
                         </div>
-                        <span className="text-sm font-medium text-slate-900">{member.memberId || 'N/A'}</span>
+                        <Link to={`/members/${member._id}`} className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">
+                          {member.memberId || 'N/A'}
+                        </Link>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-900">{member.name}</span>
+                      <Link to={`/members/${member._id}`} className="text-sm text-slate-900 hover:text-blue-600 hover:underline transition-colors">
+                        {member.name}
+                      </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-slate-600">{member.phone}</span>
@@ -191,6 +198,20 @@ const MembersList = () => {
                       <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border ${getStatusColor(member.expiryDate)}`}>
                         {getStatusText(member.expiryDate)}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {member.deviceUserId != null ? (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-green-200 bg-green-50 text-green-700" title={`Device User ID: ${member.deviceUserId}`}>
+                          Registered
+                        </span>
+                      ) : (
+                        <Link
+                          to={`/members/${member._id}/edit`}
+                          className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors"
+                        >
+                          Not Set
+                        </Link>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex flex-wrap gap-2">

@@ -38,7 +38,10 @@ const recalculateMemberFinancials = async (memberId) => {
 // @route   GET /api/payments
 const getPayments = async (req, res) => {
   try {
-    const payments = await Payment.find()
+    const filter = {};
+    if (req.query.memberId) filter.memberId = req.query.memberId;
+
+    const payments = await Payment.find(filter)
       .populate('memberId', 'name memberId phone totalAmount paidAmount dueAmount')
       .populate('packageId', 'name price duration')
       .sort({ date: -1 });

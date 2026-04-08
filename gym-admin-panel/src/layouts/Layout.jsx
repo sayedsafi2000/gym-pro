@@ -44,6 +44,8 @@ const Layout = () => {
     { name: 'Packages', href: '/packages' },
     { name: 'Store', href: '/store' },
     { name: 'Payments', href: '/payments' },
+    { name: 'Attendance', href: '/attendance' },
+    { name: 'Devices', href: '/devices' },
   ];
 
   return (

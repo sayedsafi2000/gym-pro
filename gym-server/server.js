@@ -28,6 +28,10 @@ app.use('/api/members', protect, require('./routes/memberRoutes'));
 app.use('/api/packages', protect, require('./routes/packageRoutes'));
 app.use('/api/payments', protect, require('./routes/paymentRoutes'));
 app.use('/api/products', protect, require('./routes/productRoutes'));
+app.use('/api/attendance', protect, require('./routes/attendanceRoutes'));
+app.use('/api/devices', protect, require('./routes/deviceRoutes'));
+
+const attendanceSyncService = require('./services/attendanceSyncService');
 
 const PORT = process.env.PORT || 5000;
 
@@ -37,6 +41,7 @@ connectDB()
     await seedAdmin();
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
+      attendanceSyncService.start();
     });
   })
   .catch((error) => {

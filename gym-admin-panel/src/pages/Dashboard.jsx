@@ -50,6 +50,20 @@ const Dashboard = () => {
         </div>
       </section>
 
+      {/* Attendance Stats */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+          <p className="text-sm text-slate-500 uppercase tracking-wide">Check-ins Today</p>
+          <p className="mt-4 text-4xl font-semibold text-green-600">{summary?.todayCheckIns || 0}</p>
+          <p className="mt-2 text-xs text-slate-500">Fingerprint scans</p>
+        </div>
+        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+          <p className="text-sm text-slate-500 uppercase tracking-wide">Present Now</p>
+          <p className="mt-4 text-4xl font-semibold text-blue-600">{summary?.currentlyPresent || 0}</p>
+          <p className="mt-2 text-xs text-slate-500">Currently in gym</p>
+        </div>
+      </section>
+
       {/* Main Stats Grid */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total Members */}
@@ -180,6 +194,9 @@ const Dashboard = () => {
             </a>
             <a href="/payments" className="w-full text-left rounded-[5px] border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50">
               💳 Record Payment
+            </a>
+            <a href="/attendance" className="w-full text-left rounded-[5px] border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50">
+              📋 View Attendance
             </a>
           </div>
         </div>

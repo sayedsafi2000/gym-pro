@@ -19,12 +19,21 @@ const EditMember = () => {
     additionalPayment: '',
   });
   const [packages, setPackages] = useState([]);
+  const [devices, setDevices] = useState([]);
+  const [fingerprint, setFingerprint] = useState({
+    deviceUserId: null,
+    registered: false,
+  });
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
+  const [registering, setRegistering] = useState(false);
+  const [fpMessage, setFpMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchPackages();
     fetchMember();
+    fetchDevices();
   }, [id]);
 
   const fetchPackages = async () => {
@@ -36,15 +45,32 @@ const EditMember = () => {
     }
   };
 
+  const fetchDevices = async () => {
+    try {
+      const res = await api.get('/devices');
+      setDevices(res.data.data);
+      if (res.data.data.length > 0) {
+        setSelectedDeviceId(res.data.data[0]._id);
+      }
+    } catch (error) {
+      console.error('Error fetching devices:', error);
+    }
+  };
+
   const fetchMember = async () => {
     try {
       const res = await api.get(`/members/${id}`);
       const member = res.data.data;
-      
+
       // Format date for input (YYYY-MM-DD)
       const joinDate = new Date(member.joinDate);
       const formattedDate = joinDate.toISOString().split('T')[0];
-      
+
+      setFingerprint({
+        deviceUserId: member.deviceUserId,
+        registered: member.deviceUserId != null,
+      });
+
       setFormData({
         name: member.name,
         phone: member.phone,
@@ -193,6 +219,103 @@ const EditMember = () => {
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* Fingerprint Registration */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              Fingerprint Registration
+            </h2>
+
+            {fpMessage.text && (
+              <div className={`mb-4 px-4 py-3 rounded-[5px] text-sm border ${
+                fpMessage.type === 'success'
+                  ? 'bg-green-50 border-green-200 text-green-700'
+                  : 'bg-red-50 border-red-200 text-red-700'
+              }`}>
+                {fpMessage.text}
+              </div>
+            )}
+
+            {fingerprint.registered ? (
+              <div className="bg-green-50 border border-green-200 rounded-[5px] p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-green-800">Fingerprint Registered</p>
+                    <p className="text-xs text-green-600 mt-1">
+                      Device User ID: {fingerprint.deviceUserId}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Member can scan fingerprint at the device for attendance.
+                    </p>
+                  </div>
+                  <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-green-300 bg-green-100 text-green-700">
+                    Active
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-50 border border-gray-200 rounded-[5px] p-5">
+                <p className="text-sm font-semibold text-gray-800 mb-1">No Fingerprint Registered</p>
+                <p className="text-xs text-gray-500 mb-4">
+                  Select a device and click register. Then have the member enroll their fingerprint at the device.
+                </p>
+                {devices.length > 0 ? (
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Device</label>
+                      <select
+                        value={selectedDeviceId}
+                        onChange={(e) => setSelectedDeviceId(e.target.value)}
+                        className="px-4 py-2.5 border border-gray-300 rounded-[5px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {devices.map((d) => (
+                          <option key={d._id} value={d._id}>
+                            {d.name} ({d.ip})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!selectedDeviceId) return;
+                        setRegistering(true);
+                        setFpMessage({ type: '', text: '' });
+                        try {
+                          const res = await api.post(`/devices/${selectedDeviceId}/register-user`, {
+                            memberId: id,
+                          });
+                          setFingerprint({
+                            deviceUserId: res.data.data.deviceUserId,
+                            registered: true,
+                          });
+                          setFpMessage({
+                            type: 'success',
+                            text: `Registered as Device User #${res.data.data.deviceUserId} on ${res.data.data.deviceName}. Now have the member enroll their fingerprint at the device.`,
+                          });
+                        } catch (error) {
+                          setFpMessage({
+                            type: 'error',
+                            text: error.response?.data?.message || 'Failed to register on device. Is the device online?',
+                          });
+                        } finally {
+                          setRegistering(false);
+                        }
+                      }}
+                      disabled={registering}
+                      className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-medium rounded-[5px] hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 transition-all duration-200"
+                    >
+                      {registering ? 'Registering...' : 'Register Fingerprint'}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-yellow-600">
+                    No devices configured. Add a device in the Device Management page first.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Membership Details */}

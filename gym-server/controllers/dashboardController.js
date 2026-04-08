@@ -1,6 +1,7 @@
 const Member = require('../models/Member');
 const Payment = require('../models/Payment');
 const Product = require('../models/Product');
+const Attendance = require('../models/Attendance');
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -35,7 +36,7 @@ exports.getDashboardStats = async (req, res) => {
       {
         $group: {
           _id: null,
-          total: { $sum: '$amount' },
+          total: { $sum: '$finalAmount' },
         },
       },
     ]);
@@ -55,7 +56,7 @@ exports.getDashboardStats = async (req, res) => {
       {
         $group: {
           _id: null,
-          total: { $sum: '$amount' },
+          total: { $sum: '$finalAmount' },
         },
       },
     ]);
@@ -78,7 +79,7 @@ exports.getDashboardStats = async (req, res) => {
           _id: {
             $dateToString: { format: '%Y-%m-%d', date: '$date' },
           },
-          total: { $sum: '$amount' },
+          total: { $sum: '$finalAmount' },
         },
       },
       {
@@ -181,6 +182,23 @@ exports.getDashboardStats = async (req, res) => {
     const totalProductSold = totalProductStats.length > 0 ? totalProductStats[0].totalSold : 0;
     const totalProductRevenue = totalProductStats.length > 0 ? totalProductStats[0].totalRevenue : 0;
 
+    // Attendance stats
+    const todayCheckIns = await Attendance.countDocuments({
+      timestamp: { $gte: startOfDay },
+      type: 'check-in',
+    });
+
+    const currentlyPresentResult = await Attendance.aggregate([
+      { $match: { timestamp: { $gte: startOfDay } } },
+      { $sort: { timestamp: -1 } },
+      { $group: { _id: '$deviceUserId', lastType: { $first: '$type' } } },
+      { $match: { lastType: 'check-in' } },
+      { $count: 'count' },
+    ]);
+
+    const currentlyPresent =
+      currentlyPresentResult.length > 0 ? currentlyPresentResult[0].count : 0;
+
     res.json({
       success: true,
       data: {
@@ -203,6 +221,9 @@ exports.getDashboardStats = async (req, res) => {
           monthlyProductRevenue,
           totalProductSold,
           totalProductRevenue,
+          // Attendance stats
+          todayCheckIns,
+          currentlyPresent,
         },
         chartData: {
           dailyIncome: dailyIncomeData,
