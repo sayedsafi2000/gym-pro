@@ -1,0 +1,30 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: gym-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+
+  server:
+    image: ghcr.io/${GITHUB_OWNER}/gym-server:${IMAGE_TAG}
+    container_name: gym-server
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/gymdb
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      - mongo
+
+  client:
+    image: ghcr.io/${GITHUB_OWNER}/gym-admin-panel:${IMAGE_TAG}
+    container_name: gym-client
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+
+volumes:
+  mongo_data:
