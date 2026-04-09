@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Payments = () => {
   const [payments, setPayments] = useState([]);
@@ -566,14 +567,7 @@ const Payments = () => {
               ? `${selectedPaymentIds.length} selected`
               : 'Select payments to bulk delete'}
           </p>
-          {confirmBulkDelete ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-red-600">Delete {selectedPaymentIds.length} payment(s)?</span>
-              <button onClick={confirmBulkDeletePayments} className="rounded-[5px] bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700">Yes</button>
-              <button onClick={() => setConfirmBulkDelete(false)} className="rounded-[5px] bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200">No</button>
-            </div>
-          ) : (
-            <button
+          <button
               type="button"
               onClick={() => { if (selectedPaymentIds.length) setConfirmBulkDelete(true); }}
               disabled={!selectedPaymentIds.length}
@@ -581,7 +575,6 @@ const Payments = () => {
             >
               Delete Selected
             </button>
-          )}
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200">
@@ -665,20 +658,12 @@ const Payments = () => {
                     >
                       Receipt
                     </button>
-                    {deletingPaymentId === payment._id ? (
-                      <span className="inline-flex items-center gap-1">
-                        <span className="text-xs text-red-600">Delete?</span>
-                        <button onClick={() => confirmDeletePayment(payment._id)} className="rounded-[5px] bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Yes</button>
-                        <button onClick={() => setDeletingPaymentId(null)} className="rounded-[5px] bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-slate-200">No</button>
-                      </span>
-                    ) : (
-                      <button
+                    <button
                         onClick={() => setDeletingPaymentId(payment._id)}
                         className="text-red-600 hover:text-red-500"
                       >
                         Delete
                       </button>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -687,6 +672,21 @@ const Payments = () => {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!deletingPaymentId}
+        title="Delete Payment"
+        message="Are you sure you want to delete this payment record?"
+        onConfirm={() => confirmDeletePayment(deletingPaymentId)}
+        onCancel={() => setDeletingPaymentId(null)}
+      />
+      <ConfirmModal
+        open={confirmBulkDelete}
+        title="Delete Selected Payments"
+        message={`Delete ${selectedPaymentIds.length} selected payment(s)? This cannot be undone.`}
+        onConfirm={() => confirmBulkDeletePayments()}
+        onCancel={() => setConfirmBulkDelete(false)}
+      />
     </div>
   );
 };

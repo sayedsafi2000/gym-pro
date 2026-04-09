@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
 import { Link } from 'react-router-dom';
+import ConfirmModal from '../components/ConfirmModal';
 
 const MembersList = () => {
   const { showSuccess, showError } = useToast();
@@ -227,20 +228,12 @@ const MembersList = () => {
                         >
                           Edit
                         </Link>
-                        {deletingId === member._id ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-red-600">Delete?</span>
-                            <button onClick={() => confirmDelete(member._id)} className="text-xs text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded-[5px]">Yes</button>
-                            <button onClick={() => setDeletingId(null)} className="text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-[5px]">No</button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setDeletingId(member._id)}
-                            className="text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-[5px] transition-colors duration-200"
-                          >
-                            Delete
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setDeletingId(member._id)}
+                          className="text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-[5px] transition-colors duration-200"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -257,6 +250,14 @@ const MembersList = () => {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        open={!!deletingId}
+        title="Delete Member"
+        message={`Are you sure you want to delete ${members.find(m => m._id === deletingId)?.name || 'this member'}? This removes all their records.`}
+        onConfirm={() => confirmDelete(deletingId)}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 };

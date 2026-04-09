@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Packages = () => {
   const [packages, setPackages] = useState([]);
@@ -136,17 +137,9 @@ const Packages = () => {
                     <button onClick={() => handleEdit(pkg)} className="text-slate-900 hover:text-slate-700 mr-4">
                       Edit
                     </button>
-                    {deletingPackageId === pkg._id ? (
-                      <span className="inline-flex items-center gap-1">
-                        <span className="text-xs text-red-600">Delete?</span>
-                        <button onClick={() => confirmDeletePackage(pkg._id)} className="rounded-[5px] bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Yes</button>
-                        <button onClick={() => setDeletingPackageId(null)} className="rounded-[5px] bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-slate-200">No</button>
-                      </span>
-                    ) : (
-                      <button onClick={() => setDeletingPackageId(pkg._id)} className="text-slate-500 hover:text-slate-900">
+                    <button onClick={() => setDeletingPackageId(pkg._id)} className="text-slate-500 hover:text-slate-900">
                         Delete
                       </button>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -154,6 +147,14 @@ const Packages = () => {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!deletingPackageId}
+        title="Delete Package"
+        message="Are you sure you want to delete this package? Members using it won't be affected."
+        onConfirm={() => confirmDeletePackage(deletingPackageId)}
+        onCancel={() => setDeletingPackageId(null)}
+      />
     </div>
   );
 };

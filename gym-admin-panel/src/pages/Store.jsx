@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Store = () => {
   const [products, setProducts] = useState([]);
@@ -201,17 +202,9 @@ const Store = () => {
                     <button onClick={() => handleEdit(product)} className="rounded-[5px] bg-slate-100 px-3 py-1 text-slate-900 text-xs hover:bg-slate-200">
                       Edit
                     </button>
-                    {deletingProductId === product._id ? (
-                      <div className="inline-flex items-center gap-1">
-                        <span className="text-xs text-red-600">Delete?</span>
-                        <button onClick={() => confirmDeleteProduct(product._id)} className="rounded-[5px] bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Yes</button>
-                        <button onClick={() => setDeletingProductId(null)} className="rounded-[5px] bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-slate-200">No</button>
-                      </div>
-                    ) : (
-                      <button onClick={() => setDeletingProductId(product._id)} className="rounded-[5px] bg-red-50 px-3 py-1 text-red-700 text-xs hover:bg-red-100">
+                    <button onClick={() => setDeletingProductId(product._id)} className="rounded-[5px] bg-red-50 px-3 py-1 text-red-700 text-xs hover:bg-red-100">
                         Delete
                       </button>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -219,6 +212,14 @@ const Store = () => {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!deletingProductId}
+        title="Delete Product"
+        message="Are you sure you want to delete this product?"
+        onConfirm={() => confirmDeleteProduct(deletingProductId)}
+        onCancel={() => setDeletingProductId(null)}
+      />
 
       {products.length === 0 && !loading && (
         <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-8 text-center">
