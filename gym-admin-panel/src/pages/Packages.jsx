@@ -134,12 +134,14 @@ const Packages = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{pkg.duration} days</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">৳{pkg.price}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button onClick={() => handleEdit(pkg)} className="text-slate-900 hover:text-slate-700 mr-4">
-                      Edit
-                    </button>
-                    <button onClick={() => setDeletingPackageId(pkg._id)} className="text-slate-500 hover:text-slate-900">
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEdit(pkg)} className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition">
+                        Edit
+                      </button>
+                      <button onClick={() => setDeletingPackageId(pkg._id)} className="rounded-[5px] border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50 transition">
                         Delete
                       </button>
+                    </div>
                   </td>
                 </tr>
               ))}

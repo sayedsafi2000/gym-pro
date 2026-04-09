@@ -312,7 +312,7 @@ const Payments = () => {
                 <option value="">Select Member</option>
                 {members.map((member) => (
                   <option key={member._id} value={member._id}>
-                    {member.name} ({member.memberId}) - Due: ${member.dueAmount || 0}
+                    {member.name} ({member.memberId}) - Due: ৳{member.dueAmount || 0}
                   </option>
                 ))}
               </select>
@@ -344,7 +344,7 @@ const Payments = () => {
                 <option value="">Select Package</option>
                 {packages.map((pkg) => (
                   <option key={pkg._id} value={pkg._id}>
-                    {pkg.name} - ${pkg.price}
+                    {pkg.name} - ৳{pkg.price}
                   </option>
                 ))}
               </select>
@@ -378,7 +378,7 @@ const Payments = () => {
                     }
                     className="rounded-[5px] border border-green-300 bg-green-50 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-100"
                   >
-                    Pay Full Due (${selectedMember.dueAmount})
+                    Pay Full Due (৳{selectedMember.dueAmount})
                   </button>
                   {selectedPackage?.price > 0 && (
                     <button
@@ -392,7 +392,7 @@ const Payments = () => {
                       }
                       className="rounded-[5px] border border-violet-300 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
                     >
-                      Pay 50% (${Math.max(1, Math.ceil(Math.min(selectedMember.dueAmount, selectedPackage.price) * 0.5))})
+                      Pay 50% (৳{Math.max(1, Math.ceil(Math.min(selectedMember.dueAmount, selectedPackage.price) * 0.5))})
                     </button>
                   )}
                   {selectedPackage?.price > 0 && (
@@ -407,7 +407,7 @@ const Payments = () => {
                       }
                       className="rounded-[5px] border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
                     >
-                      Set to Package Price (${Math.min(selectedMember.dueAmount, selectedPackage.price)})
+                      Set to Package Price (৳{Math.min(selectedMember.dueAmount, selectedPackage.price)})
                     </button>
                   )}
                 </div>
@@ -489,22 +489,22 @@ const Payments = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-slate-500">Total Amount:</span>
-                  <span className="ml-2 font-semibold text-slate-900">${selectedMember.totalAmount || 0}</span>
+                  <span className="ml-2 font-semibold text-slate-900">৳{selectedMember.totalAmount || 0}</span>
                 </div>
                 <div>
                   <span className="text-slate-500">Paid Amount:</span>
-                  <span className="ml-2 font-semibold text-green-600">${selectedMember.paidAmount || 0}</span>
+                  <span className="ml-2 font-semibold text-green-600">৳{selectedMember.paidAmount || 0}</span>
                 </div>
                 <div>
                   <span className="text-slate-500">Due Amount:</span>
                   <span className={`ml-2 font-semibold ${selectedMember.dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    ${selectedMember.dueAmount || 0}
+                    ৳{selectedMember.dueAmount || 0}
                   </span>
                 </div>
               </div>
               {selectedMember.dueAmount > 0 && (
                 <p className="mt-3 text-xs text-slate-600">
-                  Maximum payment allowed: ${selectedMember.dueAmount}
+                  Maximum payment allowed: ৳{selectedMember.dueAmount}
                 </p>
               )}
             </div>
@@ -586,7 +586,7 @@ const Payments = () => {
                     <div>
                       <div>{payment.memberId?.name || 'Unknown'} ({payment.memberId?.memberId || 'N/A'})</div>
                       <div className="text-xs text-slate-500 mt-1">
-                        Paid: ${payment.memberId?.paidAmount || 0} / Due: ${payment.memberId?.dueAmount || 0}
+                        Paid: ৳{payment.memberId?.paidAmount || 0} / Due: ৳{payment.memberId?.dueAmount || 0}
                       </div>
                     </div>
                   </td>
@@ -595,10 +595,10 @@ const Payments = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
                     <div>
-                      <div className="font-semibold">${payment.finalAmount || payment.amount || 0}</div>
+                      <div className="font-semibold">৳{payment.finalAmount || payment.amount || 0}</div>
                       {payment.discountAmount > 0 && payment.originalAmount && (
                         <div className="text-xs text-slate-500">
-                          Original: ${payment.originalAmount} (-{payment.discountType === 'percentage' ? `${payment.discountAmount}%` : `$${payment.discountAmount}`})
+                          Original: ৳{payment.originalAmount} (-{payment.discountType === 'percentage' ? `${payment.discountAmount}%` : `৳${payment.discountAmount}`})
                         </div>
                       )}
                     </div>
@@ -619,18 +619,20 @@ const Payments = () => {
                     {new Date(payment.date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => generateReceipt(payment)}
-                      className="text-slate-900 hover:text-slate-700 mr-3"
-                    >
-                      Receipt
-                    </button>
-                    <button
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => generateReceipt(payment)}
+                        className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                      >
+                        Receipt
+                      </button>
+                      <button
                         onClick={() => setDeletingPaymentId(payment._id)}
-                        className="text-red-600 hover:text-red-500"
+                        className="rounded-[5px] border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50 transition"
                       >
                         Delete
                       </button>
+                    </div>
                   </td>
                 </tr>
               ))}
