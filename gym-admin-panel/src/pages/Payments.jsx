@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
 import ConfirmModal from '../components/ConfirmModal';
+import ReceiptModal from '../components/ReceiptModal';
 
 const Payments = () => {
   const [payments, setPayments] = useState([]);
@@ -27,6 +28,8 @@ const Payments = () => {
   const [selectedPaymentIds, setSelectedPaymentIds] = useState([]);
   const [deletingPaymentId, setDeletingPaymentId] = useState(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
   const { showSuccess, showError } = useToast();
 
   const getPackageFromPayment = (payment) => {
@@ -167,51 +170,15 @@ const Payments = () => {
     }
   };
 
-  const generateReceipt = (payment) => {
-    const receiptWindow = window.open('', '_blank');
-    receiptWindow.document.write(`
-      <html>
-        <head>
-          <title>Payment Receipt</title>
-          <style>
-            body { font-family: 'Work Sans', sans-serif; margin: 24px; color: #111827; }
-            .header { text-align: center; margin-bottom: 24px; }
-            .details { margin: 16px 0; }
-            .label { font-weight: 600; }
-            .value { margin-left: 6px; color: #334155; }
-            .total { font-weight: 700; font-size: 18px; margin-top: 24px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>GymPro</h1>
-            <p style="color:#64748b;">Payment Receipt</p>
-          </div>
-          <div class="details">
-            <p><span class="label">Member:</span><span class="value">${payment.memberId.name} (${payment.memberId.memberId})</span></p>
-            <p><span class="label">Package:</span><span class="value">${getPackageLabel(payment)}</span></p>
-            <p><span class="label">Original Amount:</span><span class="value">৳${payment.originalAmount || payment.amount || 0}</span></p>
-            ${
-              payment.discountAmount > 0 && payment.originalAmount
-                ? `<p><span class="label">Discount:</span><span class="value">${
-                    payment.discountType === 'percentage'
-                      ? `${payment.discountAmount}%`
-                      : `৳${payment.discountAmount}`
-                  }</span></p>`
-                : ''
-            }
-            <p><span class="label">Final Amount:</span><span class="value">$${payment.finalAmount || payment.amount || 0}</span></p>
-            <p><span class="label">Payment Method:</span><span class="value">${getPaymentMethodLabel(payment)}</span></p>
-            <p><span class="label">Date:</span><span class="value">${new Date(payment.date).toLocaleDateString()}</span></p>
-            <p><span class="label">Payment Status:</span><span class="value">Paid: $${payment.memberId.paidAmount || 0} / Due: $${payment.memberId.dueAmount || 0}</span></p>
-            ${payment.note ? `<p><span class="label">Note:</span><span class="value">${payment.note}</span></p>` : ''}
-          </div>
-          <div class="total">Thank you for your payment.</div>
-        </body>
-      </html>
-    `);
-    receiptWindow.document.close();
-    receiptWindow.print();
+  const generateReceipt = async (payment) => {
+    try {
+      const res = await api.get(`/payments/${payment._id}/receipt`);
+      setReceiptData(res.data.data);
+      setShowReceipt(true);
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      showError('Failed to generate receipt.');
+    }
   };
 
   const confirmDeletePayment = async (paymentId) => {
@@ -686,6 +653,12 @@ const Payments = () => {
         message={`Delete ${selectedPaymentIds.length} selected payment(s)? This cannot be undone.`}
         onConfirm={() => confirmBulkDeletePayments()}
         onCancel={() => setConfirmBulkDelete(false)}
+      />
+      <ReceiptModal
+        open={showReceipt}
+        onClose={() => { setShowReceipt(false); setReceiptData(null); }}
+        type="payment"
+        data={receiptData}
       />
     </div>
   );

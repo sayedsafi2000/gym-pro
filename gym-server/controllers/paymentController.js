@@ -271,6 +271,11 @@ const generateReceipt = async (req, res) => {
 
     const receipt = {
       receiptId: `RCP-${payment._id.toString().slice(-8).toUpperCase()}`,
+      gym: {
+        name: process.env.GYM_NAME || 'GymPro Fitness',
+        address: process.env.GYM_ADDRESS || 'Dhaka, Bangladesh',
+        phone: process.env.GYM_PHONE || '+880 1XXXXXXXXX',
+      },
       member: {
         name: payment.memberId.name,
         memberId: payment.memberId.memberId,
@@ -288,7 +293,8 @@ const generateReceipt = async (req, res) => {
         finalAmount: payment.finalAmount,
         paymentMethod: payment.paymentMethod,
         paymentType: payment.paymentType,
-        date: payment.date
+        date: payment.date,
+        note: payment.note,
       },
       generatedAt: new Date()
     };

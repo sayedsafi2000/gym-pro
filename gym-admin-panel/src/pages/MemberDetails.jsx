@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import api from '../services/api';
 import useToast from '../hooks/useToast';
 import AttendanceCalendar from '../components/AttendanceCalendar';
+import ReceiptModal from '../components/ReceiptModal';
 
 const MemberDetails = () => {
   const { id } = useParams();
@@ -17,6 +18,8 @@ const MemberDetails = () => {
     month: new Date().getMonth() + 1,
   });
   const [loading, setLoading] = useState(true);
+  const [receiptData, setReceiptData] = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -55,6 +58,16 @@ const MemberDetails = () => {
     } catch (error) {
       console.error('Error fetching calendar:', error);
       showError('Failed to load calendar data.');
+    }
+  };
+
+  const handleViewReceipt = async (paymentId) => {
+    try {
+      const res = await api.get(`/payments/${paymentId}/receipt`);
+      setReceiptData(res.data.data);
+      setShowReceipt(true);
+    } catch (error) {
+      console.error('Error loading receipt:', error);
     }
   };
 
@@ -364,6 +377,7 @@ const MemberDetails = () => {
                 <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Final</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Method</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Type</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide"></th>
               </tr>
             </thead>
             <tbody>
@@ -395,6 +409,14 @@ const MemberDetails = () => {
                         {p.paymentType === 'full' ? 'Full' : 'Partial'}
                       </span>
                     </td>
+                    <td className="px-6 py-3">
+                      <button
+                        onClick={() => handleViewReceipt(p._id)}
+                        className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                      >
+                        Receipt
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -402,6 +424,13 @@ const MemberDetails = () => {
           </table>
         </div>
       </section>
+
+      <ReceiptModal
+        open={showReceipt}
+        onClose={() => { setShowReceipt(false); setReceiptData(null); }}
+        type="payment"
+        data={receiptData}
+      />
     </div>
   );
 };
