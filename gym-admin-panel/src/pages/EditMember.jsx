@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import useToast from '../hooks/useToast';
 
 const EditMember = () => {
   const { id } = useParams();
@@ -29,6 +30,7 @@ const EditMember = () => {
   const [fpMessage, setFpMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     fetchPackages();
@@ -85,8 +87,7 @@ const EditMember = () => {
         additionalPayment: '',
       });
     } catch (error) {
-      console.error('Error fetching member:', error);
-      alert('Error loading member. Redirecting to members list.');
+      showError('Error loading member. Redirecting to members list.');
       navigate('/members');
     } finally {
       setLoading(false);
@@ -105,12 +106,12 @@ const EditMember = () => {
       if ((formData.paymentType === 'partial' || formData.paymentType === 'full') && formData.additionalPayment) {
         const paymentAmount = parseFloat(formData.additionalPayment) || 0;
         if (paymentAmount <= 0) {
-          alert('Please enter a valid payment amount greater than 0');
+          showError('Please enter a valid payment amount greater than 0');
           setSubmitting(false);
           return;
         }
         if (paymentAmount > formData.dueAmount) {
-          alert(`Payment amount cannot exceed due amount of ৳${formData.dueAmount}`);
+          showError(`Payment amount cannot exceed due amount of ৳${formData.dueAmount}`);
           setSubmitting(false);
           return;
         }
@@ -122,10 +123,10 @@ const EditMember = () => {
       };
 
       await api.put(`/members/${id}`, submitData);
+      showSuccess('Member updated successfully');
       navigate('/members');
     } catch (error) {
-      console.error('Error updating member:', error);
-      alert('Error updating member. Please try again.');
+      showError('Error updating member. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -142,11 +143,12 @@ const EditMember = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-[5px] p-8 text-white">
+      <div className="bg-white border border-slate-200 p-8 shadow-sm rounded-[5px]">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Edit Member</h1>
-            <p className="text-blue-100">Update member information</p>
+            <Link to="/members" className="text-sm text-slate-500 hover:text-slate-700 transition-colors">&larr; Back to Members</Link>
+            <h1 className="text-3xl font-semibold mb-2 text-slate-900">Edit Member</h1>
+            <p className="text-slate-500">Update member information</p>
           </div>
         </div>
       </div>
@@ -156,12 +158,12 @@ const EditMember = () => {
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Personal Information */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
               Personal Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Full Name *
                 </label>
                 <input
@@ -169,13 +171,13 @@ const EditMember = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                   placeholder="Enter full name"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Phone Number *
                 </label>
                 <input
@@ -183,13 +185,13 @@ const EditMember = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                   placeholder="Enter phone number"
                   required
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Address
                 </label>
                 <textarea
@@ -197,19 +199,19 @@ const EditMember = () => {
                   value={formData.address}
                   onChange={handleChange}
                   rows="3"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 resize-none"
                   placeholder="Enter address (optional)"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Gender *
                 </label>
                 <select
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                   required
                 >
                   <option value="">Select Gender</option>
@@ -223,7 +225,7 @@ const EditMember = () => {
 
           {/* Fingerprint Registration */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
               Fingerprint Registration
             </h2>
 
@@ -245,7 +247,7 @@ const EditMember = () => {
                     <p className="text-xs text-green-600 mt-1">
                       Device User ID: {fingerprint.deviceUserId}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       Member can scan fingerprint at the device for attendance.
                     </p>
                   </div>
@@ -255,19 +257,19 @@ const EditMember = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 border border-gray-200 rounded-[5px] p-5">
-                <p className="text-sm font-semibold text-gray-800 mb-1">No Fingerprint Registered</p>
-                <p className="text-xs text-gray-500 mb-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-5">
+                <p className="text-sm font-semibold text-slate-800 mb-1">No Fingerprint Registered</p>
+                <p className="text-xs text-slate-500 mb-4">
                   Select a device and click register. Then have the member enroll their fingerprint at the device.
                 </p>
                 {devices.length > 0 ? (
                   <div className="flex flex-wrap items-end gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Device</label>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Device</label>
                       <select
                         value={selectedDeviceId}
                         onChange={(e) => setSelectedDeviceId(e.target.value)}
-                        className="px-4 py-2.5 border border-gray-300 rounded-[5px] text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
                       >
                         {devices.map((d) => (
                           <option key={d._id} value={d._id}>
@@ -304,7 +306,7 @@ const EditMember = () => {
                         }
                       }}
                       disabled={registering}
-                      className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-medium rounded-[5px] hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 transition-all duration-200"
+                      className="px-5 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-[5px] hover:bg-slate-800 disabled:opacity-50 transition-all duration-200"
                     >
                       {registering ? 'Registering...' : 'Register Fingerprint'}
                     </button>
@@ -320,12 +322,12 @@ const EditMember = () => {
 
           {/* Membership Details */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
               Membership Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Join Date *
                 </label>
                 <input
@@ -333,19 +335,19 @@ const EditMember = () => {
                   name="joinDate"
                   value={formData.joinDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Package *
                 </label>
                 <select
                   name="packageId"
                   value={formData.packageId}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                   required
                 >
                   <option value="">Select Package</option>
@@ -361,12 +363,12 @@ const EditMember = () => {
 
           {/* Payment Options */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
               Payment Options
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
                   Add Payment
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -379,10 +381,10 @@ const EditMember = () => {
                       onChange={handleChange}
                       className="sr-only peer"
                     />
-                    <div className="p-4 border-2 border-gray-200 rounded-[5px] cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-200 hover:border-green-300">
+                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-200 hover:border-green-300">
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-gray-800">Pay Full Due</div>
-                        <div className="text-sm text-gray-600">Pay remaining ৳{formData.dueAmount || 0}</div>
+                        <div className="text-lg font-semibold text-slate-800">Pay Full Due</div>
+                        <div className="text-sm text-slate-600">Pay remaining ৳{formData.dueAmount || 0}</div>
                       </div>
                     </div>
                   </label>
@@ -395,10 +397,10 @@ const EditMember = () => {
                       onChange={handleChange}
                       className="sr-only peer"
                     />
-                    <div className="p-4 border-2 border-gray-200 rounded-[5px] cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-200 hover:border-blue-300">
+                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-200 hover:border-blue-300">
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-gray-800">Partial Payment</div>
-                        <div className="text-sm text-gray-600">Pay part of due amount</div>
+                        <div className="text-lg font-semibold text-slate-800">Partial Payment</div>
+                        <div className="text-sm text-slate-600">Pay part of due amount</div>
                       </div>
                     </div>
                   </label>
@@ -411,10 +413,10 @@ const EditMember = () => {
                       onChange={handleChange}
                       className="sr-only peer"
                     />
-                    <div className="p-4 border-2 border-gray-200 rounded-[5px] cursor-pointer peer-checked:border-gray-500 peer-checked:bg-gray-50 transition-all duration-200 hover:border-gray-300">
+                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-slate-500 peer-checked:bg-slate-50 transition-all duration-200 hover:border-slate-200">
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-gray-800">No Payment</div>
-                        <div className="text-sm text-gray-600">Update info only</div>
+                        <div className="text-lg font-semibold text-slate-800">No Payment</div>
+                        <div className="text-sm text-slate-600">Update info only</div>
                       </div>
                     </div>
                   </label>
@@ -423,7 +425,7 @@ const EditMember = () => {
 
               {(formData.paymentType === 'partial' || formData.paymentType === 'full') && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Payment Amount *
                   </label>
                   <input
@@ -434,11 +436,11 @@ const EditMember = () => {
                     min="0"
                     step="0.01"
                     max={formData.dueAmount || 0}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-[5px] focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                     placeholder="Enter payment amount"
                     required={formData.paymentType === 'partial' || formData.paymentType === 'full'}
                   />
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-slate-600 mt-1">
                     Maximum amount: ৳{formData.dueAmount || 0}
                   </p>
                 </div>
@@ -446,14 +448,14 @@ const EditMember = () => {
             </div>
           </div>
           {formData.packageId && (
-            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-[5px] p-6 border border-blue-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            <div className="bg-slate-50 rounded-[5px] p-6 border border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">
                 Membership Preview
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-gray-500">Expiry Date:</span>
-                  <span className="font-semibold text-gray-800 ml-2">
+                  <span className="text-slate-500">Expiry Date:</span>
+                  <span className="font-semibold text-slate-800 ml-2">
                     {formData.joinDate && packages.find(p => p._id === formData.packageId) ?
                       new Date(new Date(formData.joinDate).getTime() + packages.find(p => p._id === formData.packageId).duration * 24 * 60 * 60 * 1000).toLocaleDateString()
                       : 'Select join date and package'
@@ -461,19 +463,19 @@ const EditMember = () => {
                   </span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-gray-500">Package Price:</span>
+                  <span className="text-slate-500">Package Price:</span>
                   <span className="font-semibold text-green-600 ml-2">
                     ৳{packages.find(p => p._id === formData.packageId)?.price || 0}
                   </span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-gray-500">Paid Amount:</span>
+                  <span className="text-slate-500">Paid Amount:</span>
                   <span className="font-semibold text-blue-600 ml-2">
                     ৳{formData.paidAmount || 0}
                   </span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-gray-500">Due Amount:</span>
+                  <span className="text-slate-500">Due Amount:</span>
                   <span className={`font-semibold ml-2 ${formData.dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
                     ৳{formData.dueAmount || 0}
                   </span>
@@ -483,18 +485,18 @@ const EditMember = () => {
           )}
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-4 pt-6 border-t border-slate-200">
             <button
               type="button"
               onClick={() => navigate('/members')}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-[5px] hover:bg-gray-50 transition-all duration-200"
+              className="px-6 py-3 border border-slate-200 text-slate-700 rounded-[5px] hover:bg-slate-50 transition-all duration-200"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-[5px] hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="px-8 py-3 bg-slate-900 text-white rounded-[5px] hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {submitting ? (
                 <div className="flex items-center">

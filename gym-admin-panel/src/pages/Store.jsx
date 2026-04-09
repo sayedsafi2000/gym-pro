@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import useToast from '../hooks/useToast';
 
 const Store = () => {
   const [products, setProducts] = useState([]);
@@ -13,6 +14,8 @@ const Store = () => {
     stock: '',
   });
   const [editingId, setEditingId] = useState(null);
+  const [deletingProductId, setDeletingProductId] = useState(null);
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     fetchProducts();
@@ -50,8 +53,10 @@ const Store = () => {
       setEditingId(null);
       setShowForm(false);
       fetchProducts();
+      showSuccess(editingId ? 'Product updated' : 'Product added');
     } catch (error) {
       console.error('Error saving product:', error);
+      showError('Failed to save product.');
     }
   };
 
@@ -67,13 +72,16 @@ const Store = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this product?')) return;
+  const confirmDeleteProduct = async (id) => {
     try {
       await api.delete(`/products/${id}`);
+      showSuccess('Product deleted');
       fetchProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
+      showError('Failed to delete product.');
+    } finally {
+      setDeletingProductId(null);
     }
   };
 
@@ -82,8 +90,10 @@ const Store = () => {
     try {
       await api.post(`/products/${product._id}/sell`, { quantity: 1 });
       fetchProducts();
+      showSuccess('Sale recorded');
     } catch (error) {
       console.error('Error selling product:', error);
+      showError('Failed to record sale.');
     }
   };
 
@@ -116,7 +126,7 @@ const Store = () => {
               placeholder="Product name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+              className="rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
               required
             />
             <input
@@ -124,7 +134,7 @@ const Store = () => {
               placeholder="Category (e.g. Supplements, Apparel, Accessories)"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+              className="rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
               required
             />
           </div>
@@ -132,7 +142,7 @@ const Store = () => {
             placeholder="Description"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+            className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
             rows={3}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -141,7 +151,7 @@ const Store = () => {
               placeholder="Price"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+              className="rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
               required
             />
             <input
@@ -149,7 +159,7 @@ const Store = () => {
               placeholder="Stock"
               value={formData.stock}
               onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-              className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+              className="rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
               required
             />
           </div>
@@ -191,9 +201,17 @@ const Store = () => {
                     <button onClick={() => handleEdit(product)} className="rounded-[5px] bg-slate-100 px-3 py-1 text-slate-900 text-xs hover:bg-slate-200">
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(product._id)} className="rounded-[5px] bg-red-50 px-3 py-1 text-red-700 text-xs hover:bg-red-100">
-                      Delete
-                    </button>
+                    {deletingProductId === product._id ? (
+                      <div className="inline-flex items-center gap-1">
+                        <span className="text-xs text-red-600">Delete?</span>
+                        <button onClick={() => confirmDeleteProduct(product._id)} className="rounded-[5px] bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Yes</button>
+                        <button onClick={() => setDeletingProductId(null)} className="rounded-[5px] bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-slate-200">No</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setDeletingProductId(product._id)} className="rounded-[5px] bg-red-50 px-3 py-1 text-red-700 text-xs hover:bg-red-100">
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -201,6 +219,13 @@ const Store = () => {
           </table>
         </div>
       </div>
+
+      {products.length === 0 && !loading && (
+        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-8 text-center">
+          <p className="text-sm font-medium text-slate-700">No products yet</p>
+          <p className="text-xs text-slate-500 mt-1">Add your first product to start tracking inventory.</p>
+        </div>
+      )}
     </div>
   );
 };

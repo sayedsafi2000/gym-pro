@@ -2,6 +2,7 @@ const Member = require('../models/Member');
 const Payment = require('../models/Payment');
 const Product = require('../models/Product');
 const Attendance = require('../models/Attendance');
+const Device = require('../models/Device');
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -232,6 +233,72 @@ exports.getDashboardStats = async (req, res) => {
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getDashboardAlerts = async (req, res) => {
+  try {
+    const now = new Date();
+    const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const alerts = [];
+
+    // Expiring memberships
+    const expiringCount = await Member.countDocuments({
+      expiryDate: { $gte: now, $lte: threeDaysLater },
+    });
+    if (expiringCount > 0) {
+      alerts.push({
+        type: 'expiring',
+        severity: 'warning',
+        count: expiringCount,
+        message: `${expiringCount} membership${expiringCount > 1 ? 's' : ''} expiring in 3 days`,
+        link: '/members?status=expiring',
+      });
+    }
+
+    // Expired memberships
+    const expiredCount = await Member.countDocuments({
+      expiryDate: { $lt: now },
+    });
+    if (expiredCount > 0) {
+      alerts.push({
+        type: 'expired',
+        severity: 'error',
+        count: expiredCount,
+        message: `${expiredCount} expired membership${expiredCount > 1 ? 's' : ''} need renewal`,
+        link: '/members?status=expired',
+      });
+    }
+
+    // Overdue payments
+    const overdueMembers = await Member.countDocuments({
+      dueAmount: { $gt: 0 },
+    });
+    if (overdueMembers > 0) {
+      alerts.push({
+        type: 'overdue',
+        severity: 'error',
+        count: overdueMembers,
+        message: `${overdueMembers} member${overdueMembers > 1 ? 's' : ''} with outstanding payments`,
+        link: '/payments',
+      });
+    }
+
+    // Device sync failures
+    const failedDevices = await Device.find({ lastSyncStatus: 'failed', isActive: true });
+    for (const device of failedDevices) {
+      alerts.push({
+        type: 'device_offline',
+        severity: 'warning',
+        count: 1,
+        message: `${device.name} device sync failed`,
+        link: '/devices',
+      });
+    }
+
+    res.json({ success: true, data: { alerts } });
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };

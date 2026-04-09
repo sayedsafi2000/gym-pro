@@ -19,6 +19,7 @@ const DeviceManagement = () => {
   const [members, setMembers] = useState([]);
   const [linkingUid, setLinkingUid] = useState(null);
   const [linkMemberId, setLinkMemberId] = useState('');
+  const [deletingDeviceId, setDeletingDeviceId] = useState(null);
 
   useEffect(() => {
     fetchDevices();
@@ -108,13 +109,14 @@ const DeviceManagement = () => {
     setSuccess('');
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this device?')) return;
+  const confirmDeleteDevice = async (id) => {
     try {
       await api.delete(`/devices/${id}`);
       fetchDevices();
     } catch (error) {
       console.error('Error deleting device:', error);
+    } finally {
+      setDeletingDeviceId(null);
     }
   };
 
@@ -376,12 +378,15 @@ const DeviceManagement = () => {
                 >
                   Edit
                 </button>
-                <button
-                  onClick={() => handleDelete(device._id)}
-                  className="rounded-[5px] border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50"
-                >
-                  Delete
-                </button>
+                {deletingDeviceId === device._id ? (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-red-600">Delete?</span>
+                    <button onClick={() => confirmDeleteDevice(device._id)} className="rounded-[5px] bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700">Yes</button>
+                    <button onClick={() => setDeletingDeviceId(null)} className="rounded-[5px] bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200">No</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setDeletingDeviceId(device._id)} className="rounded-[5px] border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50">Delete</button>
+                )}
               </div>
 
               {/* Device Users Panel */}

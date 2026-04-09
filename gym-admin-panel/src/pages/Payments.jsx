@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import useToast from '../hooks/useToast';
 
 const Payments = () => {
   const [payments, setPayments] = useState([]);
@@ -23,6 +24,9 @@ const Payments = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [selectedPaymentIds, setSelectedPaymentIds] = useState([]);
+  const [deletingPaymentId, setDeletingPaymentId] = useState(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const { showSuccess, showError } = useToast();
 
   const getPackageFromPayment = (payment) => {
     if (payment?.packageId && typeof payment.packageId === 'object') {
@@ -149,11 +153,13 @@ const Payments = () => {
       setSelectedMember(null);
       setShowForm(false);
       fetchData(); // Refresh the payments list
+      showSuccess('Payment recorded');
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error creating payment:', error);
+      showError('Failed to create payment.');
       setError(error.response?.data?.message || error.message || 'Error creating payment. Please try again.');
     } finally {
       setSubmitting(false);
@@ -207,20 +213,21 @@ const Payments = () => {
     receiptWindow.print();
   };
 
-  const handleDeletePayment = async (paymentId) => {
-    const confirmed = window.confirm('Are you sure you want to delete this payment?');
-    if (!confirmed) return;
-
+  const confirmDeletePayment = async (paymentId) => {
     try {
       setError('');
       setSuccess('');
       await api.delete(`/payments/${paymentId}`);
       setSuccess('Payment deleted successfully.');
       fetchData();
+      showSuccess('Payment deleted');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error deleting payment:', error);
+      showError('Failed to delete payment.');
       setError(error.response?.data?.message || 'Failed to delete payment.');
+    } finally {
+      setDeletingPaymentId(null);
     }
   };
 
@@ -240,11 +247,7 @@ const Payments = () => {
     setSelectedPaymentIds(payments.map((payment) => payment._id));
   };
 
-  const handleBulkDelete = async () => {
-    if (!selectedPaymentIds.length) return;
-    const confirmed = window.confirm(`Delete ${selectedPaymentIds.length} selected payment(s)?`);
-    if (!confirmed) return;
-
+  const confirmBulkDeletePayments = async () => {
     try {
       setError('');
       setSuccess('');
@@ -252,10 +255,14 @@ const Payments = () => {
       setSuccess(`${selectedPaymentIds.length} payment(s) deleted successfully.`);
       setSelectedPaymentIds([]);
       fetchData();
+      showSuccess('Payments deleted');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error bulk deleting payments:', error);
+      showError('Failed to delete payments.');
       setError(error.response?.data?.message || 'Failed to bulk delete payments.');
+    } finally {
+      setConfirmBulkDelete(false);
     }
   };
 
@@ -559,14 +566,22 @@ const Payments = () => {
               ? `${selectedPaymentIds.length} selected`
               : 'Select payments to bulk delete'}
           </p>
-          <button
-            type="button"
-            onClick={handleBulkDelete}
-            disabled={!selectedPaymentIds.length}
-            className="rounded-[5px] border border-red-300 bg-red-50 px-4 py-2 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Delete Selected
-          </button>
+          {confirmBulkDelete ? (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-red-600">Delete {selectedPaymentIds.length} payment(s)?</span>
+              <button onClick={confirmBulkDeletePayments} className="rounded-[5px] bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700">Yes</button>
+              <button onClick={() => setConfirmBulkDelete(false)} className="rounded-[5px] bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200">No</button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { if (selectedPaymentIds.length) setConfirmBulkDelete(true); }}
+              disabled={!selectedPaymentIds.length}
+              className="rounded-[5px] border border-red-300 bg-red-50 px-4 py-2 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Delete Selected
+            </button>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200">
@@ -590,7 +605,14 @@ const Payments = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              {payments.map((payment) => (
+              {payments.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-8">
+                    <p className="text-sm font-medium text-slate-500">No payments found</p>
+                    <p className="text-xs text-slate-400 mt-1">Record a payment to get started.</p>
+                  </td>
+                </tr>
+              ) : payments.map((payment) => (
                 <tr key={payment._id} className="hover:bg-slate-50 transition duration-200">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
@@ -643,16 +665,25 @@ const Payments = () => {
                     >
                       Receipt
                     </button>
-                    <button
-                      onClick={() => handleDeletePayment(payment._id)}
-                      className="text-red-600 hover:text-red-500"
-                    >
-                      Delete
-                    </button>
+                    {deletingPaymentId === payment._id ? (
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-xs text-red-600">Delete?</span>
+                        <button onClick={() => confirmDeletePayment(payment._id)} className="rounded-[5px] bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Yes</button>
+                        <button onClick={() => setDeletingPaymentId(null)} className="rounded-[5px] bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-slate-200">No</button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setDeletingPaymentId(payment._id)}
+                        className="text-red-600 hover:text-red-500"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
+
           </table>
         </div>
       </div>

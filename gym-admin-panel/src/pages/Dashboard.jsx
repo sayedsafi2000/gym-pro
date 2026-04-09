@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import useToast from '../hooks/useToast';
 import IncomeChart from '../components/IncomeChart';
 
 const Dashboard = () => {
+  const { showError } = useToast();
   const [stats, setStats] = useState(null);
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    fetchAlerts();
   }, []);
 
   const fetchStats = async () => {
@@ -16,8 +20,18 @@ const Dashboard = () => {
       setStats(response.data.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
+      showError('Failed to load dashboard data.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAlerts = async () => {
+    try {
+      const response = await api.get('/dashboard/alerts');
+      setAlerts(response.data.data.alerts);
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
     }
   };
 
@@ -178,27 +192,40 @@ const Dashboard = () => {
         <IncomeChart data={chartData?.dailyIncome} monthlyIncome={summary?.monthlyIncome} />
       </section>
 
-      {/* Quick Actions */}
+      {/* Alerts + Member Status */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white border border-slate-200 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
-            <span className="text-xs text-slate-500 uppercase tracking-[0.2em]">Navigate</span>
+            <h2 className="text-lg font-semibold text-slate-900">Alerts</h2>
+            <span className="text-xs text-slate-500 uppercase tracking-[0.2em]">Action needed</span>
           </div>
-          <div className="grid gap-3">
-            <a href="/members/add" className="w-full text-left rounded-[5px] border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50">
-              + Add Member
-            </a>
-            <a href="/packages" className="w-full text-left rounded-[5px] border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50">
-              📦 Manage Packages
-            </a>
-            <a href="/payments" className="w-full text-left rounded-[5px] border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50">
-              💳 Record Payment
-            </a>
-            <a href="/attendance" className="w-full text-left rounded-[5px] border border-slate-200 px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50">
-              📋 View Attendance
-            </a>
-          </div>
+          {alerts.length === 0 ? (
+            <div className="bg-green-50 border border-green-200 rounded-[5px] px-4 py-6 text-center">
+              <p className="text-sm font-medium text-green-700">All clear</p>
+              <p className="text-xs text-green-600 mt-1">No alerts right now</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {alerts.map((alert, i) => (
+                <a
+                  key={i}
+                  href={alert.link}
+                  className={`flex items-center justify-between rounded-[5px] border px-4 py-3 text-sm font-medium transition hover:opacity-80 ${
+                    alert.severity === 'error'
+                      ? 'border-red-200 bg-red-50 text-red-700'
+                      : 'border-yellow-200 bg-yellow-50 text-yellow-700'
+                  }`}
+                >
+                  <span>{alert.message}</span>
+                  <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] ${
+                    alert.severity === 'error' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {alert.count}
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="bg-white border border-slate-200 p-6 shadow-sm">

@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import useToast from '../hooks/useToast';
 import { Link } from 'react-router-dom';
 
 const MembersList = () => {
+  const { showSuccess, showError } = useToast();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchMembers();
@@ -22,6 +25,7 @@ const MembersList = () => {
       setMembers(res.data.data);
     } catch (error) {
       console.error('Error fetching members:', error);
+      showError('Failed to load members.');
     } finally {
       setLoading(false);
     }
@@ -47,14 +51,16 @@ const MembersList = () => {
     return 'Active';
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this member?')) {
-      try {
-        await api.delete(`/members/${id}`);
-        fetchMembers();
-      } catch (error) {
-        console.error('Error deleting member:', error);
-      }
+  const confirmDelete = async (id) => {
+    try {
+      await api.delete(`/members/${id}`);
+      showSuccess('Member deleted');
+      fetchMembers();
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      showError('Failed to delete member.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -112,7 +118,7 @@ const MembersList = () => {
           </div>
         </div>
 
-        <div className="overflow-hidden bg-white border border-slate-200 rounded-3xl">
+        <div className="overflow-hidden bg-white border border-slate-200 rounded-[5px]">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
@@ -221,12 +227,20 @@ const MembersList = () => {
                         >
                           Edit
                         </Link>
-                        <button
-                          onClick={() => handleDelete(member._id)}
-                          className="text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-[5px] transition-colors duration-200"
-                        >
-                          Delete
-                        </button>
+                        {deletingId === member._id ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-red-600">Delete?</span>
+                            <button onClick={() => confirmDelete(member._id)} className="text-xs text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded-[5px]">Yes</button>
+                            <button onClick={() => setDeletingId(null)} className="text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-[5px]">No</button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeletingId(member._id)}
+                            className="text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-[5px] transition-colors duration-200"
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

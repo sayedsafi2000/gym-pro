@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import useToast from '../hooks/useToast';
 
 const Packages = () => {
   const [packages, setPackages] = useState([]);
@@ -7,6 +8,8 @@ const Packages = () => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ name: '', duration: '', price: '' });
   const [editingId, setEditingId] = useState(null);
+  const [deletingPackageId, setDeletingPackageId] = useState(null);
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     fetchPackages();
@@ -35,8 +38,10 @@ const Packages = () => {
       setShowForm(false);
       setEditingId(null);
       fetchPackages();
+      showSuccess(editingId ? 'Package updated' : 'Package added');
     } catch (error) {
       console.error('Error saving package:', error);
+      showError('Failed to save package.');
     }
   };
 
@@ -46,14 +51,16 @@ const Packages = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this package?')) {
-      try {
-        await api.delete(`/packages/${id}`);
-        fetchPackages();
-      } catch (error) {
-        console.error('Error deleting package:', error);
-      }
+  const confirmDeletePackage = async (id) => {
+    try {
+      await api.delete(`/packages/${id}`);
+      showSuccess('Package deleted');
+      fetchPackages();
+    } catch (error) {
+      console.error('Error deleting package:', error);
+      showError('Failed to delete package.');
+    } finally {
+      setDeletingPackageId(null);
     }
   };
 
@@ -82,7 +89,7 @@ const Packages = () => {
               placeholder="Package name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+              className="rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
               required
             />
             <input
@@ -90,7 +97,7 @@ const Packages = () => {
               placeholder="Duration (days)"
               value={formData.duration}
               onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-              className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+              className="rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
               required
             />
             <input
@@ -98,7 +105,7 @@ const Packages = () => {
               placeholder="Price"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+              className="rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
               required
             />
           </div>
@@ -129,9 +136,17 @@ const Packages = () => {
                     <button onClick={() => handleEdit(pkg)} className="text-slate-900 hover:text-slate-700 mr-4">
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(pkg._id)} className="text-slate-500 hover:text-slate-900">
-                      Delete
-                    </button>
+                    {deletingPackageId === pkg._id ? (
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-xs text-red-600">Delete?</span>
+                        <button onClick={() => confirmDeletePackage(pkg._id)} className="rounded-[5px] bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Yes</button>
+                        <button onClick={() => setDeletingPackageId(null)} className="rounded-[5px] bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-slate-200">No</button>
+                      </span>
+                    ) : (
+                      <button onClick={() => setDeletingPackageId(pkg._id)} className="text-slate-500 hover:text-slate-900">
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

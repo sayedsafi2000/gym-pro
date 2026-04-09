@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../services/api';
+import useToast from '../hooks/useToast';
 import AttendanceCalendar from '../components/AttendanceCalendar';
 
 const MemberDetails = () => {
   const { id } = useParams();
+  const { showError } = useToast();
   const [member, setMember] = useState(null);
   const [stats, setStats] = useState(null);
   const [payments, setPayments] = useState([]);
@@ -38,6 +40,7 @@ const MemberDetails = () => {
       setPayments(paymentsRes.data.data);
     } catch (error) {
       console.error('Error fetching member details:', error);
+      showError('Failed to load member details.');
     } finally {
       setLoading(false);
     }
@@ -51,6 +54,7 @@ const MemberDetails = () => {
       setCalendarData(res.data.data);
     } catch (error) {
       console.error('Error fetching calendar:', error);
+      showError('Failed to load calendar data.');
     }
   };
 
@@ -234,16 +238,16 @@ const MemberDetails = () => {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-sm text-slate-600">Total</span>
-              <span className="text-sm font-semibold text-slate-900">${member.totalAmount}</span>
+              <span className="text-sm font-semibold text-slate-900">৳{member.totalAmount}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-slate-600">Paid</span>
-              <span className="text-sm font-semibold text-green-600">${member.paidAmount}</span>
+              <span className="text-sm font-semibold text-green-600">৳{member.paidAmount}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-slate-600">Due</span>
               <span className={`text-sm font-semibold ${member.dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                ${member.dueAmount}
+                ৳{member.dueAmount}
               </span>
             </div>
           </div>
@@ -269,7 +273,7 @@ const MemberDetails = () => {
 
       {/* Attendance Stats */}
       {stats && (
-        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <section className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div className="bg-white border border-slate-200 p-5 shadow-sm">
             <p className="text-xs text-slate-500 uppercase tracking-wide">Total Visits</p>
             <p className="mt-2 text-3xl font-semibold text-slate-900">{stats.totalVisits}</p>
@@ -374,13 +378,13 @@ const MemberDetails = () => {
                   <tr key={p._id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-6 py-3 text-slate-600">{new Date(p.date).toLocaleDateString()}</td>
                     <td className="px-6 py-3 text-slate-900">{p.packageId?.name || '-'}</td>
-                    <td className="px-6 py-3 text-slate-600">${p.originalAmount}</td>
+                    <td className="px-6 py-3 text-slate-600">৳{p.originalAmount}</td>
                     <td className="px-6 py-3 text-slate-600">
                       {p.discountAmount > 0
-                        ? `${p.discountAmount}${p.discountType === 'percentage' ? '%' : ' BDT'}`
+                        ? `${p.discountAmount}${p.discountType === 'percentage' ? '%' : '৳'}`
                         : '-'}
                     </td>
-                    <td className="px-6 py-3 font-semibold text-slate-900">${p.finalAmount}</td>
+                    <td className="px-6 py-3 font-semibold text-slate-900">৳{p.finalAmount}</td>
                     <td className="px-6 py-3 text-slate-600">{p.paymentMethod}</td>
                     <td className="px-6 py-3">
                       <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -50,7 +51,7 @@ const AttendanceCalendar = ({ calendarData, year, month, joinDate, expiryDate, o
   };
 
   const getStatusClasses = (status, isToday) => {
-    const base = 'aspect-square flex flex-col items-center justify-center text-sm rounded-[5px] relative cursor-default transition-colors';
+    const base = 'aspect-square flex flex-col items-center justify-center text-xs sm:text-sm rounded-[5px] relative cursor-default transition-colors';
     const ring = isToday ? ' ring-2 ring-slate-900' : '';
 
     switch (status) {
@@ -94,6 +95,7 @@ const AttendanceCalendar = ({ calendarData, year, month, joinDate, expiryDate, o
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={handlePrev}
+          aria-label="Previous month"
           className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
         >
           &lt;
@@ -103,6 +105,7 @@ const AttendanceCalendar = ({ calendarData, year, month, joinDate, expiryDate, o
         </h3>
         <button
           onClick={handleNext}
+          aria-label="Next month"
           className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
         >
           &gt;
@@ -123,9 +126,10 @@ const AttendanceCalendar = ({ calendarData, year, month, joinDate, expiryDate, o
 
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-1 mb-1">
-        {WEEKDAYS.map((day) => (
+        {WEEKDAYS.map((day, i) => (
           <div key={day} className="text-center text-xs font-semibold text-slate-500 uppercase py-1">
-            {day}
+            <span className="hidden sm:inline">{day}</span>
+            <span className="sm:hidden">{WEEKDAYS_SHORT[i]}</span>
           </div>
         ))}
       </div>
@@ -173,6 +177,12 @@ const AttendanceCalendar = ({ calendarData, year, month, joinDate, expiryDate, o
           );
         })}
       </div>
+
+      {presentCount === 0 && absentCount === 0 && (
+        <div className="mt-3 bg-slate-50 border border-slate-200 rounded-[5px] px-4 py-3 text-center">
+          <p className="text-xs text-slate-500">No attendance recorded this month</p>
+        </div>
+      )}
     </div>
   );
 };

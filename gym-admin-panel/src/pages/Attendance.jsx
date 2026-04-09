@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import useToast from '../hooks/useToast';
 
 const Attendance = () => {
+  const { showSuccess, showError } = useToast();
   const [attendances, setAttendances] = useState([]);
   const [todayStats, setTodayStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +41,7 @@ const Attendance = () => {
       setTodayStats(todayRes.data.data);
     } catch (error) {
       console.error('Error fetching attendance:', error);
+      showError('Failed to load attendance records.');
     } finally {
       setLoading(false);
     }
@@ -49,8 +52,10 @@ const Attendance = () => {
     try {
       await api.post('/attendance/sync');
       await fetchData();
+      showSuccess('Sync completed');
     } catch (error) {
       console.error('Sync failed:', error);
+      showError('Device sync failed.');
     } finally {
       setSyncing(false);
     }
