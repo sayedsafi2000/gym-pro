@@ -38,7 +38,10 @@ const recalculateMemberFinancials = async (memberId) => {
 // @route   GET /api/payments
 const getPayments = async (req, res) => {
   try {
-    const payments = await Payment.find()
+    const filter = {};
+    if (req.query.memberId) filter.memberId = req.query.memberId;
+
+    const payments = await Payment.find(filter)
       .populate('memberId', 'name memberId phone totalAmount paidAmount dueAmount')
       .populate('packageId', 'name price duration')
       .sort({ date: -1 });
@@ -268,6 +271,11 @@ const generateReceipt = async (req, res) => {
 
     const receipt = {
       receiptId: `RCP-${payment._id.toString().slice(-8).toUpperCase()}`,
+      gym: {
+        name: process.env.GYM_NAME || 'GymPro Fitness',
+        address: process.env.GYM_ADDRESS || 'Dhaka, Bangladesh',
+        phone: process.env.GYM_PHONE || '+880 1XXXXXXXXX',
+      },
       member: {
         name: payment.memberId.name,
         memberId: payment.memberId.memberId,
@@ -285,7 +293,8 @@ const generateReceipt = async (req, res) => {
         finalAmount: payment.finalAmount,
         paymentMethod: payment.paymentMethod,
         paymentType: payment.paymentType,
-        date: payment.date
+        date: payment.date,
+        note: payment.note,
       },
       generatedAt: new Date()
     };

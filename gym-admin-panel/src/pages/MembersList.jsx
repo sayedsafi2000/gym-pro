@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import useToast from '../hooks/useToast';
 import { Link } from 'react-router-dom';
+import ConfirmModal from '../components/ConfirmModal';
 
 const MembersList = () => {
+  const { showSuccess, showError } = useToast();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchMembers();
@@ -22,6 +26,7 @@ const MembersList = () => {
       setMembers(res.data.data);
     } catch (error) {
       console.error('Error fetching members:', error);
+      showError('Failed to load members.');
     } finally {
       setLoading(false);
     }
@@ -47,14 +52,16 @@ const MembersList = () => {
     return 'Active';
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this member?')) {
-      try {
-        await api.delete(`/members/${id}`);
-        fetchMembers();
-      } catch (error) {
-        console.error('Error deleting member:', error);
-      }
+  const confirmDelete = async (id) => {
+    try {
+      await api.delete(`/members/${id}`);
+      showSuccess('Member deleted');
+      fetchMembers();
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      showError('Failed to delete member.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -112,7 +119,7 @@ const MembersList = () => {
           </div>
         </div>
 
-        <div className="overflow-hidden bg-white border border-slate-200 rounded-3xl">
+        <div className="overflow-hidden bg-white border border-slate-200 rounded-[5px]">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
@@ -139,6 +146,9 @@ const MembersList = () => {
                     Status
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Fingerprint
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -151,11 +161,15 @@ const MembersList = () => {
                         <div className="w-8 h-8 bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-700">
                           {member.memberId ? member.memberId.slice(-1) : member.name?.charAt(0).toUpperCase() || '-'}
                         </div>
-                        <span className="text-sm font-medium text-slate-900">{member.memberId || 'N/A'}</span>
+                        <Link to={`/members/${member._id}`} className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">
+                          {member.memberId || 'N/A'}
+                        </Link>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-900">{member.name}</span>
+                      <Link to={`/members/${member._id}`} className="text-sm text-slate-900 hover:text-blue-600 hover:underline transition-colors">
+                        {member.name}
+                      </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-slate-600">{member.phone}</span>
@@ -192,6 +206,20 @@ const MembersList = () => {
                         {getStatusText(member.expiryDate)}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {member.deviceUserId != null ? (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-green-200 bg-green-50 text-green-700" title={`Device User ID: ${member.deviceUserId}`}>
+                          Registered
+                        </span>
+                      ) : (
+                        <Link
+                          to={`/members/${member._id}/edit`}
+                          className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors"
+                        >
+                          Not Set
+                        </Link>
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex flex-wrap gap-2">
                         <Link
@@ -201,7 +229,7 @@ const MembersList = () => {
                           Edit
                         </Link>
                         <button
-                          onClick={() => handleDelete(member._id)}
+                          onClick={() => setDeletingId(member._id)}
                           className="text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-[5px] transition-colors duration-200"
                         >
                           Delete
@@ -222,6 +250,14 @@ const MembersList = () => {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        open={!!deletingId}
+        title="Delete Member"
+        message={`Are you sure you want to delete ${members.find(m => m._id === deletingId)?.name || 'this member'}? This removes all their records.`}
+        onConfirm={() => confirmDelete(deletingId)}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 };

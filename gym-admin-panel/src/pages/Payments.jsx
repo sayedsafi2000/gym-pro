@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import useToast from '../hooks/useToast';
+import ConfirmModal from '../components/ConfirmModal';
+import ReceiptModal from '../components/ReceiptModal';
 
 const Payments = () => {
   const [payments, setPayments] = useState([]);
@@ -23,6 +26,11 @@ const Payments = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [selectedPaymentIds, setSelectedPaymentIds] = useState([]);
+  const [deletingPaymentId, setDeletingPaymentId] = useState(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const { showSuccess, showError } = useToast();
 
   const getPackageFromPayment = (payment) => {
     if (payment?.packageId && typeof payment.packageId === 'object') {
@@ -149,78 +157,45 @@ const Payments = () => {
       setSelectedMember(null);
       setShowForm(false);
       fetchData(); // Refresh the payments list
+      showSuccess('Payment recorded');
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error creating payment:', error);
+      showError('Failed to create payment.');
       setError(error.response?.data?.message || error.message || 'Error creating payment. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const generateReceipt = (payment) => {
-    const receiptWindow = window.open('', '_blank');
-    receiptWindow.document.write(`
-      <html>
-        <head>
-          <title>Payment Receipt</title>
-          <style>
-            body { font-family: 'Work Sans', sans-serif; margin: 24px; color: #111827; }
-            .header { text-align: center; margin-bottom: 24px; }
-            .details { margin: 16px 0; }
-            .label { font-weight: 600; }
-            .value { margin-left: 6px; color: #334155; }
-            .total { font-weight: 700; font-size: 18px; margin-top: 24px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>GymPro</h1>
-            <p style="color:#64748b;">Payment Receipt</p>
-          </div>
-          <div class="details">
-            <p><span class="label">Member:</span><span class="value">${payment.memberId.name} (${payment.memberId.memberId})</span></p>
-            <p><span class="label">Package:</span><span class="value">${getPackageLabel(payment)}</span></p>
-            <p><span class="label">Original Amount:</span><span class="value">৳${payment.originalAmount || payment.amount || 0}</span></p>
-            ${
-              payment.discountAmount > 0 && payment.originalAmount
-                ? `<p><span class="label">Discount:</span><span class="value">${
-                    payment.discountType === 'percentage'
-                      ? `${payment.discountAmount}%`
-                      : `৳${payment.discountAmount}`
-                  }</span></p>`
-                : ''
-            }
-            <p><span class="label">Final Amount:</span><span class="value">$${payment.finalAmount || payment.amount || 0}</span></p>
-            <p><span class="label">Payment Method:</span><span class="value">${getPaymentMethodLabel(payment)}</span></p>
-            <p><span class="label">Date:</span><span class="value">${new Date(payment.date).toLocaleDateString()}</span></p>
-            <p><span class="label">Payment Status:</span><span class="value">Paid: $${payment.memberId.paidAmount || 0} / Due: $${payment.memberId.dueAmount || 0}</span></p>
-            ${payment.note ? `<p><span class="label">Note:</span><span class="value">${payment.note}</span></p>` : ''}
-          </div>
-          <div class="total">Thank you for your payment.</div>
-        </body>
-      </html>
-    `);
-    receiptWindow.document.close();
-    receiptWindow.print();
+  const generateReceipt = async (payment) => {
+    try {
+      const res = await api.get(`/payments/${payment._id}/receipt`);
+      setReceiptData(res.data.data);
+      setShowReceipt(true);
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      showError('Failed to generate receipt.');
+    }
   };
 
-  const handleDeletePayment = async (paymentId) => {
-    const confirmed = window.confirm('Are you sure you want to delete this payment?');
-    if (!confirmed) return;
-
+  const confirmDeletePayment = async (paymentId) => {
     try {
       setError('');
       setSuccess('');
       await api.delete(`/payments/${paymentId}`);
       setSuccess('Payment deleted successfully.');
       fetchData();
+      showSuccess('Payment deleted');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error deleting payment:', error);
+      showError('Failed to delete payment.');
       setError(error.response?.data?.message || 'Failed to delete payment.');
+    } finally {
+      setDeletingPaymentId(null);
     }
   };
 
@@ -240,11 +215,7 @@ const Payments = () => {
     setSelectedPaymentIds(payments.map((payment) => payment._id));
   };
 
-  const handleBulkDelete = async () => {
-    if (!selectedPaymentIds.length) return;
-    const confirmed = window.confirm(`Delete ${selectedPaymentIds.length} selected payment(s)?`);
-    if (!confirmed) return;
-
+  const confirmBulkDeletePayments = async () => {
     try {
       setError('');
       setSuccess('');
@@ -252,10 +223,14 @@ const Payments = () => {
       setSuccess(`${selectedPaymentIds.length} payment(s) deleted successfully.`);
       setSelectedPaymentIds([]);
       fetchData();
+      showSuccess('Payments deleted');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error bulk deleting payments:', error);
+      showError('Failed to delete payments.');
       setError(error.response?.data?.message || 'Failed to bulk delete payments.');
+    } finally {
+      setConfirmBulkDelete(false);
     }
   };
 
@@ -560,13 +535,13 @@ const Payments = () => {
               : 'Select payments to bulk delete'}
           </p>
           <button
-            type="button"
-            onClick={handleBulkDelete}
-            disabled={!selectedPaymentIds.length}
-            className="rounded-[5px] border border-red-300 bg-red-50 px-4 py-2 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Delete Selected
-          </button>
+              type="button"
+              onClick={() => { if (selectedPaymentIds.length) setConfirmBulkDelete(true); }}
+              disabled={!selectedPaymentIds.length}
+              className="rounded-[5px] border border-red-300 bg-red-50 px-4 py-2 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Delete Selected
+            </button>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200">
@@ -590,7 +565,14 @@ const Payments = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              {payments.map((payment) => (
+              {payments.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-8">
+                    <p className="text-sm font-medium text-slate-500">No payments found</p>
+                    <p className="text-xs text-slate-400 mt-1">Record a payment to get started.</p>
+                  </td>
+                </tr>
+              ) : payments.map((payment) => (
                 <tr key={payment._id} className="hover:bg-slate-50 transition duration-200">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
@@ -644,18 +626,40 @@ const Payments = () => {
                       Receipt
                     </button>
                     <button
-                      onClick={() => handleDeletePayment(payment._id)}
-                      className="text-red-600 hover:text-red-500"
-                    >
-                      Delete
-                    </button>
+                        onClick={() => setDeletingPaymentId(payment._id)}
+                        className="text-red-600 hover:text-red-500"
+                      >
+                        Delete
+                      </button>
                   </td>
                 </tr>
               ))}
             </tbody>
+
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!deletingPaymentId}
+        title="Delete Payment"
+        message="Are you sure you want to delete this payment record?"
+        onConfirm={() => confirmDeletePayment(deletingPaymentId)}
+        onCancel={() => setDeletingPaymentId(null)}
+      />
+      <ConfirmModal
+        open={confirmBulkDelete}
+        title="Delete Selected Payments"
+        message={`Delete ${selectedPaymentIds.length} selected payment(s)? This cannot be undone.`}
+        onConfirm={() => confirmBulkDeletePayments()}
+        onCancel={() => setConfirmBulkDelete(false)}
+      />
+      <ReceiptModal
+        open={showReceipt}
+        onClose={() => { setShowReceipt(false); setReceiptData(null); }}
+        type="payment"
+        data={receiptData}
+      />
     </div>
   );
 };

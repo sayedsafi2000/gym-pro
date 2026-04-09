@@ -26,6 +26,11 @@ const memberSchema = new mongoose.Schema(
       enum: ['Male', 'Female', 'Other'],
       required: [true, 'Gender is required'],
     },
+    deviceUserId: {
+      type: Number,
+      unique: true,
+      sparse: true,
+    },
     joinDate: {
       type: Date,
       required: [true, 'Join date is required'],
