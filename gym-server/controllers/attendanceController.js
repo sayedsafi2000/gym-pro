@@ -83,10 +83,10 @@ exports.getTodayAttendance = async (req, res) => {
     const checkIns = todayLogs.filter((l) => l.type === 'check-in').length;
     const checkOuts = todayLogs.filter((l) => l.type === 'check-out').length;
 
-    // Currently present: members whose last scan today is a check-in
+    // Currently present: members/users whose last scan today is a check-in
     const latestByMember = new Map();
     for (const log of todayLogs) {
-      const key = log.deviceUserId.toString();
+      const key = log.memberId?._id?.toString() || log.deviceUserId?.toString() || log._id.toString();
       if (!latestByMember.has(key)) {
         latestByMember.set(key, log);
       }
@@ -433,6 +433,81 @@ exports.getMemberAttendanceStats = async (req, res) => {
         attendanceRate,
         lastVisit,
         weeklyTrend,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Manual check-in/check-out
+// @route   POST /api/attendance/manual
+exports.createManualAttendance = async (req, res) => {
+  try {
+    const { memberId, type } = req.body;
+
+    if (!memberId) {
+      return res.status(400).json({ success: false, message: 'memberId is required' });
+    }
+
+    const member = await Member.findById(memberId);
+    if (!member) {
+      return res.status(404).json({ success: false, message: 'Member not found' });
+    }
+
+    // Auto-determine type if not provided
+    let attendanceType = type;
+    if (!attendanceType) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const lastRecord = await Attendance.findOne({
+        memberId,
+        timestamp: { $gte: startOfDay },
+      }).sort({ timestamp: -1 });
+
+      if (!lastRecord || lastRecord.type === 'check-out') {
+        attendanceType = 'check-in';
+      } else {
+        attendanceType = 'check-out';
+      }
+    }
+
+    const attendance = await Attendance.create({
+      memberId: member._id,
+      timestamp: new Date(),
+      type: attendanceType,
+      source: 'manual',
+    });
+
+    const populated = await Attendance.findById(attendance._id)
+      .populate('memberId', 'name memberId phone');
+
+    res.status(201).json({ success: true, data: populated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get member's current check-in status today
+// @route   GET /api/attendance/member/:memberId/status
+exports.getMemberCurrentStatus = async (req, res) => {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const lastRecord = await Attendance.findOne({
+      memberId: req.params.memberId,
+      timestamp: { $gte: startOfDay },
+    }).sort({ timestamp: -1 });
+
+    res.json({
+      success: true,
+      data: {
+        checkedIn: lastRecord?.type === 'check-in',
+        lastRecord: lastRecord
+          ? { type: lastRecord.type, timestamp: lastRecord.timestamp, source: lastRecord.source }
+          : null,
       },
     });
   } catch (error) {

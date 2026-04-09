@@ -79,7 +79,7 @@ const Dashboard = () => {
       </section>
 
       {/* Main Stats Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Total Members */}
         <div className="bg-white border border-slate-200 p-6 shadow-sm">
           <p className="text-sm text-slate-500 uppercase tracking-wide">Total Members</p>

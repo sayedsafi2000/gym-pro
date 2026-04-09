@@ -8,7 +8,7 @@ import ReceiptModal from '../components/ReceiptModal';
 
 const MemberDetails = () => {
   const { id } = useParams();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const [member, setMember] = useState(null);
   const [stats, setStats] = useState(null);
   const [payments, setPayments] = useState([]);
@@ -20,9 +20,12 @@ const MemberDetails = () => {
   const [loading, setLoading] = useState(true);
   const [receiptData, setReceiptData] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [memberStatus, setMemberStatus] = useState(null);
+  const [checkingIn, setCheckingIn] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchStatus();
   }, [id]);
 
   useEffect(() => {
@@ -30,6 +33,31 @@ const MemberDetails = () => {
       fetchCalendar();
     }
   }, [calendarMonth, member]);
+
+  const fetchStatus = async () => {
+    try {
+      const res = await api.get(`/attendance/member/${id}/status`);
+      setMemberStatus(res.data.data);
+    } catch (error) {
+      console.error('Error fetching status:', error);
+    }
+  };
+
+  const handleManualCheckin = async () => {
+    setCheckingIn(true);
+    try {
+      const type = memberStatus?.checkedIn ? 'check-out' : 'check-in';
+      await api.post('/attendance/manual', { memberId: id, type });
+      showSuccess(`${member.name} ${type === 'check-in' ? 'checked in' : 'checked out'}`);
+      fetchData();
+      fetchStatus();
+      fetchCalendar();
+    } catch (error) {
+      showError('Failed to record attendance.');
+    } finally {
+      setCheckingIn(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -176,6 +204,17 @@ const MemberDetails = () => {
             )}
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleManualCheckin}
+              disabled={checkingIn}
+              className={`rounded-[5px] px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${
+                memberStatus?.checkedIn
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              {checkingIn ? 'Recording...' : memberStatus?.checkedIn ? 'Check Out' : 'Check In'}
+            </button>
             <Link
               to={`/members/${id}/edit`}
               className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"

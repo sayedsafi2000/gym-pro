@@ -9,12 +9,10 @@ const attendanceSchema = new mongoose.Schema(
     },
     deviceUserId: {
       type: Number,
-      required: [true, 'Device user ID is required'],
     },
     deviceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Device',
-      required: [true, 'Device ID is required'],
     },
     timestamp: {
       type: Date,
@@ -25,6 +23,11 @@ const attendanceSchema = new mongoose.Schema(
       enum: ['check-in', 'check-out'],
       required: [true, 'Attendance type is required'],
     },
+    source: {
+      type: String,
+      enum: ['device', 'manual'],
+      default: 'device',
+    },
     rawLog: {
       type: mongoose.Schema.Types.Mixed,
     },
@@ -32,10 +35,10 @@ const attendanceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Deduplication: compound unique index
+// Deduplication for device entries
 attendanceSchema.index(
   { deviceId: 1, deviceUserId: 1, timestamp: 1 },
-  { unique: true }
+  { unique: true, sparse: true }
 );
 
 // Query performance indexes
