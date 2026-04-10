@@ -30,8 +30,7 @@ services:
       - "80:80"
 
   backup:
-    build:
-      context: ./backup
+    image: ghcr.io/${GITHUB_OWNER}/gym-backup:${IMAGE_TAG}
     container_name: gym-backup
     restart: unless-stopped
     depends_on:
