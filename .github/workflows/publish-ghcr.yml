@@ -51,3 +51,13 @@ jobs:
           tags: |
             ghcr.io/${{ env.OWNER_LC }}/gym-admin-panel:latest
             ghcr.io/${{ env.OWNER_LC }}/gym-admin-panel:${{ github.sha }}
+
+      - name: Build and push backup image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backup
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ env.OWNER_LC }}/gym-backup:latest
+            ghcr.io/${{ env.OWNER_LC }}/gym-backup:${{ github.sha }}
