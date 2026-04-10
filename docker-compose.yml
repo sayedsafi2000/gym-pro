@@ -4,7 +4,7 @@ services:
     container_name: gym-mongo
     restart: unless-stopped
     volumes:
-      - mongo_data:/data/db
+      - ./data/db:/data/db
 
   server:
     build:
@@ -31,5 +31,19 @@ services:
     ports:
       - "80:80"
 
-volumes:
-  mongo_data:
+  backup:
+    build:
+      context: ./backup
+    container_name: gym-backup
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
+      BACKUP_MAX_COUNT: ${BACKUP_MAX_COUNT:-7}
+      GDRIVE_CLIENT_ID: ${GDRIVE_CLIENT_ID:-}
+      GDRIVE_CLIENT_SECRET: ${GDRIVE_CLIENT_SECRET:-}
+      GDRIVE_TOKEN: ${GDRIVE_TOKEN:-}
+      GDRIVE_FOLDER_ID: ${GDRIVE_FOLDER_ID:-}
+    volumes:
+      - ./backups:/backups

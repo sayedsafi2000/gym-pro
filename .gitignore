@@ -1,1 +1,4 @@
 DEPLOY_COMMANDS.local.md
+data/
+backups/
+.env
