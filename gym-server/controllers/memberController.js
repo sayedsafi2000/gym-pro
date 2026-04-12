@@ -11,8 +11,15 @@ const getMembers = async (req, res) => {
     const now = new Date();
     const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    // Only show approved members (pending visible via /members/pending)
-    let query = { status: { $ne: 'pending' } };
+    // Super admin sees all. Regular admin sees approved + their own pending.
+    let query = {};
+    if (req.admin?.role === 'admin') {
+      query.$or = [
+        { status: 'approved' },
+        { status: { $exists: false } },
+        { status: 'pending', addedBy: req.admin._id },
+      ];
+    }
 
     // Search by name or phone
     if (search) {

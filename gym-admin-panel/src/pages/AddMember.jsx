@@ -64,8 +64,9 @@ const AddMember = () => {
         installmentMonths: formData.paymentType === 'monthly' ? (formData.installmentMonths || Math.ceil(packages.find(p => p._id === formData.packageId)?.duration / 30)) : undefined,
       };
 
-      await api.post('/members', submitData);
-      showSuccess('Member created successfully');
+      const res = await api.post('/members', submitData);
+      const isPending = res.data.data?.status === 'pending';
+      showSuccess(isPending ? 'Member created — pending super admin approval' : 'Member created successfully');
       navigate('/members');
     } catch (error) {
       showError('Error creating member. Please try again.');

@@ -205,9 +205,15 @@ const MembersList = () => {
                       <span className="text-sm text-slate-900">{member.expiryDate ? new Date(member.expiryDate).toLocaleDateString() : 'Lifetime'}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border ${getStatusColor(member.expiryDate)}`}>
-                        {getStatusText(member.expiryDate)}
-                      </span>
+                      {member.status === 'pending' ? (
+                        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-orange-200 bg-orange-50 text-orange-700">
+                          Pending Approval
+                        </span>
+                      ) : (
+                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border ${getStatusColor(member.expiryDate)}`}>
+                          {getStatusText(member.expiryDate)}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {member.deviceUserId != null ? (
