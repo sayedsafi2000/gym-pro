@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
 import IncomeChart from '../components/IncomeChart';
+import { isSuperAdmin, hasPermission } from '../utils/auth';
 
 const Dashboard = () => {
   const { showError } = useToast();
@@ -66,60 +68,58 @@ const Dashboard = () => {
 
       {/* Attendance Stats */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+        <Link to="/attendance" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
           <p className="text-sm text-slate-500 uppercase tracking-wide">Check-ins Today</p>
           <p className="mt-4 text-4xl font-semibold text-green-600">{summary?.todayCheckIns || 0}</p>
           <p className="mt-2 text-xs text-slate-500">Fingerprint scans</p>
-        </div>
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+        </Link>
+        <Link to="/attendance" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
           <p className="text-sm text-slate-500 uppercase tracking-wide">Present Now</p>
           <p className="mt-4 text-4xl font-semibold text-blue-600">{summary?.currentlyPresent || 0}</p>
           <p className="mt-2 text-xs text-slate-500">Currently in gym</p>
-        </div>
+        </Link>
       </section>
 
       {/* Main Stats Grid */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Total Members */}
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+        <Link to="/members" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
           <p className="text-sm text-slate-500 uppercase tracking-wide">Total Members</p>
           <p className="mt-4 text-4xl font-semibold text-slate-900">{summary?.totalMembers || 0}</p>
-        </div>
+        </Link>
 
-        {/* Active Members */}
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+        <Link to="/members?status=active" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
           <p className="text-sm text-slate-500 uppercase tracking-wide">Active</p>
           <p className="mt-4 text-4xl font-semibold text-green-600">{summary?.activeMembers || 0}</p>
           <p className="mt-2 text-xs text-slate-500">Valid membership</p>
-        </div>
+        </Link>
 
-        {/* Expiring Members */}
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+        <Link to="/members?status=expiring" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
           <p className="text-sm text-slate-500 uppercase tracking-wide">Expiring Soon</p>
           <p className="mt-4 text-4xl font-semibold text-yellow-600">{summary?.expiringMembers || 0}</p>
-          <p className="mt-2 text-xs text-slate-500">Next 3 days</p>
-        </div>
+          <p className="mt-2 text-xs text-slate-500">Next 7 days</p>
+        </Link>
 
-        {/* Expired Members */}
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+        <Link to="/members?status=expired" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
           <p className="text-sm text-slate-500 uppercase tracking-wide">Expired</p>
           <p className="mt-4 text-4xl font-semibold text-red-600">{summary?.expiredMembers || 0}</p>
           <p className="mt-2 text-xs text-slate-500">Action needed</p>
-        </div>
+        </Link>
 
-        {/* Monthly Income */}
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+        {hasPermission('canViewIncome') && (
+        <Link to="/payments" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
           <p className="text-sm text-slate-500 uppercase tracking-wide">This Month</p>
           <p className="mt-4 text-3xl font-semibold text-slate-900">৳{summary?.monthlyIncome || 0}</p>
           <p className="mt-2 text-xs text-slate-500">Total income</p>
-        </div>
+        </Link>
+        )}
 
-        {/* Total Due */}
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+        {hasPermission('canViewIncome') && (
+        <Link to="/payments" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
           <p className="text-sm text-slate-500 uppercase tracking-wide">Total Due</p>
           <p className="mt-4 text-3xl font-semibold text-red-600">৳{summary?.totalDueAmount || 0}</p>
           <p className="mt-2 text-xs text-slate-500">Outstanding payments</p>
-        </div>
+        </Link>
+        )}
       </section>
 
       {/* Product Analytics Section */}
@@ -187,10 +187,12 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* Income Charts Section */}
+      {/* Income Charts Section — super admin only */}
+      {hasPermission('canViewAnalytics') && (
       <section className="space-y-4">
         <IncomeChart data={chartData?.dailyIncome} monthlyIncome={summary?.monthlyIncome} />
       </section>
+      )}
 
       {/* Alerts + Member Status */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">

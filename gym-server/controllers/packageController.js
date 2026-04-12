@@ -15,8 +15,8 @@ const getPackages = async (req, res) => {
 // @route   POST /api/packages
 const createPackage = async (req, res) => {
   try {
-    const { name, duration, price } = req.body;
-    const pkg = await Package.create({ name, duration, price });
+    const { name, duration, price, description, benefits, category, isLifetime } = req.body;
+    const pkg = await Package.create({ name, duration: isLifetime ? 0 : duration, price, description, benefits, category, isLifetime });
     res.status(201).json({ success: true, data: pkg });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

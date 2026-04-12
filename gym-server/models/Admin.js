@@ -15,6 +15,24 @@ const adminSchema = new mongoose.Schema(
       required: [true, 'Please add a password'],
       minlength: 8,
     },
+    name: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    role: {
+      type: String,
+      enum: ['super_admin', 'admin'],
+      default: 'admin',
+    },
+    permissions: {
+      canViewAnalytics: { type: Boolean, default: false },
+      canManagePackages: { type: Boolean, default: false },
+      canManageDevices: { type: Boolean, default: false },
+      canManageStore: { type: Boolean, default: false },
+      canDeleteMembers: { type: Boolean, default: false },
+      canViewIncome: { type: Boolean, default: false },
+    },
   },
   { timestamps: true }
 );

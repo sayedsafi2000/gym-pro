@@ -9,6 +9,7 @@ const EditMember = () => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    emergencyPhone: '',
     address: '',
     gender: '',
     joinDate: '',
@@ -77,6 +78,7 @@ const EditMember = () => {
         name: member.name,
         phone: member.phone,
         address: member.address || '',
+        emergencyPhone: member.emergencyPhone || '',
         gender: member.gender,
         joinDate: formattedDate,
         packageId: member.packageId._id,
@@ -188,6 +190,17 @@ const EditMember = () => {
                   className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                   placeholder="Enter phone number"
                   required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Emergency Phone</label>
+                <input
+                  type="tel"
+                  name="emergencyPhone"
+                  value={formData.emergencyPhone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                  placeholder="Emergency contact number (optional)"
                 />
               </div>
               <div className="md:col-span-2">

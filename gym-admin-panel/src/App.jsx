@@ -11,6 +11,7 @@ import Store from './pages/Store';
 import Attendance from './pages/Attendance';
 import DeviceManagement from './pages/DeviceManagement';
 import MemberDetails from './pages/MemberDetails';
+import ManageAdmins from './pages/ManageAdmins';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PrivateRoute from './components/PrivateRoute';
@@ -20,7 +21,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
@@ -33,6 +33,7 @@ function App() {
             <Route path="payments" element={<Payments />} />
             <Route path="attendance" element={<Attendance />} />
             <Route path="devices" element={<DeviceManagement />} />
+            <Route path="admins" element={<ManageAdmins />} />
           </Route>
         </Route>
       </Routes>

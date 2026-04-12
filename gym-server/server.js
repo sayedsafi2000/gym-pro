@@ -30,6 +30,7 @@ app.use('/api/payments', protect, require('./routes/paymentRoutes'));
 app.use('/api/products', protect, require('./routes/productRoutes'));
 app.use('/api/attendance', protect, require('./routes/attendanceRoutes'));
 app.use('/api/devices', protect, require('./routes/deviceRoutes'));
+app.use('/api/installments', protect, require('./routes/installmentRoutes'));
 
 const attendanceSyncService = require('./services/attendanceSyncService');
 
