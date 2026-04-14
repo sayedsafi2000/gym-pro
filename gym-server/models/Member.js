@@ -16,6 +16,11 @@ const memberSchema = new mongoose.Schema(
       required: [true, 'Phone number is required'],
       trim: true,
     },
+    emergencyPhone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     address: {
       type: String,
       trim: true,
@@ -62,6 +67,15 @@ const memberSchema = new mongoose.Schema(
       required: true,
       min: [0, 'Due amount cannot be negative'],
       default: 0,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved'],
+      default: 'approved',
+    },
+    addedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Admin',
     },
   },
   { timestamps: true }

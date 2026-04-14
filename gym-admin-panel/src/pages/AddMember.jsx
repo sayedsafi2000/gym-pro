@@ -7,12 +7,14 @@ const AddMember = () => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    emergencyPhone: '',
     address: '',
     gender: '',
     joinDate: '',
     packageId: '',
     paymentType: 'due', // 'full', 'partial', 'due'
     initialPayment: '',
+    installmentMonths: '',
   });
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -59,10 +61,12 @@ const AddMember = () => {
       const submitData = {
         ...formData,
         initialPayment: formData.paymentType === 'partial' ? parseFloat(formData.initialPayment) : undefined,
+        installmentMonths: formData.paymentType === 'monthly' ? (formData.installmentMonths || Math.ceil(packages.find(p => p._id === formData.packageId)?.duration / 30)) : undefined,
       };
 
-      await api.post('/members', submitData);
-      showSuccess('Member created successfully');
+      const res = await api.post('/members', submitData);
+      const isPending = res.data.data?.status === 'pending';
+      showSuccess(isPending ? 'Member created — pending super admin approval' : 'Member created successfully');
       navigate('/members');
     } catch (error) {
       showError('Error creating member. Please try again.');
@@ -118,6 +122,17 @@ const AddMember = () => {
                   className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                   placeholder="Enter phone number"
                   required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Emergency Phone</label>
+                <input
+                  type="tel"
+                  name="emergencyPhone"
+                  value={formData.emergencyPhone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                  placeholder="Emergency contact number (optional)"
                 />
               </div>
               <div className="md:col-span-2">
@@ -195,6 +210,39 @@ const AddMember = () => {
                     </option>
                   ))}
                 </select>
+                {formData.packageId && (() => {
+                  const selectedPkg = packages.find(p => p._id === formData.packageId);
+                  if (!selectedPkg) return null;
+                  return (
+                    <div className="mt-3 bg-slate-50 border border-slate-200 rounded-[5px] p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold text-slate-900">{selectedPkg.name}</h4>
+                        {selectedPkg.category === 'special' && (
+                          <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border border-orange-200 bg-orange-50 text-orange-700">Special Offer</span>
+                        )}
+                      </div>
+                      {selectedPkg.description && (
+                        <p className="text-xs text-slate-500 mb-2">{selectedPkg.description}</p>
+                      )}
+                      <div className="flex gap-4 text-xs text-slate-600">
+                        <span>{selectedPkg.price.toLocaleString()}</span>
+                        <span>{selectedPkg.duration} days</span>
+                      </div>
+                      {selectedPkg.benefits && selectedPkg.benefits.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-slate-200 space-y-1">
+                          {selectedPkg.benefits.map((b, i) => (
+                            <div key={i} className="flex items-center gap-1.5 text-xs text-slate-600">
+                              <svg className="w-3 h-3 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                              {b}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -258,6 +306,22 @@ const AddMember = () => {
                       </div>
                     </div>
                   </label>
+                  <label className="relative">
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value="monthly"
+                      checked={formData.paymentType === 'monthly'}
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 transition-all duration-200 hover:border-purple-300">
+                      <div className="flex items-center gap-2">
+                        <div className="text-lg font-semibold text-slate-800">Monthly Installment</div>
+                      </div>
+                      <div className="text-sm text-slate-600">Pay in equal monthly installments</div>
+                    </div>
+                  </label>
                 </div>
               </div>
 
@@ -285,6 +349,43 @@ const AddMember = () => {
                   )}
                 </div>
               )}
+
+              {formData.paymentType === 'monthly' && formData.packageId && (() => {
+                const selectedPkg = packages.find(p => p._id === formData.packageId);
+                if (!selectedPkg) return null;
+                const months = parseInt(formData.installmentMonths, 10) || Math.ceil(selectedPkg.duration / 30) || 1;
+                const monthlyAmt = Math.ceil(selectedPkg.price / months);
+                return (
+                  <div className="mt-4 bg-purple-50 border border-purple-200 rounded-[5px] p-4 space-y-3">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Number of Months</label>
+                      <input
+                        type="number"
+                        name="installmentMonths"
+                        value={formData.installmentMonths || Math.ceil(selectedPkg.duration / 30)}
+                        onChange={handleChange}
+                        min="2"
+                        max="24"
+                        className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                      />
+                    </div>
+                    <div className="text-sm text-slate-700 space-y-1">
+                      <div className="flex justify-between">
+                        <span>Total Package Price</span>
+                        <span className="font-semibold">৳{selectedPkg.price.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Monthly Payment</span>
+                        <span className="font-semibold text-purple-700">৳{monthlyAmt.toLocaleString()}/month</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>First Payment (today)</span>
+                        <span className="font-semibold text-green-700">৳{monthlyAmt.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
           {formData.packageId && (

@@ -48,7 +48,7 @@ const paymentSchema = new mongoose.Schema(
     },
     paymentType: {
       type: String,
-      enum: ['full', 'partial'],
+      enum: ['full', 'partial', 'monthly'],
       default: 'partial',
     },
   },

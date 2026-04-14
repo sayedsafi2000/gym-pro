@@ -3,25 +3,26 @@ const Payment = require('../models/Payment');
 const Product = require('../models/Product');
 const Attendance = require('../models/Attendance');
 const Device = require('../models/Device');
+const Installment = require('../models/Installment');
 
 exports.getDashboardStats = async (req, res) => {
   try {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     // Get all members
     const allMembers = await Member.countDocuments();
 
-    // Get active members (expiry > 3 days from now)
+    // Get active members (expiry > 7 days from now OR lifetime with null expiry)
     const activeMembers = await Member.countDocuments({
-      expiryDate: { $gt: threeDaysLater },
+      $or: [{ expiryDate: null }, { expiryDate: { $gt: threeDaysLater } }],
     });
 
-    // Get expired members (expiry < now)
+    // Get expired members (expiry < now, exclude lifetime)
     const expiredMembers = await Member.countDocuments({
-      expiryDate: { $lt: now },
+      expiryDate: { $ne: null, $lt: now },
     });
 
     // Get today's income
@@ -240,7 +241,7 @@ exports.getDashboardStats = async (req, res) => {
 exports.getDashboardAlerts = async (req, res) => {
   try {
     const now = new Date();
-    const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const alerts = [];
 
     // Expiring memberships
@@ -294,6 +295,21 @@ exports.getDashboardAlerts = async (req, res) => {
         count: 1,
         message: `${device.name} device sync failed`,
         link: '/devices',
+      });
+    }
+
+    // Overdue installments
+    const overdueInstallments = await Installment.countDocuments({
+      status: 'active',
+      'schedule.status': 'overdue',
+    });
+    if (overdueInstallments > 0) {
+      alerts.push({
+        type: 'installment_overdue',
+        severity: 'warning',
+        count: overdueInstallments,
+        message: `${overdueInstallments} member${overdueInstallments > 1 ? 's' : ''} with overdue installments`,
+        link: '/members',
       });
     }
 

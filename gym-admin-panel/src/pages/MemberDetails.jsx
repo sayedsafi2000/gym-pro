@@ -22,6 +22,7 @@ const MemberDetails = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [memberStatus, setMemberStatus] = useState(null);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [installment, setInstallment] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -75,6 +76,14 @@ const MemberDetails = () => {
     } finally {
       setLoading(false);
     }
+
+    // Fetch installment plan
+    try {
+      const installRes = await api.get(`/installments/member/${id}`);
+      setInstallment(installRes.data.data);
+    } catch (e) {
+      // No installment plan - that's fine
+    }
   };
 
   const fetchCalendar = async () => {
@@ -100,18 +109,20 @@ const MemberDetails = () => {
   };
 
   const getStatusColor = (expiryDate) => {
+    if (!expiryDate) return 'border-blue-200 bg-blue-50 text-blue-700';
     const now = new Date();
     const expiry = new Date(expiryDate);
-    const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     if (expiry < now) return 'border-red-200 bg-red-50 text-red-700';
     if (expiry <= threeDaysLater) return 'border-yellow-200 bg-yellow-50 text-yellow-700';
     return 'border-green-200 bg-green-50 text-green-700';
   };
 
   const getStatusText = (expiryDate) => {
+    if (!expiryDate) return 'Lifetime';
     const now = new Date();
     const expiry = new Date(expiryDate);
-    const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     if (expiry < now) return 'Expired';
     if (expiry <= threeDaysLater) return 'Expiring Soon';
     return 'Active';
@@ -250,6 +261,10 @@ const MemberDetails = () => {
               <p className="text-sm font-medium text-slate-900 mt-0.5">{member.phone}</p>
             </div>
             <div>
+              <p className="text-xs text-slate-500">Emergency Phone</p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5">{member.emergencyPhone || '-'}</p>
+            </div>
+            <div>
               <p className="text-xs text-slate-500">Gender</p>
               <p className="text-sm font-medium text-slate-900 mt-0.5">{member.gender}</p>
             </div>
@@ -263,13 +278,28 @@ const MemberDetails = () => {
             </div>
             <div>
               <p className="text-xs text-slate-500">Expiry Date</p>
-              <p className="text-sm font-medium text-slate-900 mt-0.5">{expiryDate.toLocaleDateString()}</p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5">{member.expiryDate ? new Date(member.expiryDate).toLocaleDateString() : 'Lifetime (No Expiry)'}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500">Package</p>
               <p className="text-sm font-medium text-slate-900 mt-0.5">
                 {member.packageId?.name} ({member.packageId?.duration}d)
               </p>
+              {member.packageId?.description && (
+                <p className="text-xs text-slate-400 mt-0.5">{member.packageId.description}</p>
+              )}
+              {member.packageId?.benefits && member.packageId.benefits.length > 0 && (
+                <div className="mt-1 space-y-0.5">
+                  {member.packageId.benefits.map((b, i) => (
+                    <div key={i} className="flex items-center gap-1 text-xs text-slate-500">
+                      <svg className="w-3 h-3 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {b}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <p className="text-xs text-slate-500">Fingerprint</p>
@@ -305,6 +335,7 @@ const MemberDetails = () => {
           </div>
 
           {/* Progress bar */}
+          {member.expiryDate && (
           <div className="mt-6">
             <h2 className="text-sm text-slate-500 uppercase tracking-wide mb-2">Membership Progress</h2>
             <div className="w-full bg-slate-200 rounded-full h-2.5">
@@ -320,6 +351,7 @@ const MemberDetails = () => {
               </span>
             </div>
           </div>
+          )}
         </div>
       </section>
 
@@ -399,6 +431,59 @@ const MemberDetails = () => {
           )}
         </div>
       </section>
+
+      {/* Installment Schedule */}
+      {installment && (
+        <section className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h3 className="text-sm text-slate-500 uppercase tracking-wide">Installment Plan</h3>
+            <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${
+              installment.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700' :
+              installment.status === 'overdue' ? 'border-red-200 bg-red-50 text-red-700' :
+              'border-blue-200 bg-blue-50 text-blue-700'
+            }`}>
+              {installment.status === 'completed' ? 'Completed' : installment.status === 'overdue' ? 'Overdue' : 'Active'}
+            </span>
+          </div>
+          <div className="px-6 py-3 bg-slate-50 text-xs text-slate-600 flex gap-6">
+            <span>Total: ৳{installment.totalAmount?.toLocaleString()}</span>
+            <span>Monthly: ৳{installment.monthlyAmount?.toLocaleString()}</span>
+            <span>Paid: {installment.paidInstallments}/{installment.totalInstallments} months</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Month</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Amount</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Due Date</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Paid Date</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {installment.schedule?.map((s) => (
+                  <tr key={s.month} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="px-6 py-3 font-medium text-slate-900">Month {s.month}</td>
+                    <td className="px-6 py-3 text-slate-600">৳{s.amount?.toLocaleString()}</td>
+                    <td className="px-6 py-3 text-slate-600">{new Date(s.dueDate).toLocaleDateString()}</td>
+                    <td className="px-6 py-3 text-slate-600">{s.paidDate ? new Date(s.paidDate).toLocaleDateString() : '-'}</td>
+                    <td className="px-6 py-3">
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${
+                        s.status === 'paid' ? 'border-green-200 bg-green-50 text-green-700' :
+                        s.status === 'overdue' ? 'border-red-200 bg-red-50 text-red-700' :
+                        'border-yellow-200 bg-yellow-50 text-yellow-700'
+                      }`}>
+                        {s.status === 'paid' ? 'Paid' : s.status === 'overdue' ? 'Overdue' : 'Pending'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Payment History */}
       <section className="bg-white border border-slate-200 shadow-sm overflow-hidden">

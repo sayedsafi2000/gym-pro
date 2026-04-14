@@ -263,7 +263,7 @@ const generateReceipt = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
       .populate('memberId', 'name memberId phone')
-      .populate('packageId', 'name price duration');
+      .populate('packageId', 'name price duration description benefits');
 
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment not found' });
@@ -284,7 +284,9 @@ const generateReceipt = async (req, res) => {
       package: {
         name: payment.packageId.name,
         price: payment.packageId.price,
-        duration: payment.packageId.duration
+        duration: payment.packageId.duration,
+        description: payment.packageId.description,
+        benefits: payment.packageId.benefits
       },
       payment: {
         originalAmount: payment.originalAmount,

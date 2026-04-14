@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
-import { getToken, setToken } from '../utils/auth';
+import { getToken, setToken, setAdminData } from '../utils/auth';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -28,6 +28,7 @@ const Login = () => {
     try {
       const response = await api.post('/auth/login', formData);
       setToken(response.data.data.token);
+      setAdminData(response.data.data.admin);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
@@ -87,11 +88,8 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm">
-          <span className="text-slate-600">Don't have an account? </span>
-          <Link to="/register" className="text-slate-900 font-medium hover:underline">
-            Create one
-          </Link>
+        <div className="mt-6 text-center text-sm text-slate-500">
+          Contact your super admin to create an account.
         </div>
       </div>
     </div>

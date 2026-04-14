@@ -9,13 +9,31 @@ const packageSchema = new mongoose.Schema(
     },
     duration: {
       type: Number,
-      required: [true, 'Duration (in days) is required'],
-      min: [1, 'Duration must be at least 1 day'],
+      min: [0, 'Duration cannot be negative'],
+      default: 0,
+    },
+    isLifetime: {
+      type: Boolean,
+      default: false,
     },
     price: {
       type: Number,
       required: [true, 'Price is required'],
       min: [0, 'Price cannot be negative'],
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    benefits: [{
+      type: String,
+      trim: true,
+    }],
+    category: {
+      type: String,
+      enum: ['regular', 'special'],
+      default: 'regular',
     },
   },
   { timestamps: true }

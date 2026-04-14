@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 
 const MembersList = () => {
   const { showSuccess, showError } = useToast();
+  const [searchParams] = useSearchParams();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
   const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
@@ -33,9 +34,10 @@ const MembersList = () => {
   };
 
   const getStatusColor = (expiryDate) => {
+    if (!expiryDate) return 'bg-blue-100 text-blue-800 border-blue-200';
     const now = new Date();
     const expiry = new Date(expiryDate);
-    const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     if (expiry < now) return 'bg-red-100 text-red-800 border-red-200';
     if (expiry <= threeDaysLater) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -43,9 +45,10 @@ const MembersList = () => {
   };
 
   const getStatusText = (expiryDate) => {
+    if (!expiryDate) return 'Lifetime';
     const now = new Date();
     const expiry = new Date(expiryDate);
-    const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     if (expiry < now) return 'Expired';
     if (expiry <= threeDaysLater) return 'Expiring Soon';
@@ -199,12 +202,18 @@ const MembersList = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-900">{new Date(member.expiryDate).toLocaleDateString()}</span>
+                      <span className="text-sm text-slate-900">{member.expiryDate ? new Date(member.expiryDate).toLocaleDateString() : 'Lifetime'}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border ${getStatusColor(member.expiryDate)}`}>
-                        {getStatusText(member.expiryDate)}
-                      </span>
+                      {member.status === 'pending' ? (
+                        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-orange-200 bg-orange-50 text-orange-700">
+                          Pending Approval
+                        </span>
+                      ) : (
+                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border ${getStatusColor(member.expiryDate)}`}>
+                          {getStatusText(member.expiryDate)}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {member.deviceUserId != null ? (
