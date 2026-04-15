@@ -89,6 +89,9 @@ exports.getDashboardStats = async (req, res) => {
       },
     ]);
 
+    // Get pending members
+    const pendingMembers = await Member.countDocuments({ status: 'pending' });
+
     // Get member status breakdown
     const expiringMembers = await Member.countDocuments({
       expiryDate: {
@@ -208,6 +211,7 @@ exports.getDashboardStats = async (req, res) => {
           totalMembers: allMembers,
           activeMembers,
           expiredMembers,
+          pendingMembers,
           expiringMembers,
           todayIncome,
           monthlyIncome,
@@ -296,6 +300,20 @@ exports.getDashboardAlerts = async (req, res) => {
         message: `${device.name} device sync failed`,
         link: '/devices',
       });
+    }
+
+    // Pending member approvals (super_admin only)
+    if (req.admin?.role === 'super_admin') {
+      const pendingCount = await Member.countDocuments({ status: 'pending' });
+      if (pendingCount > 0) {
+        alerts.push({
+          type: 'pending_approval',
+          severity: 'warning',
+          count: pendingCount,
+          message: `${pendingCount} member${pendingCount > 1 ? 's' : ''} awaiting approval`,
+          link: '/members?tab=pending',
+        });
+      }
     }
 
     // Overdue installments

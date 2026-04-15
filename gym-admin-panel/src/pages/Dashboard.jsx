@@ -105,6 +105,14 @@ const Dashboard = () => {
           <p className="mt-2 text-xs text-slate-500">Action needed</p>
         </Link>
 
+        {isSuperAdmin() && (summary?.pendingMembers || 0) > 0 && (
+        <Link to="/members?tab=pending" className="bg-white border border-orange-200 p-6 shadow-sm hover:border-orange-300 transition cursor-pointer block">
+          <p className="text-sm text-orange-500 uppercase tracking-wide">Pending Approval</p>
+          <p className="mt-4 text-4xl font-semibold text-orange-600">{summary?.pendingMembers || 0}</p>
+          <p className="mt-2 text-xs text-orange-500">Awaiting approval</p>
+        </Link>
+        )}
+
         {hasPermission('canViewIncome') && (
         <Link to="/payments" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
           <p className="text-sm text-slate-500 uppercase tracking-wide">This Month</p>

@@ -3,19 +3,36 @@ import api from '../services/api';
 import useToast from '../hooks/useToast';
 import { Link, useSearchParams } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
+import { isSuperAdmin } from '../utils/auth';
 
 const MembersList = () => {
   const { showSuccess, showError } = useToast();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
   const [deletingId, setDeletingId] = useState(null);
+  const [tab, setTab] = useState(searchParams.get('tab') || 'all');
+  const [pendingMembers, setPendingMembers] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  const [rejectingId, setRejectingId] = useState(null);
 
   useEffect(() => {
     fetchMembers();
   }, [search, statusFilter]);
+
+  useEffect(() => {
+    if (isSuperAdmin()) {
+      fetchPending();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tab === 'pending' && isSuperAdmin()) {
+      fetchPending();
+    }
+  }, [tab]);
 
   const fetchMembers = async () => {
     try {
@@ -31,6 +48,55 @@ const MembersList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchPending = async () => {
+    setPendingLoading(true);
+    try {
+      const res = await api.get('/members/pending');
+      setPendingMembers(res.data.data);
+    } catch (error) {
+      console.error('Error fetching pending members:', error);
+      showError('Failed to load pending members.');
+    } finally {
+      setPendingLoading(false);
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await api.put(`/members/${id}/approve`);
+      showSuccess('Member approved');
+      setPendingMembers((prev) => prev.filter((m) => m._id !== id));
+      fetchMembers();
+    } catch (error) {
+      console.error('Error approving member:', error);
+      showError('Failed to approve member.');
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      await api.delete(`/members/${id}/reject`);
+      showSuccess('Member rejected');
+      setPendingMembers((prev) => prev.filter((m) => m._id !== id));
+    } catch (error) {
+      console.error('Error rejecting member:', error);
+      showError('Failed to reject member.');
+    } finally {
+      setRejectingId(null);
+    }
+  };
+
+  const switchTab = (newTab) => {
+    setTab(newTab);
+    const params = new URLSearchParams(searchParams);
+    if (newTab === 'all') {
+      params.delete('tab');
+    } else {
+      params.set('tab', newTab);
+    }
+    setSearchParams(params, { replace: true });
   };
 
   const getStatusColor = (expiryDate) => {
@@ -91,8 +157,115 @@ const MembersList = () => {
             Add Member
           </Link>
         </div>
+
+        {isSuperAdmin() && (
+          <div className="flex gap-1 mt-6 border-b border-slate-200">
+            <button
+              onClick={() => switchTab('all')}
+              className={`px-4 py-2.5 text-sm font-medium transition -mb-px ${
+                tab === 'all'
+                  ? 'border-b-2 border-slate-900 text-slate-900'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              All Members
+            </button>
+            <button
+              onClick={() => switchTab('pending')}
+              className={`px-4 py-2.5 text-sm font-medium transition -mb-px flex items-center gap-2 ${
+                tab === 'pending'
+                  ? 'border-b-2 border-orange-600 text-orange-600'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Pending Approval
+              {pendingMembers.length > 0 && tab !== 'pending' && (
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
+                  {pendingMembers.length}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
+      {tab === 'pending' && isSuperAdmin() ? (
+        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+          {pendingLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600"></div>
+            </div>
+          ) : pendingMembers.length === 0 ? (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium text-slate-900 mb-2">No pending approvals</h3>
+              <p className="text-slate-500">All member requests have been reviewed.</p>
+            </div>
+          ) : (
+            <div className="overflow-hidden bg-white border border-slate-200 rounded-[5px]">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Package</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Join Date</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Added By</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-slate-200">
+                    {pendingMembers.map((member) => (
+                      <tr key={member._id} className="hover:bg-slate-50 transition-colors duration-200">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Link to={`/members/${member._id}`} className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">
+                            {member.name}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-slate-600">{member.phone}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-slate-900">{member.packageId?.name || 'N/A'}</div>
+                          {member.packageId?.price != null && (
+                            <div className="text-xs text-slate-500">৳{member.packageId.price}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-slate-600">
+                            {member.joinDate ? new Date(member.joinDate).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-slate-600">
+                            {member.addedBy?.name || member.addedBy?.email || 'Unknown'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => handleApprove(member._id)}
+                              className="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-[5px] transition-colors duration-200"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => setRejectingId(member._id)}
+                              className="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-[5px] transition-colors duration-200"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
       <div className="bg-white border border-slate-200 p-6 shadow-sm">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
@@ -260,12 +433,23 @@ const MembersList = () => {
         )}
       </div>
 
+      )}
+
       <ConfirmModal
         open={!!deletingId}
         title="Delete Member"
         message={`Are you sure you want to delete ${members.find(m => m._id === deletingId)?.name || 'this member'}? This removes all their records.`}
         onConfirm={() => confirmDelete(deletingId)}
         onCancel={() => setDeletingId(null)}
+      />
+
+      <ConfirmModal
+        open={!!rejectingId}
+        title="Reject Member"
+        message={`Are you sure you want to reject ${pendingMembers.find((m) => m._id === rejectingId)?.name || 'this member'}? This will permanently delete their request.`}
+        confirmLabel="Reject"
+        onConfirm={() => handleReject(rejectingId)}
+        onCancel={() => setRejectingId(null)}
       />
     </div>
   );
