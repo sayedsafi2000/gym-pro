@@ -60,9 +60,9 @@ async function syncDevice(device) {
     const uniqueUserIds = [...new Set(logs.map((l) => l.deviceUserId))];
     const members = await Member.find({
       deviceUserId: { $in: uniqueUserIds },
-    }).select('_id deviceUserId');
+    }).select('_id deviceUserId expiryDate');
     const memberMap = new Map(
-      members.map((m) => [m.deviceUserId, m._id])
+      members.map((m) => [m.deviceUserId, { _id: m._id, expiryDate: m.expiryDate }])
     );
 
     // Process logs sequentially (check-in/out depends on order)
@@ -87,7 +87,13 @@ async function syncDevice(device) {
         device._id,
         log.timestamp
       );
-      const memberId = memberMap.get(log.deviceUserId) || null;
+      const memberInfo = memberMap.get(log.deviceUserId);
+      const memberId = memberInfo?._id || null;
+
+      // Skip expired members — do not record attendance
+      if (memberInfo?.expiryDate && memberInfo.expiryDate < new Date()) {
+        continue;
+      }
 
       operations.push({
         updateOne: {

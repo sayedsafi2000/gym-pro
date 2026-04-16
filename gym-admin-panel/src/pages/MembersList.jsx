@@ -227,8 +227,8 @@ const MembersList = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-slate-900">{member.packageId?.name || 'N/A'}</div>
-                          {member.packageId?.price != null && (
-                            <div className="text-xs text-slate-500">৳{member.packageId.price}</div>
+                          {member.packageId?.priceGents != null && (
+                            <div className="text-xs text-slate-500">৳{member.gender === 'Female' ? member.packageId.priceLadies : member.packageId.priceGents}</div>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -352,7 +352,7 @@ const MembersList = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-slate-900">{member.packageId?.name}</div>
-                      <div className="text-xs text-slate-500">৳{member.packageId?.price}</div>
+                      <div className="text-xs text-slate-500">৳{member.gender === 'Female' ? member.packageId?.priceLadies : member.packageId?.priceGents}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="space-y-1">

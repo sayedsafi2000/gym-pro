@@ -3,6 +3,13 @@ import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import useToast from '../hooks/useToast';
 
+// Get effective price for a package based on member gender (includes admission fee if not bundled)
+const getEffectivePrice = (pkg, gender) => {
+  if (!pkg) return 0;
+  const base = gender === 'Female' ? pkg.priceLadies : pkg.priceGents;
+  return pkg.includesAdmission ? base : base + (pkg.admissionFee || 0);
+};
+
 const AddMember = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -44,7 +51,8 @@ const AddMember = () => {
     try {
       // Validate partial payment amount
       if (formData.paymentType === 'partial') {
-        const packagePrice = packages.find(p => p._id === formData.packageId)?.price || 0;
+        const selectedPkg = packages.find(p => p._id === formData.packageId);
+        const packagePrice = getEffectivePrice(selectedPkg, formData.gender);
         const paymentAmount = parseFloat(formData.initialPayment) || 0;
         if (paymentAmount <= 0) {
           showError('Please enter a valid payment amount greater than 0');
@@ -206,7 +214,7 @@ const AddMember = () => {
                   <option value="">Select Package</option>
                   {packages.map((pkg) => (
                     <option key={pkg._id} value={pkg._id}>
-                      {pkg.name} - ৳{pkg.price} ({pkg.duration} days)
+                      {pkg.name} - ৳{getEffectivePrice(pkg, formData.gender)} ({pkg.isLifetime ? 'Lifetime' : `${pkg.duration} days`})
                     </option>
                   ))}
                 </select>
@@ -225,8 +233,11 @@ const AddMember = () => {
                         <p className="text-xs text-slate-500 mb-2">{selectedPkg.description}</p>
                       )}
                       <div className="flex gap-4 text-xs text-slate-600">
-                        <span>{selectedPkg.price.toLocaleString()}</span>
-                        <span>{selectedPkg.duration} days</span>
+                        <span>৳{getEffectivePrice(selectedPkg, formData.gender).toLocaleString()}</span>
+                        <span>{selectedPkg.isLifetime ? 'Lifetime' : `${selectedPkg.duration} days`}</span>
+                        {!selectedPkg.includesAdmission && selectedPkg.admissionFee > 0 && (
+                          <span className="text-amber-600">incl. ৳{selectedPkg.admissionFee} admission</span>
+                        )}
                       </div>
                       {selectedPkg.benefits && selectedPkg.benefits.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-slate-200 space-y-1">
@@ -337,14 +348,14 @@ const AddMember = () => {
                     onChange={handleChange}
                     min="0"
                     step="0.01"
-                    max={packages.find(p => p._id === formData.packageId)?.price || 0}
+                    max={getEffectivePrice(packages.find(p => p._id === formData.packageId), formData.gender)}
                     className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                     placeholder="Enter payment amount"
                     required={formData.paymentType === 'partial'}
                   />
                   {packages.find(p => p._id === formData.packageId) && (
                     <p className="text-sm text-slate-600 mt-1">
-                      Maximum amount: ৳{packages.find(p => p._id === formData.packageId).price}
+                      Maximum amount: ৳{getEffectivePrice(packages.find(p => p._id === formData.packageId), formData.gender)}
                     </p>
                   )}
                 </div>
@@ -353,8 +364,9 @@ const AddMember = () => {
               {formData.paymentType === 'monthly' && formData.packageId && (() => {
                 const selectedPkg = packages.find(p => p._id === formData.packageId);
                 if (!selectedPkg) return null;
+                const effectivePrice = getEffectivePrice(selectedPkg, formData.gender);
                 const months = parseInt(formData.installmentMonths, 10) || Math.ceil(selectedPkg.duration / 30) || 1;
-                const monthlyAmt = Math.ceil(selectedPkg.price / months);
+                const monthlyAmt = Math.ceil(effectivePrice / months);
                 return (
                   <div className="mt-4 bg-purple-50 border border-purple-200 rounded-[5px] p-4 space-y-3">
                     <div>
@@ -371,8 +383,8 @@ const AddMember = () => {
                     </div>
                     <div className="text-sm text-slate-700 space-y-1">
                       <div className="flex justify-between">
-                        <span>Total Package Price</span>
-                        <span className="font-semibold">৳{selectedPkg.price.toLocaleString()}</span>
+                        <span>Total Amount</span>
+                        <span className="font-semibold">৳{effectivePrice.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Monthly Payment</span>
@@ -408,21 +420,26 @@ const AddMember = () => {
                   </span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">Package Price:</span>
+                  <span className="text-slate-500">Total Amount:</span>
                   <span className="font-semibold text-green-600 ml-2">
-                    ৳{packages.find(p => p._id === formData.packageId)?.price || 0}
+                    ৳{getEffectivePrice(packages.find(p => p._id === formData.packageId), formData.gender)}
                   </span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
                   <span className="text-slate-500">Payment Status:</span>
-                  <span className={`font-semibold ml-2 ${
-                    formData.paymentType === 'full' ? 'text-green-600' :
-                    formData.paymentType === 'partial' ? 'text-blue-600' : 'text-orange-600'
-                  }`}>
-                    {formData.paymentType === 'full' && `Paid: ৳${packages.find(p => p._id === formData.packageId)?.price || 0}`}
-                    {formData.paymentType === 'partial' && `Paid: ৳${formData.initialPayment || 0}, Due: ৳${(packages.find(p => p._id === formData.packageId)?.price || 0) - (parseFloat(formData.initialPayment) || 0)}`}
-                    {formData.paymentType === 'due' && `Due: ৳${packages.find(p => p._id === formData.packageId)?.price || 0}`}
-                  </span>
+                  {(() => {
+                    const total = getEffectivePrice(packages.find(p => p._id === formData.packageId), formData.gender);
+                    return (
+                      <span className={`font-semibold ml-2 ${
+                        formData.paymentType === 'full' ? 'text-green-600' :
+                        formData.paymentType === 'partial' ? 'text-blue-600' : 'text-orange-600'
+                      }`}>
+                        {formData.paymentType === 'full' && `Paid: ৳${total}`}
+                        {formData.paymentType === 'partial' && `Paid: ৳${formData.initialPayment || 0}, Due: ৳${total - (parseFloat(formData.initialPayment) || 0)}`}
+                        {formData.paymentType === 'due' && `Due: ৳${total}`}
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

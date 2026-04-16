@@ -18,9 +18,13 @@ const Packages = () => {
   const [benefitInput, setBenefitInput] = useState('');
   const { showSuccess, showError } = useToast();
 
-  const [formData, setFormData] = useState({
-    name: '', duration: '', price: '', description: '', category: 'regular', benefits: [], isLifetime: false,
-  });
+  const defaultForm = {
+    name: '', duration: '', priceGents: '', priceLadies: '', description: '',
+    category: 'regular', benefits: [], isLifetime: false,
+    admissionFee: '0', includesAdmission: false, freeMonths: '0',
+  };
+
+  const [formData, setFormData] = useState(defaultForm);
 
   useEffect(() => {
     fetchPackages();
@@ -39,7 +43,7 @@ const Packages = () => {
 
   const openAdd = () => {
     setEditingPkg(null);
-    setFormData({ name: '', duration: '', price: '', description: '', category: 'regular', benefits: [], isLifetime: false });
+    setFormData(defaultForm);
     setBenefitInput('');
     setShowModal(true);
   };
@@ -49,11 +53,15 @@ const Packages = () => {
     setFormData({
       name: pkg.name,
       duration: String(pkg.duration || ''),
-      price: String(pkg.price),
+      priceGents: String(pkg.priceGents),
+      priceLadies: String(pkg.priceLadies),
       description: pkg.description || '',
       category: pkg.category || 'regular',
       benefits: pkg.benefits || [],
       isLifetime: pkg.isLifetime || false,
+      admissionFee: String(pkg.admissionFee || 0),
+      includesAdmission: pkg.includesAdmission || false,
+      freeMonths: String(pkg.freeMonths || 0),
     });
     setBenefitInput('');
     setShowModal(true);
@@ -63,7 +71,14 @@ const Packages = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const data = { ...formData, duration: Number(formData.duration), price: Number(formData.price) };
+      const data = {
+        ...formData,
+        duration: Number(formData.duration),
+        priceGents: Number(formData.priceGents),
+        priceLadies: Number(formData.priceLadies),
+        admissionFee: Number(formData.admissionFee),
+        freeMonths: Number(formData.freeMonths),
+      };
       if (editingPkg) {
         await api.put(`/packages/${editingPkg._id}`, data);
         showSuccess('Package updated');
@@ -108,6 +123,13 @@ const Packages = () => {
     if (days >= 365) return `${Math.round(days / 365)} year${days >= 730 ? 's' : ''}`;
     if (days >= 30) return `${Math.round(days / 30)} month${days >= 60 ? 's' : ''}`;
     return `${days} days`;
+  };
+
+  const formatPrice = (pkg) => {
+    if (pkg.priceGents === pkg.priceLadies) {
+      return `৳${pkg.priceGents.toLocaleString()}`;
+    }
+    return `৳${pkg.priceGents.toLocaleString()} / ৳${pkg.priceLadies.toLocaleString()}`;
   };
 
   if (loading) {
@@ -162,8 +184,31 @@ const Packages = () => {
               )}
 
               {/* Price */}
-              <p className="text-2xl font-semibold text-slate-900 mt-4">৳{pkg.price.toLocaleString()}</p>
-              <p className="text-xs text-slate-400">{pkg.isLifetime ? 'No expiry' : `${pkg.duration} days`}</p>
+              <div className="mt-4">
+                {(pkg.priceGents ?? pkg.price) === (pkg.priceLadies ?? pkg.price) ? (
+                  <p className="text-2xl font-semibold text-slate-900">৳{(pkg.priceGents ?? pkg.price ?? 0).toLocaleString()}</p>
+                ) : (
+                  <div className="space-y-0.5">
+                    <p className="text-xl font-semibold text-slate-900">
+                      ♂ ৳{(pkg.priceGents ?? 0).toLocaleString()}
+                      <span className="text-slate-300 mx-2">|</span>
+                      ♀ ৳{(pkg.priceLadies ?? 0).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {pkg.isLifetime ? 'No expiry' : `${pkg.duration} days`}
+                  {pkg.freeMonths > 0 && ` · ${pkg.freeMonths} month${pkg.freeMonths > 1 ? 's' : ''} free`}
+                </p>
+              </div>
+
+              {/* Admission fee info */}
+              {!pkg.includesAdmission && (pkg.admissionFee || 0) > 0 && (
+                <p className="text-xs text-amber-600 mt-1">+ ৳{(pkg.admissionFee || 0).toLocaleString()} admission fee</p>
+              )}
+              {pkg.includesAdmission && (
+                <p className="text-xs text-green-600 mt-1">Admission fee included</p>
+              )}
 
               {/* Benefits */}
               {pkg.benefits && pkg.benefits.length > 0 && (
@@ -268,20 +313,34 @@ const Packages = () => {
                 <span className="text-sm text-slate-700">Lifetime package (no expiry)</span>
               </div>
 
-              {/* Price + Duration */}
-              <div className={`grid ${formData.isLifetime ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+              {/* Prices: Gents + Ladies */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Price (৳)</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Price - Gents (৳)</label>
                   <input
                     type="number"
                     required
                     min="0"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    value={formData.priceGents}
+                    onChange={(e) => setFormData({ ...formData, priceGents: e.target.value })}
                     className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
                   />
                 </div>
-                {!formData.isLifetime && (
+                <div>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Price - Ladies (৳)</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={formData.priceLadies}
+                    onChange={(e) => setFormData({ ...formData, priceLadies: e.target.value })}
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Duration (if not lifetime) */}
+              {!formData.isLifetime && (
                 <div>
                   <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Duration (days)</label>
                   <input
@@ -296,7 +355,45 @@ const Packages = () => {
                     <p className="text-xs text-slate-400 mt-1">{formatDuration(Number(formData.duration))}</p>
                   )}
                 </div>
-                )}
+              )}
+
+              {/* Admission Fee + Includes Toggle */}
+              <div className="grid grid-cols-2 gap-4 items-end">
+                <div>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Admission Fee (৳)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.admissionFee}
+                    onChange={(e) => setFormData({ ...formData, admissionFee: e.target.value })}
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pb-2">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.includesAdmission || false}
+                      onChange={(e) => setFormData({ ...formData, includesAdmission: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                  </label>
+                  <span className="text-xs text-slate-600">Admission included in price</span>
+                </div>
+              </div>
+
+              {/* Free Months */}
+              <div>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Free Months Included</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.freeMonths}
+                  onChange={(e) => setFormData({ ...formData, freeMonths: e.target.value })}
+                  placeholder="0"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                />
               </div>
 
               {/* Benefits */}

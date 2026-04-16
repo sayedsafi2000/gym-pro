@@ -292,8 +292,8 @@ const Payments = () => {
                       ? member?.packageId?._id
                       : member?.packageId || '';
                   const memberDue = member?.dueAmount || 0;
-                  const packagePrice =
-                    typeof member?.packageId === 'object' ? member?.packageId?.price || 0 : 0;
+                  const pkgObj = typeof member?.packageId === 'object' ? member?.packageId : null;
+                  const packagePrice = pkgObj ? (member?.gender === 'Female' ? pkgObj.priceLadies : pkgObj.priceGents) || 0 : 0;
                   const baseAmount = memberDue > 0 ? memberDue : packagePrice;
                   const defaultAmount = baseAmount > 0 ? Math.max(1, Math.ceil(baseAmount * 0.5)) : 0;
 
@@ -324,7 +324,7 @@ const Payments = () => {
                 onChange={(e) => {
                   const packageId = e.target.value;
                   const pkg = packages.find((p) => p._id === packageId);
-                  const packagePrice = pkg?.price || 0;
+                  const packagePrice = pkg ? (selectedMember?.gender === 'Female' ? pkg.priceLadies : pkg.priceGents) || 0 : 0;
                   const memberDue = selectedMember?.dueAmount || 0;
                   const capAmount = memberDue > 0
                     ? Math.min(memberDue, packagePrice || memberDue)
@@ -344,18 +344,21 @@ const Payments = () => {
                 <option value="">Select Package</option>
                 {packages.map((pkg) => (
                   <option key={pkg._id} value={pkg._id}>
-                    {pkg.name} - ৳{pkg.price}
+                    {pkg.name} - ৳{selectedMember?.gender === 'Female' ? pkg.priceLadies : pkg.priceGents}
                   </option>
                 ))}
               </select>
-              {selectedPackage && (
-                <p className="mt-2 text-xs text-slate-500">
-                  Suggested amount: $
-                  {selectedMember?.dueAmount > 0
-                    ? Math.max(1, Math.ceil(Math.min(selectedMember.dueAmount, selectedPackage.price) * 0.5))
-                    : Math.max(1, Math.ceil(selectedPackage.price * 0.5))}
-                </p>
-              )}
+              {selectedPackage && (() => {
+                const pkgPrice = selectedMember?.gender === 'Female' ? selectedPackage.priceLadies : selectedPackage.priceGents;
+                return (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Suggested amount: ৳
+                    {selectedMember?.dueAmount > 0
+                      ? Math.max(1, Math.ceil(Math.min(selectedMember.dueAmount, pkgPrice) * 0.5))
+                      : Math.max(1, Math.ceil(pkgPrice * 0.5))}
+                  </p>
+                );
+              })()}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Original Amount *</label>
@@ -369,7 +372,9 @@ const Payments = () => {
                 step="0.01"
                 required
               />
-              {selectedMember?.dueAmount > 0 && (
+              {selectedMember?.dueAmount > 0 && (() => {
+                const pkgPrice = selectedPackage ? (selectedMember?.gender === 'Female' ? selectedPackage.priceLadies : selectedPackage.priceGents) : 0;
+                return (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -380,38 +385,39 @@ const Payments = () => {
                   >
                     Pay Full Due (৳{selectedMember.dueAmount})
                   </button>
-                  {selectedPackage?.price > 0 && (
+                  {pkgPrice > 0 && (
                     <button
                       type="button"
                       onClick={() =>
                         setFormData({
                           ...formData,
-                          originalAmount: String(Math.max(1, Math.ceil(Math.min(selectedMember.dueAmount, selectedPackage.price) * 0.5))),
+                          originalAmount: String(Math.max(1, Math.ceil(Math.min(selectedMember.dueAmount, pkgPrice) * 0.5))),
                           paymentType: 'partial',
                         })
                       }
                       className="rounded-[5px] border border-violet-300 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
                     >
-                      Pay 50% (৳{Math.max(1, Math.ceil(Math.min(selectedMember.dueAmount, selectedPackage.price) * 0.5))})
+                      Pay 50% (৳{Math.max(1, Math.ceil(Math.min(selectedMember.dueAmount, pkgPrice) * 0.5))})
                     </button>
                   )}
-                  {selectedPackage?.price > 0 && (
+                  {pkgPrice > 0 && (
                     <button
                       type="button"
                       onClick={() =>
                         setFormData({
                           ...formData,
-                          originalAmount: String(Math.min(selectedMember.dueAmount, selectedPackage.price)),
-                          paymentType: selectedMember.dueAmount <= selectedPackage.price ? 'full' : 'partial',
+                          originalAmount: String(Math.min(selectedMember.dueAmount, pkgPrice)),
+                          paymentType: selectedMember.dueAmount <= pkgPrice ? 'full' : 'partial',
                         })
                       }
                       className="rounded-[5px] border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
                     >
-                      Set to Package Price (৳{Math.min(selectedMember.dueAmount, selectedPackage.price)})
+                      Set to Package Price (৳{Math.min(selectedMember.dueAmount, pkgPrice)})
                     </button>
                   )}
                 </div>
-              )}
+                );
+              })()}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Discount Amount</label>

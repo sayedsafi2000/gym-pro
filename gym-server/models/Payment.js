@@ -12,6 +12,11 @@ const paymentSchema = new mongoose.Schema(
       ref: 'Package',
       required: [true, 'Package is required'],
     },
+    subscriptionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Subscription',
+      default: null,
+    },
     originalAmount: {
       type: Number,
       required: [true, 'Original amount is required'],

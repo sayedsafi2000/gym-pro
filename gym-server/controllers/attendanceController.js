@@ -455,6 +455,14 @@ exports.createManualAttendance = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Member not found' });
     }
 
+    // Block check-in for expired members
+    if (member.expiryDate && member.expiryDate < new Date()) {
+      return res.status(403).json({
+        success: false,
+        message: `Membership expired on ${member.expiryDate.toLocaleDateString()}. Please renew to check in.`,
+      });
+    }
+
     // Auto-determine type if not provided
     let attendanceType = type;
     if (!attendanceType) {

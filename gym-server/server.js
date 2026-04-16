@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const { seedProducts } = require('./controllers/productController');
 const { seedAdmin } = require('./controllers/authController');
+const { seedPackages } = require('./controllers/packageController');
 
 // Load env vars
 dotenv.config();
@@ -31,6 +32,7 @@ app.use('/api/products', protect, require('./routes/productRoutes'));
 app.use('/api/attendance', protect, require('./routes/attendanceRoutes'));
 app.use('/api/devices', protect, require('./routes/deviceRoutes'));
 app.use('/api/installments', protect, require('./routes/installmentRoutes'));
+app.use('/api/subscriptions', protect, require('./routes/subscriptionRoutes'));
 
 const attendanceSyncService = require('./services/attendanceSyncService');
 
@@ -40,6 +42,7 @@ connectDB()
   .then(async () => {
     await seedProducts();
     await seedAdmin();
+    await seedPackages();
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       attendanceSyncService.start();

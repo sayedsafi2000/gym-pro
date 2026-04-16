@@ -2,6 +2,7 @@ const Member = require('../models/Member');
 const Package = require('../models/Package');
 const Payment = require('../models/Payment');
 const Installment = require('../models/Installment');
+const Subscription = require('../models/Subscription');
 
 // @desc    Get all members (with optional filters)
 // @route   GET /api/members
@@ -40,7 +41,7 @@ const getMembers = async (req, res) => {
     }
 
     const members = await Member.find(query)
-      .populate('packageId', 'name duration price description benefits category isLifetime')
+      .populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime')
       .sort({ createdAt: -1 });
 
     res.json({ success: true, count: members.length, data: members });
@@ -55,7 +56,7 @@ const getMember = async (req, res) => {
   try {
     const member = await Member.findById(req.params.id).populate(
       'packageId',
-      'name duration price'
+      'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime'
     );
     if (!member) {
       return res.status(404).json({ success: false, message: 'Member not found' });
@@ -85,16 +86,20 @@ const createMember = async (req, res) => {
     const count = await Member.countDocuments();
     const memberId = `GYM-${String(count + 1).padStart(3, '0')}`;
 
+    // Calculate total amount based on gender + admission fee
+    const packagePrice = pkg.getPriceForGender(gender);
+    const totalPrice = pkg.getTotalForGender(gender);
+
     // Calculate payment amounts
     let paidAmount = 0;
-    let dueAmount = pkg.price;
+    let dueAmount = totalPrice;
 
     if (paymentType === 'full') {
-      paidAmount = pkg.price;
+      paidAmount = totalPrice;
       dueAmount = 0;
     } else if (paymentType === 'partial' && initialPayment) {
       paidAmount = parseFloat(initialPayment);
-      dueAmount = pkg.price - paidAmount;
+      dueAmount = totalPrice - paidAmount;
     }
 
     // If admin (not super_admin), set status to pending
@@ -110,20 +115,34 @@ const createMember = async (req, res) => {
       joinDate: join,
       expiryDate: expiry,
       packageId,
-      totalAmount: pkg.price,
+      totalAmount: totalPrice,
       paidAmount,
       dueAmount,
       status: memberStatus,
       addedBy: req.admin?._id,
     });
 
+    // Create subscription record (source of truth for access)
+    const subscription = await Subscription.create({
+      memberId: member._id,
+      packageId,
+      startDate: join,
+      endDate: expiry,
+      isLifetime: pkg.isLifetime || false,
+      status: 'active',
+      totalAmount: totalPrice,
+      paidAmount,
+      dueAmount,
+      createdBy: req.admin?._id,
+    });
+
     // Create initial payment record if payment was made
     if ((paymentType === 'full' || paymentType === 'partial') && paidAmount > 0) {
-      const paymentMethod = req.body.paymentMethod || 'Cash'; // Default to Cash
-      console.log('Creating payment:', { memberId: member._id, amount: paidAmount, paymentType });
+      const paymentMethod = req.body.paymentMethod || 'Cash';
       await Payment.create({
         memberId: member._id,
         packageId: packageId,
+        subscriptionId: subscription._id,
         originalAmount: paidAmount,
         discountAmount: 0,
         discountType: 'fixed',
@@ -133,11 +152,10 @@ const createMember = async (req, res) => {
         note: `Initial ${paymentType} payment for membership`,
         paymentType: paymentType === 'full' ? 'full' : 'partial'
       });
-      console.log('Payment created successfully');
     } else if (paymentType === 'monthly') {
       // Create installment plan
       const installmentMonths = parseInt(req.body.installmentMonths, 10) || Math.ceil(pkg.duration / 30) || 1;
-      const monthlyAmount = Math.ceil(pkg.price / installmentMonths);
+      const monthlyAmount = Math.ceil(totalPrice / installmentMonths);
 
       const schedule = [];
       for (let i = 1; i <= installmentMonths; i++) {
@@ -145,7 +163,7 @@ const createMember = async (req, res) => {
         dueDate.setMonth(dueDate.getMonth() + i - 1);
         schedule.push({
           month: i,
-          amount: i === installmentMonths ? pkg.price - monthlyAmount * (installmentMonths - 1) : monthlyAmount,
+          amount: i === installmentMonths ? totalPrice - monthlyAmount * (installmentMonths - 1) : monthlyAmount,
           dueDate,
           status: 'pending',
         });
@@ -157,6 +175,7 @@ const createMember = async (req, res) => {
       const payment = await Payment.create({
         memberId: member._id,
         packageId: packageId,
+        subscriptionId: subscription._id,
         originalAmount: firstAmount,
         finalAmount: firstAmount,
         paymentMethod,
@@ -172,22 +191,25 @@ const createMember = async (req, res) => {
       await Installment.create({
         memberId: member._id,
         packageId: packageId,
-        totalAmount: pkg.price,
+        subscriptionId: subscription._id,
+        totalAmount: totalPrice,
         monthlyAmount,
         totalInstallments: installmentMonths,
         paidInstallments: 1,
         schedule,
       });
 
-      // Update member with first payment
+      // Update member + subscription with first payment
       member.paidAmount = firstAmount;
-      member.dueAmount = pkg.price - firstAmount;
+      member.dueAmount = totalPrice - firstAmount;
       await member.save();
-    } else {
-      console.log('No payment created:', { paymentType, paidAmount });
+
+      subscription.paidAmount = firstAmount;
+      subscription.dueAmount = totalPrice - firstAmount;
+      await subscription.save();
     }
 
-    const populated = await member.populate('packageId', 'name duration price description benefits category isLifetime');
+    const populated = await member.populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime');
     res.status(201).json({ success: true, data: populated });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -237,12 +259,33 @@ const updateMember = async (req, res) => {
       req.body.paidAmount = newPaidAmount;
       req.body.dueAmount = newDueAmount;
 
-      // Auto-renew if fully paid and membership expired
+      // Auto-renew if fully paid and membership expired — create NEW subscription
       if (newDueAmount <= 0 && member.expiryDate && member.expiryDate < new Date()) {
         const pkg = await Package.findById(member.packageId);
         if (pkg) {
-          req.body.joinDate = new Date();
-          req.body.expiryDate = new Date(Date.now() + pkg.duration * 24 * 60 * 60 * 1000);
+          // Expire old subscription
+          const oldSub = await Subscription.findOne({ memberId: member._id, status: 'active' });
+          if (oldSub) await oldSub.expire();
+
+          const newStart = new Date();
+          const newEnd = pkg.isLifetime ? null : new Date(newStart.getTime() + pkg.duration * 24 * 60 * 60 * 1000);
+          const newTotal = pkg.getTotalForGender(member.gender);
+
+          await Subscription.create({
+            memberId: member._id,
+            packageId: member.packageId,
+            startDate: newStart,
+            endDate: newEnd,
+            isLifetime: pkg.isLifetime || false,
+            status: 'active',
+            totalAmount: newTotal,
+            paidAmount: newTotal,
+            dueAmount: 0,
+            createdBy: req.admin?._id,
+          });
+
+          req.body.joinDate = newStart;
+          req.body.expiryDate = newEnd;
         }
       }
     }
@@ -264,15 +307,17 @@ const updateMember = async (req, res) => {
       req.body.expiryDate = new Date(join.getTime() + pkg.duration * 24 * 60 * 60 * 1000);
       req.body.joinDate = join;
 
-      // Update total amount and recalculate due amount
-      req.body.totalAmount = pkg.price;
-      req.body.dueAmount = pkg.price - (req.body.paidAmount || member.paidAmount);
+      // Update total amount and recalculate due amount using member gender
+      const memberGender = req.body.gender || member.gender;
+      const newTotal = pkg.getTotalForGender(memberGender);
+      req.body.totalAmount = newTotal;
+      req.body.dueAmount = newTotal - (req.body.paidAmount || member.paidAmount);
     }
 
     const member = await Member.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    }).populate('packageId', 'name duration price');
+    }).populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime');
 
     if (!member) {
       return res.status(404).json({ success: false, message: 'Member not found' });
@@ -303,7 +348,7 @@ const deleteMember = async (req, res) => {
 const getPendingMembers = async (req, res) => {
   try {
     const members = await Member.find({ status: 'pending' })
-      .populate('packageId', 'name duration price')
+      .populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime')
       .populate('addedBy', 'name email')
       .sort({ createdAt: -1 });
     res.json({ success: true, data: members });
@@ -325,7 +370,7 @@ const approveMember = async (req, res) => {
     }
     member.status = 'approved';
     await member.save();
-    const populated = await member.populate('packageId', 'name duration price');
+    const populated = await member.populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime');
     res.json({ success: true, data: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

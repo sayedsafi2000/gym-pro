@@ -12,6 +12,11 @@ const installmentSchema = new mongoose.Schema(
       ref: 'Package',
       required: true,
     },
+    subscriptionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Subscription',
+      default: null,
+    },
     totalAmount: {
       type: Number,
       required: true,

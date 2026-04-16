@@ -366,7 +366,7 @@ const EditMember = () => {
                   <option value="">Select Package</option>
                   {packages.map((pkg) => (
                     <option key={pkg._id} value={pkg._id}>
-                      {pkg.name} - ৳{pkg.price} ({pkg.duration} days)
+                      {pkg.name} - ৳{formData.gender === 'Female' ? pkg.priceLadies : pkg.priceGents} ({pkg.isLifetime ? 'Lifetime' : `${pkg.duration} days`})
                     </option>
                   ))}
                 </select>
@@ -478,7 +478,7 @@ const EditMember = () => {
                 <div className="bg-white p-4 rounded-[5px]">
                   <span className="text-slate-500">Package Price:</span>
                   <span className="font-semibold text-green-600 ml-2">
-                    ৳{packages.find(p => p._id === formData.packageId)?.price || 0}
+                    ৳{(() => { const p = packages.find(p => p._id === formData.packageId); return p ? (formData.gender === 'Female' ? p.priceLadies : p.priceGents) : 0; })()}
                   </span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
