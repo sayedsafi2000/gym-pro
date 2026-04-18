@@ -79,12 +79,12 @@ async function seed() {
   // 2. Packages
   console.log('Seeding packages...');
   const packages = await Package.insertMany([
-    { name: 'Monthly Basic', duration: 30, price: 1500 },
-    { name: 'Monthly Premium', duration: 30, price: 2500 },
-    { name: 'Quarterly Basic', duration: 90, price: 4000 },
-    { name: 'Quarterly Premium', duration: 90, price: 6500 },
-    { name: 'Half Yearly', duration: 180, price: 8000 },
-    { name: 'Annual', duration: 365, price: 14000 },
+    { name: 'Monthly Basic', duration: 30, priceGents: 1500, priceLadies: 1500 },
+    { name: 'Monthly Premium', duration: 30, priceGents: 2500, priceLadies: 2500 },
+    { name: 'Quarterly Basic', duration: 90, priceGents: 4000, priceLadies: 4000 },
+    { name: 'Quarterly Premium', duration: 90, priceGents: 6500, priceLadies: 6500 },
+    { name: 'Half Yearly', duration: 180, priceGents: 8000, priceLadies: 8000 },
+    { name: 'Annual', duration: 365, priceGents: 14000, priceLadies: 14000 },
   ]);
 
   // 3. Devices
@@ -127,18 +127,18 @@ async function seed() {
     const roll = Math.random();
     if (roll < 0.5) {
       // Full payment
-      paidAmount = pkg.price;
+      paidAmount = pkg.priceGents;
       dueAmount = 0;
       paymentType = 'full';
     } else if (roll < 0.8) {
       // Partial payment
-      paidAmount = Math.round(pkg.price * (randomBetween(30, 70) / 100));
-      dueAmount = pkg.price - paidAmount;
+      paidAmount = Math.round(pkg.priceGents * (randomBetween(30, 70) / 100));
+      dueAmount = pkg.priceGents - paidAmount;
       paymentType = 'partial';
     } else {
       // Unpaid
       paidAmount = 0;
-      dueAmount = pkg.price;
+      dueAmount = pkg.priceGents;
       paymentType = 'due';
     }
 
@@ -152,7 +152,7 @@ async function seed() {
       joinDate,
       expiryDate,
       packageId: pkg._id,
-      totalAmount: pkg.price,
+      totalAmount: pkg.priceGents,
       paidAmount,
       dueAmount,
     };

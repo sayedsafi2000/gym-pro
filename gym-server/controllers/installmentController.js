@@ -7,7 +7,7 @@ const Member = require('../models/Member');
 exports.getMemberInstallment = async (req, res) => {
   try {
     const installment = await Installment.findOne({ memberId: req.params.memberId })
-      .populate('packageId', 'name price duration')
+      .populate('packageId', 'name priceGents priceLadies duration')
       .sort({ createdAt: -1 });
 
     if (!installment) {
@@ -96,7 +96,7 @@ exports.getOverdueInstallments = async (req, res) => {
       'schedule.status': 'overdue',
     })
       .populate('memberId', 'name memberId phone')
-      .populate('packageId', 'name price');
+      .populate('packageId', 'name priceGents priceLadies');
 
     res.json({ success: true, data: overdueInstallments });
   } catch (error) {

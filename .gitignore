@@ -1,4 +1,42 @@
-DEPLOY_COMMANDS.local.md
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build output
+gym-admin-panel/dist/
+dist/
+
+# Docker volumes
 data/
 backups/
-.env
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test output
+test-results/
+playwright-report/
+.gstack/
+
+# Claude Code
+.claude/
+
+# Deployment
+DEPLOY_COMMANDS.local.md

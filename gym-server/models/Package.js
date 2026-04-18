@@ -16,10 +16,29 @@ const packageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    price: {
+    priceGents: {
       type: Number,
-      required: [true, 'Price is required'],
+      required: [true, 'Price (Gents) is required'],
       min: [0, 'Price cannot be negative'],
+    },
+    priceLadies: {
+      type: Number,
+      required: [true, 'Price (Ladies) is required'],
+      min: [0, 'Price cannot be negative'],
+    },
+    admissionFee: {
+      type: Number,
+      default: 0,
+      min: [0, 'Admission fee cannot be negative'],
+    },
+    includesAdmission: {
+      type: Boolean,
+      default: false,
+    },
+    freeMonths: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     description: {
       type: String,
@@ -38,5 +57,16 @@ const packageSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Helper: get price for a given gender
+packageSchema.methods.getPriceForGender = function (gender) {
+  return gender === 'Female' ? this.priceLadies : this.priceGents;
+};
+
+// Helper: get total cost including admission fee if not bundled
+packageSchema.methods.getTotalForGender = function (gender) {
+  const base = this.getPriceForGender(gender);
+  return this.includesAdmission ? base : base + this.admissionFee;
+};
 
 module.exports = mongoose.model('Package', packageSchema);

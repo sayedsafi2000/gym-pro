@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'client/*'
   workflow_dispatch:
 
 jobs:
@@ -18,6 +19,18 @@ jobs:
 
       - name: Set lowercase owner
         run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+
+      - name: Set image tag from branch
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          if [ "$BRANCH" = "main" ]; then
+            echo "IMAGE_TAG=latest" >> "$GITHUB_ENV"
+          else
+            # client/abc-gym → client-abc-gym
+            TAG=$(echo "$BRANCH" | sed 's|/|-|g')
+            echo "IMAGE_TAG=$TAG" >> "$GITHUB_ENV"
+          fi
+          echo "Branch: $BRANCH → Tag: $IMAGE_TAG"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -39,7 +52,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ env.OWNER_LC }}/gym-server:latest
+            ghcr.io/${{ env.OWNER_LC }}/gym-server:${{ env.IMAGE_TAG }}
             ghcr.io/${{ env.OWNER_LC }}/gym-server:${{ github.sha }}
 
       - name: Build and push client image
@@ -49,7 +62,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ env.OWNER_LC }}/gym-admin-panel:latest
+            ghcr.io/${{ env.OWNER_LC }}/gym-admin-panel:${{ env.IMAGE_TAG }}
             ghcr.io/${{ env.OWNER_LC }}/gym-admin-panel:${{ github.sha }}
 
       - name: Build and push backup image
@@ -59,5 +72,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ env.OWNER_LC }}/gym-backup:latest
+            ghcr.io/${{ env.OWNER_LC }}/gym-backup:${{ env.IMAGE_TAG }}
             ghcr.io/${{ env.OWNER_LC }}/gym-backup:${{ github.sha }}

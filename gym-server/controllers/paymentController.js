@@ -1,6 +1,7 @@
 const Payment = require('../models/Payment');
 const Member = require('../models/Member');
 const Package = require('../models/Package');
+const Subscription = require('../models/Subscription');
 
 const calculateDiscountValue = (amount, discountAmount, discountType) => {
   if (!discountAmount || discountAmount <= 0) return 0;
@@ -11,11 +12,12 @@ const calculateDiscountValue = (amount, discountAmount, discountType) => {
 };
 
 const recalculateMemberFinancials = async (memberId) => {
-  const member = await Member.findById(memberId).populate('packageId', 'price');
+  const member = await Member.findById(memberId).populate('packageId', 'priceGents priceLadies admissionFee includesAdmission');
   if (!member) return null;
 
   const payments = await Payment.find({ memberId });
-  const packagePrice = member.packageId?.price || 0;
+  const pkg = member.packageId;
+  const packagePrice = pkg ? pkg.getTotalForGender(member.gender) : 0;
   const totalPaid = payments.reduce((sum, payment) => sum + (payment.finalAmount || 0), 0);
   const totalDiscount = payments.reduce(
     (sum, payment) => sum + Math.max(0, (payment.originalAmount || 0) - (payment.finalAmount || 0)),
@@ -43,7 +45,7 @@ const getPayments = async (req, res) => {
 
     const payments = await Payment.find(filter)
       .populate('memberId', 'name memberId phone totalAmount paidAmount dueAmount')
-      .populate('packageId', 'name price duration')
+      .populate('packageId', 'name priceGents priceLadies duration')
       .sort({ date: -1 });
     console.log('Fetched payments:', payments.length);
     res.json({ success: true, data: payments });
@@ -59,7 +61,7 @@ const getPayment = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
       .populate('memberId', 'name memberId phone totalAmount paidAmount dueAmount')
-      .populate('packageId', 'name price duration');
+      .populate('packageId', 'name priceGents priceLadies duration');
 
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment not found' });
@@ -127,10 +129,14 @@ const createPayment = async (req, res) => {
       });
     }
 
+    // Find active subscription for this member
+    const activeSub = await Subscription.findOne({ memberId, status: 'active' }).sort({ createdAt: -1 });
+
     // Create payment
     const payment = await Payment.create({
       memberId,
       packageId,
+      subscriptionId: activeSub?._id || null,
       originalAmount: parsedOriginalAmount,
       discountAmount: parsedDiscountAmount,
       discountType,
@@ -142,6 +148,15 @@ const createPayment = async (req, res) => {
     });
 
     await recalculateMemberFinancials(memberId);
+
+    // Also update subscription financials if linked
+    if (activeSub) {
+      const subPayments = await Payment.find({ subscriptionId: activeSub._id });
+      const subPaid = subPayments.reduce((sum, p) => sum + (p.finalAmount || 0), 0);
+      activeSub.paidAmount = subPaid;
+      activeSub.dueAmount = Math.max(0, activeSub.totalAmount - subPaid);
+      await activeSub.save();
+    }
 
     await payment.populate([
       { path: 'memberId', select: 'name memberId phone totalAmount paidAmount dueAmount' },
@@ -196,7 +211,7 @@ const updatePayment = async (req, res) => {
       },
       { new: true }
     ).populate('memberId', 'name memberId phone totalAmount paidAmount dueAmount')
-     .populate('packageId', 'name price duration');
+     .populate('packageId', 'name priceGents priceLadies duration');
 
     // Reconcile member totals from source-of-truth payments
     if (finalAmount !== payment.finalAmount || newDiscountValue !== oldDiscountValue) {
@@ -219,9 +234,9 @@ const deletePayment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Payment not found' });
     }
 
-    // In this app flow, deleting a payment is treated as record cleanup.
-    // So we remove the payment entry without changing member ledger values.
+    const memberId = payment.memberId;
     await Payment.findByIdAndDelete(req.params.id);
+    await recalculateMemberFinancials(memberId);
 
     res.json({ success: true, message: 'Payment deleted successfully' });
   } catch (error) {
@@ -244,7 +259,13 @@ const bulkDeletePayments = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No payments found to delete' });
     }
 
+    // Collect unique member IDs before deletion
+    const affectedMemberIds = [...new Set(payments.map(p => p.memberId.toString()))];
+
     await Payment.deleteMany({ _id: { $in: paymentIds } });
+
+    // Recalculate financials for all affected members
+    await Promise.all(affectedMemberIds.map(id => recalculateMemberFinancials(id)));
 
     res.json({
       success: true,
@@ -263,7 +284,7 @@ const generateReceipt = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
       .populate('memberId', 'name memberId phone')
-      .populate('packageId', 'name price duration description benefits');
+      .populate('packageId', 'name priceGents priceLadies admissionFee includesAdmission duration description benefits');
 
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment not found' });
@@ -283,7 +304,8 @@ const generateReceipt = async (req, res) => {
       },
       package: {
         name: payment.packageId.name,
-        price: payment.packageId.price,
+        priceGents: payment.packageId.priceGents,
+        priceLadies: payment.packageId.priceLadies,
         duration: payment.packageId.duration,
         description: payment.packageId.description,
         benefits: payment.packageId.benefits
