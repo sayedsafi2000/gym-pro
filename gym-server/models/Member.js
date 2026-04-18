@@ -49,6 +49,20 @@ const memberSchema = new mongoose.Schema(
       ref: 'Package',
       required: [true, 'Package is required'],
     },
+    // Lifetime membership tracking
+    hasLifetimeMembership: {
+      type: Boolean,
+      default: false,
+    },
+    lifetimePackageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Package',
+      default: null,
+    },
+    freeMonthsEndDate: {
+      type: Date,
+      default: null,
+    },
     // Payment tracking fields
     totalAmount: {
       type: Number,

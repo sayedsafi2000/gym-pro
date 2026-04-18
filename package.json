@@ -1,0 +1,23 @@
+{
+  "name": "gym-pro",
+  "version": "1.0.0",
+  "description": "A complete gym management system with member tracking, fingerprint attendance, store/POS, payments, and analytics.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sayedsafi2000/gym-pro.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sayedsafi2000/gym-pro/issues"
+  },
+  "homepage": "https://github.com/sayedsafi2000/gym-pro#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}

@@ -117,6 +117,13 @@ const Dashboard = () => {
           <p className="mt-2 text-xs text-slate-500">Outstanding payments</p>
         </Link>
         )}
+        {(summary?.needsMonthlyRenewal || 0) > 0 && (
+        <Link to="/members?status=expired" className="bg-white border border-purple-200 p-6 shadow-sm hover:border-purple-300 transition cursor-pointer block">
+          <p className="text-sm text-purple-500 uppercase tracking-wide">Needs Monthly Payment</p>
+          <p className="mt-4 text-4xl font-semibold text-purple-600">{summary?.needsMonthlyRenewal || 0}</p>
+          <p className="mt-2 text-xs text-purple-500">Lifetime members with expired access</p>
+        </Link>
+        )}
       </section>
 
       {/* Product Analytics Section */}

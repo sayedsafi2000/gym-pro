@@ -25,6 +25,12 @@ exports.getDashboardStats = async (req, res) => {
       expiryDate: { $ne: null, $lt: now },
     });
 
+    // Lifetime members needing monthly payment
+    const needsMonthlyRenewal = await Member.countDocuments({
+      hasLifetimeMembership: true,
+      expiryDate: { $ne: null, $lt: now },
+    });
+
     // Get today's income
     const todayPayments = await Payment.aggregate([
       {
@@ -211,6 +217,7 @@ exports.getDashboardStats = async (req, res) => {
           totalMembers: allMembers,
           activeMembers,
           expiredMembers,
+          needsMonthlyRenewal,
           pendingMembers,
           expiringMembers,
           todayIncome,

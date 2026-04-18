@@ -411,10 +411,18 @@ const AddMember = () => {
                   <span className="font-semibold text-slate-800 ml-2">Will be auto-generated</span>
                 </div>
                 <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">Expiry Date:</span>
+                  <span className="text-slate-500">{packages.find(p => p._id === formData.packageId)?.isLifetime ? 'Free Months End:' : 'Expiry Date:'}</span>
                   <span className="font-semibold text-slate-800 ml-2">
                     {formData.joinDate && packages.find(p => p._id === formData.packageId) ?
-                      new Date(new Date(formData.joinDate).getTime() + packages.find(p => p._id === formData.packageId).duration * 24 * 60 * 60 * 1000).toLocaleDateString()
+                      (() => {
+                        const pkg = packages.find(p => p._id === formData.packageId);
+                        const join = new Date(formData.joinDate);
+                        if (pkg.isLifetime) {
+                          const freeEnd = new Date(join.getTime() + (pkg.freeMonths || 0) * 30 * 24 * 60 * 60 * 1000);
+                          return freeEnd.toLocaleDateString() + ` (${pkg.freeMonths} months free, then monthly)`;
+                        }
+                        return new Date(join.getTime() + pkg.duration * 24 * 60 * 60 * 1000).toLocaleDateString();
+                      })()
                       : 'Select join date and package'
                     }
                   </span>

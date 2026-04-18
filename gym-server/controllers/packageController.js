@@ -90,19 +90,6 @@ const seedPackages = async () => {
         benefits: ['1 Month Free Access', 'Lifetime Membership'],
       },
       {
-        name: 'Monthly Prepaid',
-        category: 'regular',
-        isLifetime: false,
-        duration: 30,
-        priceGents: 800,
-        priceLadies: 1000,
-        admissionFee: 4000,
-        includesAdmission: false,
-        freeMonths: 0,
-        description: 'Monthly prepaid membership (admission fee required for new members)',
-        benefits: ['Full Gym Access', '30 Days Validity'],
-      },
-      {
         name: 'Super Saver',
         category: 'special',
         isLifetime: true,
@@ -163,7 +150,7 @@ const seedPackages = async () => {
       },
     ]);
 
-    console.log('Seeded 6 default packages');
+    console.log('Seeded 5 default packages');
   } catch (error) {
     console.error('Package seed failed:', error.message);
   }

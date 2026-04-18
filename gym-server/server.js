@@ -43,6 +43,13 @@ connectDB()
     await seedProducts();
     await seedAdmin();
     await seedPackages();
+    // Seed GymConfig singleton
+    const GymConfig = require('./models/GymConfig');
+    const configCount = await GymConfig.countDocuments();
+    if (configCount === 0) {
+      await GymConfig.create({});
+      console.log('Seeded GymConfig (monthly: ৳800/৳1000, 30 days)');
+    }
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       attendanceSyncService.start();

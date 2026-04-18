@@ -80,7 +80,11 @@ const createMember = async (req, res) => {
     }
 
     const join = joinDate ? new Date(joinDate) : new Date();
-    const expiry = pkg.isLifetime ? null : new Date(join.getTime() + pkg.duration * 24 * 60 * 60 * 1000);
+    // Lifetime packages: expiry = end of free months (not null)
+    // Non-lifetime: expiry = join + duration days
+    const expiry = pkg.isLifetime
+      ? new Date(join.getTime() + (pkg.freeMonths || 0) * 30 * 24 * 60 * 60 * 1000)
+      : new Date(join.getTime() + pkg.duration * 24 * 60 * 60 * 1000);
 
     // Generate memberId
     const count = await Member.countDocuments();
@@ -115,6 +119,9 @@ const createMember = async (req, res) => {
       joinDate: join,
       expiryDate: expiry,
       packageId,
+      hasLifetimeMembership: pkg.isLifetime || false,
+      lifetimePackageId: pkg.isLifetime ? packageId : null,
+      freeMonthsEndDate: pkg.isLifetime ? expiry : null,
       totalAmount: totalPrice,
       paidAmount,
       dueAmount,
@@ -123,11 +130,12 @@ const createMember = async (req, res) => {
     });
 
     // Create subscription record (source of truth for access)
+    // Lifetime subs store endDate:null; free-months window lives on Member
     const subscription = await Subscription.create({
       memberId: member._id,
       packageId,
       startDate: join,
-      endDate: expiry,
+      endDate: pkg.isLifetime ? null : expiry,
       isLifetime: pkg.isLifetime || false,
       status: 'active',
       totalAmount: totalPrice,

@@ -9,6 +9,9 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.admin = await Admin.findById(decoded.id).select('-password');
+      if (!req.admin) {
+        return res.status(401).json({ success: false, message: 'Admin account not found' });
+      }
       return next();
     } catch (error) {
       console.error(error);
@@ -22,6 +25,7 @@ const protect = async (req, res, next) => {
 };
 
 const requireRole = (...roles) => (req, res, next) => {
+  if (!req.admin) return res.status(401).json({ success: false, message: 'Not authorized' });
   if (!roles.includes(req.admin.role)) {
     return res.status(403).json({ success: false, message: 'Access denied' });
   }
@@ -29,6 +33,7 @@ const requireRole = (...roles) => (req, res, next) => {
 };
 
 const requirePermission = (permission) => (req, res, next) => {
+  if (!req.admin) return res.status(401).json({ success: false, message: 'Not authorized' });
   if (req.admin.role === 'super_admin') return next();
   if (req.admin.permissions && req.admin.permissions[permission]) return next();
   return res.status(403).json({ success: false, message: 'Permission denied' });

@@ -10,7 +10,12 @@ const subscriptionSchema = new mongoose.Schema(
     packageId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Package',
-      required: [true, 'Package is required'],
+      default: null,
+    },
+    type: {
+      type: String,
+      enum: ['package', 'monthly'],
+      default: 'package',
     },
     startDate: {
       type: Date,
