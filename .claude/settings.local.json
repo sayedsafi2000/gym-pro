@@ -54,7 +54,32 @@
       "Bash(node -e \"require\\('./controllers/memberController'\\); console.log\\('OK'\\);\")",
       "Bash(npm run *)",
       "Bash(ls /d/Personal_Projects/gym-pro/gym-server/*.js)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(npx playwright *)",
+      "Bash(npm init *)",
+      "Bash(chmod +x D:/Personal_Projects/gym-pro/deploy/*.sh)",
+      "Bash(bun --version)",
+      "Bash(bun build *)",
+      "Bash(bash ~/.claude/skills/gstack/browse/scripts/build-node-server.sh)",
+      "Read(//c/Users/KIBRIA/.gstack/**)",
+      "Read(//c/Users/KIBRIA/.gstack/browse/**)",
+      "Bash(BROWSE_PARENT_PID=0 ~/.claude/skills/gstack/browse/dist/browse stop sleep 1 BROWSE_PARENT_PID=0 ~/.claude/skills/gstack/browse/dist/browse goto http://localhost BROWSE_PARENT_PID=0 ~/.claude/skills/gstack/browse/dist/browse fill \"input[name='email']\" \"admin@gym.com\" BROWSE_PARENT_PID=0 ~/.claude/skills/gstack/browse/dist/browse fill \"input[name='password']\" \"Password123\" BROWSE_PARENT_PID=0 ~/.claude/skills/gstack/browse/dist/browse click \"button[type='submit']\" sleep 3 BROWSE_PARENT_PID=0 ~/.claude/skills/gstack/browse/dist/browse goto http://localhost/members/69e1b6579739637c30ff960e sleep 3 BROWSE_PARENT_PID=0 ~/.claude/skills/gstack/browse/dist/browse click \"button:has-text\\('Pay Monthly'\\)\" sleep 2 BROWSE_PARENT_PID=0 ~/.claude/skills/gstack/browse/dist/browse screenshot .gstack/qa-reports/screenshots/ui-04-pay-monthly-modal.png BROWSE_PARENT_PID=0 ~/.claude/skills/gstack/browse/dist/browse snapshot -i -o .gstack/qa-reports/screenshots/ui-04-modal-ann.png)",
+      "Bash(python -m json.tool)",
+      "Bash(node .gstack/qa-reports/verify-editmember-fix.mjs)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec gym-server node /app/migrate-products.js)",
+      "Bash(node .gstack/qa-reports/verify-receipt-monthly.mjs)",
+      "Bash(grep -v \":0$\")",
+      "Bash(node -e \"process.stdin.on\\('data',d=>{const j=JSON.parse\\(d.toString\\(\\)\\);console.log\\(j.data.token\\)}\\)\")",
+      "Read(//tmp/**)",
+      "Bash(node -e \"process.stdin.on\\('data',d=>{const j=JSON.parse\\(d.toString\\(\\)\\);console.log\\('data.length:',j.data.length,'pagination:',JSON.stringify\\(j.pagination\\)\\)}\\)\")",
+      "Bash(node .gstack/qa-reports/verify-pagination.mjs)",
+      "Bash(bash .gstack/qa-reports/dark-sweep.sh)",
+      "Bash(node --input-type=module -e ' *)",
+      "Bash(node .gstack/qa-reports/verify-darkmode.mjs)",
+      "Bash(node .gstack/qa-reports/dark-sweep-safe.mjs)",
+      "Bash(node .gstack/qa-reports/dark-tables-fix.mjs)",
+      "Bash(node .gstack/qa-reports/dark-audit-all.mjs)",
+      "Bash(node *)"
     ]
   }
 }

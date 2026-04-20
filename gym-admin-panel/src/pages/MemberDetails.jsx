@@ -193,13 +193,13 @@ const MemberDetails = () => {
   };
 
   const getStatusColor = (expiryDate) => {
-    if (!expiryDate) return 'border-blue-200 bg-blue-50 text-blue-700';
+    if (!expiryDate) return 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800/60 dark:bg-blue-900/30 dark:text-blue-300';
     const now = new Date();
     const expiry = new Date(expiryDate);
     const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    if (expiry < now) return 'border-red-200 bg-red-50 text-red-700';
-    if (expiry <= threeDaysLater) return 'border-yellow-200 bg-yellow-50 text-yellow-700';
-    return 'border-green-200 bg-green-50 text-green-700';
+    if (expiry < now) return 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-900/30 dark:text-red-300';
+    if (expiry <= threeDaysLater) return 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800/60 dark:bg-yellow-900/30 dark:text-yellow-300';
+    return 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300';
   };
 
   const getStatusText = (expiryDate) => {
@@ -242,8 +242,8 @@ const MemberDetails = () => {
   if (!member) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-xl font-semibold text-slate-900">Member not found</h2>
-        <Link to="/members" className="text-sm text-blue-600 hover:underline mt-2 inline-block">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Member not found</h2>
+        <Link to="/members" className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block">
           Back to Members
         </Link>
       </div>
@@ -284,28 +284,28 @@ const MemberDetails = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <section className="bg-white border border-slate-200 p-8 shadow-sm">
+      <section className="bg-white border border-slate-200 p-8 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <Link to="/members" className="text-sm text-slate-500 hover:text-slate-700 transition-colors">
+            <Link to="/members" className="text-sm text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400">
               &larr; Back to Members
             </Link>
             <div className="flex items-center gap-3 mt-2">
-              <h1 className="text-3xl font-semibold text-slate-900">{member.name}</h1>
-              <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-slate-300 bg-slate-100 text-slate-700">
+              <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">{member.name}</h1>
+              <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-slate-300 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600">
                 {member.memberId}
               </span>
               <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border ${getStatusColor(member.expiryDate)}`}>
                 {getStatusText(member.expiryDate)}
               </span>
               {member.hasLifetimeMembership && (
-                <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-blue-200 bg-blue-50 text-blue-700">
+                <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-blue-200 dark:border-blue-800/60 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                   Lifetime Member
                 </span>
               )}
             </div>
             {stats?.lastVisit && (
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 Last visit: {timeAgo(stats.lastVisit)} ({new Date(stats.lastVisit).toLocaleDateString()})
               </p>
             )}
@@ -342,20 +342,20 @@ const MemberDetails = () => {
             )}
             <Link
               to={`/members/${id}/edit`}
-              className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+              className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
             >
               Edit Member
             </Link>
             <Link
               to="/payments"
-              className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+              className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
             >
               Record Payment
             </Link>
             {!member.deviceUserId && (
               <Link
                 to={`/members/${id}/edit`}
-                className="rounded-[5px] border border-yellow-300 bg-yellow-50 px-4 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100 transition"
+                className="rounded-[5px] border border-yellow-300 bg-yellow-50 dark:bg-yellow-900/30 px-4 py-2 text-sm font-medium text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 transition"
               >
                 Register Fingerprint
               </Link>
@@ -367,36 +367,36 @@ const MemberDetails = () => {
       {/* Member Info + Financial */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Info */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 p-6 shadow-sm">
-          <h2 className="text-sm text-slate-500 uppercase tracking-wide mb-4">Personal Information</h2>
+        <div className="lg:col-span-2 bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+          <h2 className="text-sm text-slate-500 uppercase tracking-wide mb-4 dark:text-slate-400">Personal Information</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6">
             <div>
-              <p className="text-xs text-slate-500">Phone</p>
-              <p className="text-sm font-medium text-slate-900 mt-0.5">{member.phone}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Phone</p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5 dark:text-slate-100">{member.phone}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Emergency Phone</p>
-              <p className="text-sm font-medium text-slate-900 mt-0.5">{member.emergencyPhone || '-'}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Emergency Phone</p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5 dark:text-slate-100">{member.emergencyPhone || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Gender</p>
-              <p className="text-sm font-medium text-slate-900 mt-0.5">{member.gender}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Gender</p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5 dark:text-slate-100">{member.gender}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Address</p>
-              <p className="text-sm font-medium text-slate-900 mt-0.5">{member.address || '-'}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Address</p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5 dark:text-slate-100">{member.address || '-'}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Join Date</p>
-              <p className="text-sm font-medium text-slate-900 mt-0.5">{joinDate.toLocaleDateString()}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Join Date</p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5 dark:text-slate-100">{joinDate.toLocaleDateString()}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Expiry Date</p>
-              <p className="text-sm font-medium text-slate-900 mt-0.5">{member.expiryDate ? new Date(member.expiryDate).toLocaleDateString() : 'Lifetime (No Expiry)'}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Expiry Date</p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5 dark:text-slate-100">{member.expiryDate ? new Date(member.expiryDate).toLocaleDateString() : 'Lifetime (No Expiry)'}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Package</p>
-              <p className="text-sm font-medium text-slate-900 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400">Package</p>
+              <p className="text-sm font-medium text-slate-900 mt-0.5 dark:text-slate-100">
                 {member.packageId?.name} ({member.packageId?.duration}d)
               </p>
               {member.packageId?.description && (
@@ -405,7 +405,7 @@ const MemberDetails = () => {
               {member.packageId?.benefits && member.packageId.benefits.length > 0 && (
                 <div className="mt-1 space-y-0.5">
                   {member.packageId.benefits.map((b, i) => (
-                    <div key={i} className="flex items-center gap-1 text-xs text-slate-500">
+                    <div key={i} className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                       <svg className="w-3 h-3 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
@@ -416,10 +416,10 @@ const MemberDetails = () => {
               )}
             </div>
             <div>
-              <p className="text-xs text-slate-500">Fingerprint</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Fingerprint</p>
               <p className="text-sm font-medium mt-0.5">
                 {member.deviceUserId ? (
-                  <span className="text-green-700">Registered (ID: {member.deviceUserId})</span>
+                  <span className="text-green-700 dark:text-green-300">Registered (ID: {member.deviceUserId})</span>
                 ) : (
                   <span className="text-slate-400">Not registered</span>
                 )}
@@ -429,19 +429,19 @@ const MemberDetails = () => {
         </div>
 
         {/* Financial + Progress */}
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
-          <h2 className="text-sm text-slate-500 uppercase tracking-wide mb-4">Financial</h2>
+        <div className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+          <h2 className="text-sm text-slate-500 uppercase tracking-wide mb-4 dark:text-slate-400">Financial</h2>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-slate-600">Total</span>
-              <span className="text-sm font-semibold text-slate-900">৳{member.totalAmount}</span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">Total</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">৳{member.totalAmount}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-slate-600">Paid</span>
-              <span className="text-sm font-semibold text-green-600">৳{member.paidAmount}</span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">Paid</span>
+              <span className="text-sm font-semibold text-green-600 dark:text-green-400">৳{member.paidAmount}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-slate-600">Due</span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">Due</span>
               <span className={`text-sm font-semibold ${member.dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
                 ৳{member.dueAmount}
               </span>
@@ -451,14 +451,14 @@ const MemberDetails = () => {
           {/* Progress bar */}
           {member.expiryDate && (
           <div className="mt-6">
-            <h2 className="text-sm text-slate-500 uppercase tracking-wide mb-2">Membership Progress</h2>
+            <h2 className="text-sm text-slate-500 uppercase tracking-wide mb-2 dark:text-slate-400">Membership Progress</h2>
             <div className="w-full bg-slate-200 rounded-full h-2.5">
               <div
                 className={`h-2.5 rounded-full ${progressColor()} transition-all duration-500`}
                 style={{ width: `${progressPct}%` }}
               ></div>
             </div>
-            <div className="flex justify-between mt-2 text-xs text-slate-500">
+            <div className="flex justify-between mt-2 text-xs text-slate-500 dark:text-slate-400">
               <span>{elapsed} of {totalDays} days</span>
               <span className={daysRemaining === 0 ? 'text-red-600 font-semibold' : ''}>
                 {daysRemaining > 0 ? `${daysRemaining} days left` : 'Expired'}
@@ -472,29 +472,29 @@ const MemberDetails = () => {
       {/* Attendance Stats */}
       {stats && (
         <section className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Total Visits</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{stats.totalVisits}</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Total Visits</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-slate-100">{stats.totalVisits}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">This Month</p>
-            <p className="mt-2 text-3xl font-semibold text-blue-600">{stats.thisMonthVisits}</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">This Month</p>
+            <p className="mt-2 text-3xl font-semibold text-blue-600 dark:text-blue-400">{stats.thisMonthVisits}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Avg / Week</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{stats.avgPerWeek}</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Avg / Week</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-slate-100">{stats.avgPerWeek}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Avg Session</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{formatDuration(stats.avgSessionMinutes)}</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Avg Session</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-slate-100">{formatDuration(stats.avgSessionMinutes)}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Streak</p>
-            <p className="mt-2 text-3xl font-semibold text-orange-600">{stats.currentStreak}d</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Streak</p>
+            <p className="mt-2 text-3xl font-semibold text-orange-600 dark:text-orange-400">{stats.currentStreak}d</p>
           </div>
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Attendance</p>
-            <p className="mt-2 text-3xl font-semibold text-green-600">{stats.attendanceRate}%</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Attendance</p>
+            <p className="mt-2 text-3xl font-semibold text-green-600 dark:text-green-400">{stats.attendanceRate}%</p>
           </div>
         </section>
       )}
@@ -516,8 +516,8 @@ const MemberDetails = () => {
         </div>
 
         {/* Weekly trend chart */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 p-6 shadow-sm">
-          <h3 className="text-sm text-slate-500 uppercase tracking-wide mb-4">Weekly Visit Trend</h3>
+        <div className="lg:col-span-2 bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+          <h3 className="text-sm text-slate-500 uppercase tracking-wide mb-4 dark:text-slate-400">Weekly Visit Trend</h3>
           {stats?.weeklyTrend?.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={stats.weeklyTrend}>
@@ -548,18 +548,18 @@ const MemberDetails = () => {
 
       {/* Installment Schedule */}
       {installment && (
-        <section className="bg-white border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-            <h3 className="text-sm text-slate-500 uppercase tracking-wide">Installment Plan</h3>
+        <section className="bg-white border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700">
+          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+            <h3 className="text-sm text-slate-500 uppercase tracking-wide dark:text-slate-400">Installment Plan</h3>
             <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${
-              installment.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700' :
-              installment.status === 'overdue' ? 'border-red-200 bg-red-50 text-red-700' :
-              'border-blue-200 bg-blue-50 text-blue-700'
+              installment.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300' :
+              installment.status === 'overdue' ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-900/30 dark:text-red-300' :
+              'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800/60 dark:bg-blue-900/30 dark:text-blue-300'
             }`}>
               {installment.status === 'completed' ? 'Completed' : installment.status === 'overdue' ? 'Overdue' : 'Active'}
             </span>
           </div>
-          <div className="px-6 py-3 bg-slate-50 text-xs text-slate-600 flex gap-6">
+          <div className="px-6 py-3 bg-slate-50 text-xs text-slate-600 flex gap-6 dark:bg-slate-950 dark:text-slate-400">
             <span>Total: ৳{installment.totalAmount?.toLocaleString()}</span>
             <span>Monthly: ৳{installment.monthlyAmount?.toLocaleString()}</span>
             <span>Paid: {installment.paidInstallments}/{installment.totalInstallments} months</span>
@@ -567,26 +567,26 @@ const MemberDetails = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Month</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Amount</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Due Date</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Paid Date</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Status</th>
+                <tr className="border-b border-slate-200 bg-slate-100 dark:bg-slate-800/60 dark:border-slate-700">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Month</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Amount</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Due Date</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Paid Date</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {installment.schedule?.map((s) => (
-                  <tr key={s.month} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-3 font-medium text-slate-900">Month {s.month}</td>
-                    <td className="px-6 py-3 text-slate-600">৳{s.amount?.toLocaleString()}</td>
-                    <td className="px-6 py-3 text-slate-600">{new Date(s.dueDate).toLocaleDateString()}</td>
-                    <td className="px-6 py-3 text-slate-600">{s.paidDate ? new Date(s.paidDate).toLocaleDateString() : '-'}</td>
+                  <tr key={s.month} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <td className="px-6 py-3 font-medium text-slate-900 dark:text-slate-100">Month {s.month}</td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-400">৳{s.amount?.toLocaleString()}</td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{new Date(s.dueDate).toLocaleDateString()}</td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{s.paidDate ? new Date(s.paidDate).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-3">
                       <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${
-                        s.status === 'paid' ? 'border-green-200 bg-green-50 text-green-700' :
-                        s.status === 'overdue' ? 'border-red-200 bg-red-50 text-red-700' :
-                        'border-yellow-200 bg-yellow-50 text-yellow-700'
+                        s.status === 'paid' ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300' :
+                        s.status === 'overdue' ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-900/30 dark:text-red-300' :
+                        'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800/60 dark:bg-yellow-900/30 dark:text-yellow-300'
                       }`}>
                         {s.status === 'paid' ? 'Paid' : s.status === 'overdue' ? 'Overdue' : 'Pending'}
                       </span>
@@ -600,22 +600,22 @@ const MemberDetails = () => {
       )}
 
       {/* Payment History */}
-      <section className="bg-white border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-sm text-slate-500 uppercase tracking-wide">Payment History</h3>
+      <section className="bg-white border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+          <h3 className="text-sm text-slate-500 uppercase tracking-wide dark:text-slate-400">Payment History</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Date</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Package</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Amount</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Discount</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Final</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Method</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Type</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide"></th>
+              <tr className="border-b border-slate-200 bg-slate-100 dark:bg-slate-800/60 dark:border-slate-700">
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Date</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Package</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Amount</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Discount</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Final</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Method</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Type</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400"></th>
               </tr>
             </thead>
             <tbody>
@@ -627,28 +627,28 @@ const MemberDetails = () => {
                 </tr>
               ) : (
                 payments.map((p) => (
-                  <tr key={p._id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-3 text-slate-600">{new Date(p.date).toLocaleDateString()}</td>
-                    <td className="px-6 py-3 text-slate-900">
+                  <tr key={p._id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{new Date(p.date).toLocaleDateString()}</td>
+                    <td className="px-6 py-3 text-slate-900 dark:text-slate-100">
                       {p.paymentType === 'monthly_renewal' || p.paymentType === 'monthly'
                         ? 'Monthly Access'
                         : p.packageId?.name || '-'}
                     </td>
-                    <td className="px-6 py-3 text-slate-600">৳{p.originalAmount}</td>
-                    <td className="px-6 py-3 text-slate-600">
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-400">৳{p.originalAmount}</td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-400">
                       {p.discountAmount > 0
                         ? `${p.discountAmount}${p.discountType === 'percentage' ? '%' : '৳'}`
                         : '-'}
                     </td>
-                    <td className="px-6 py-3 font-semibold text-slate-900">৳{p.finalAmount}</td>
-                    <td className="px-6 py-3 text-slate-600">{p.paymentMethod}</td>
+                    <td className="px-6 py-3 font-semibold text-slate-900 dark:text-slate-100">৳{p.finalAmount}</td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{p.paymentMethod}</td>
                     <td className="px-6 py-3">
                       <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${
                         p.paymentType === 'full'
-                          ? 'border-green-200 bg-green-50 text-green-700'
+                          ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300'
                           : p.paymentType === 'monthly_renewal' || p.paymentType === 'monthly'
-                          ? 'border-purple-200 bg-purple-50 text-purple-700'
-                          : 'border-yellow-200 bg-yellow-50 text-yellow-700'
+                          ? 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800/60 dark:bg-purple-900/30 dark:text-purple-300'
+                          : 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800/60 dark:bg-yellow-900/30 dark:text-yellow-300'
                       }`}>
                         {p.paymentType === 'full'
                           ? 'Full'
@@ -660,7 +660,7 @@ const MemberDetails = () => {
                     <td className="px-6 py-3">
                       <button
                         onClick={() => handleViewReceipt(p._id)}
-                        className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                        className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                       >
                         Receipt
                       </button>
@@ -675,20 +675,20 @@ const MemberDetails = () => {
 
       {/* Subscription History */}
       {subscriptions.length > 0 && (
-        <section className="bg-white border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200">
-            <h3 className="text-sm text-slate-500 uppercase tracking-wide">Subscription History</h3>
+        <section className="bg-white border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+            <h3 className="text-sm text-slate-500 uppercase tracking-wide dark:text-slate-400">Subscription History</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Package</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Start</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">End</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Amount</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Paid</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Status</th>
+                <tr className="border-b border-slate-200 bg-slate-100 dark:bg-slate-800/60 dark:border-slate-700">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Package</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Start</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">End</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Amount</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Paid</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -705,17 +705,17 @@ const MemberDetails = () => {
                   const packageLabel =
                     sub.type === 'monthly' ? 'Monthly Access' : sub.packageId?.name || '-';
                   return (
-                    <tr key={sub._id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-6 py-3 font-medium text-slate-900">{packageLabel}</td>
-                      <td className="px-6 py-3 text-slate-600">{new Date(sub.startDate).toLocaleDateString()}</td>
-                      <td className="px-6 py-3 text-slate-600">{sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'Lifetime'}</td>
-                      <td className="px-6 py-3 text-slate-600">৳{sub.totalAmount?.toLocaleString()}</td>
-                      <td className="px-6 py-3 text-slate-600">৳{sub.paidAmount?.toLocaleString()}</td>
+                    <tr key={sub._id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                      <td className="px-6 py-3 font-medium text-slate-900 dark:text-slate-100">{packageLabel}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{new Date(sub.startDate).toLocaleDateString()}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'Lifetime'}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">৳{sub.totalAmount?.toLocaleString()}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">৳{sub.paidAmount?.toLocaleString()}</td>
                       <td className="px-6 py-3">
                         <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${
-                          effectiveStatus === 'active' ? 'border-green-200 bg-green-50 text-green-700' :
-                          effectiveStatus === 'cancelled' ? 'border-slate-200 bg-slate-50 text-slate-600' :
-                          'border-red-200 bg-red-50 text-red-700'
+                          effectiveStatus === 'active' ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300' :
+                          effectiveStatus === 'cancelled' ? 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300' :
+                          'border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-900/30 dark:text-red-300'
                         }`}>
                           {effectiveStatus === 'active' ? 'Active' : effectiveStatus === 'cancelled' ? 'Cancelled' : 'Expired'}
                         </span>
@@ -733,21 +733,21 @@ const MemberDetails = () => {
       {showMonthlyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50" onClick={() => setShowMonthlyModal(false)} />
-          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-sm w-full mx-4 p-6 z-10">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Monthly Access Payment</h3>
+          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-sm w-full mx-4 p-6 z-10 dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">Monthly Access Payment</h3>
             <div className="space-y-4">
-              <div className="bg-slate-50 rounded-[5px] p-4 text-center">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Monthly Fee</p>
-                <p className="text-3xl font-bold text-slate-900 mt-1">৳{monthlyFee?.toLocaleString()}</p>
-                <p className="text-xs text-slate-500 mt-1">30 days access</p>
+              <div className="bg-slate-50 rounded-[5px] p-4 text-center dark:bg-slate-950">
+                <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Monthly Fee</p>
+                <p className="text-3xl font-bold text-slate-900 mt-1 dark:text-slate-100">৳{monthlyFee?.toLocaleString()}</p>
+                <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">30 days access</p>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Payment Method</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Payment Method</label>
                 <select
                   value={monthlyMethod}
                   onChange={(e) => setMonthlyMethod(e.target.value)}
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   {['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map((m) => (
                     <option key={m} value={m}>{m}</option>
@@ -756,7 +756,7 @@ const MemberDetails = () => {
               </div>
 
               {member.freeMonthsEndDate && (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Free months ended: {new Date(member.freeMonthsEndDate).toLocaleDateString()}
                 </p>
               )}
@@ -765,7 +765,7 @@ const MemberDetails = () => {
                 <button
                   type="button"
                   onClick={() => setShowMonthlyModal(false)}
-                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   Cancel
                 </button>
@@ -786,15 +786,15 @@ const MemberDetails = () => {
       {showRenewModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50" onClick={() => setShowRenewModal(false)} />
-          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-md w-full mx-4 p-6 z-10">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Renew Membership</h3>
+          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-md w-full mx-4 p-6 z-10 dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">Renew Membership</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Package</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Package</label>
                 <select
                   value={renewData.packageId}
                   onChange={(e) => setRenewData({ ...renewData, packageId: e.target.value })}
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="">Select Package</option>
                   {renewPackages.map((pkg) => (
@@ -806,7 +806,7 @@ const MemberDetails = () => {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Payment Type</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Payment Type</label>
                 <div className="grid grid-cols-3 gap-2">
                   {['full', 'partial', 'due'].map((pt) => (
                     <button
@@ -827,13 +827,13 @@ const MemberDetails = () => {
 
               {renewData.paymentType === 'partial' && (
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Payment Amount (৳)</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Payment Amount (৳)</label>
                   <input
                     type="number"
                     min="1"
                     value={renewData.initialPayment}
                     onChange={(e) => setRenewData({ ...renewData, initialPayment: e.target.value })}
-                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                     placeholder="Enter amount"
                   />
                 </div>
@@ -841,11 +841,11 @@ const MemberDetails = () => {
 
               {renewData.paymentType !== 'due' && (
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Payment Method</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Payment Method</label>
                   <select
                     value={renewData.paymentMethod}
                     onChange={(e) => setRenewData({ ...renewData, paymentMethod: e.target.value })}
-                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   >
                     {['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map((m) => (
                       <option key={m} value={m}>{m}</option>
@@ -855,31 +855,31 @@ const MemberDetails = () => {
               )}
 
               {renewData.packageId && (
-                <div className="bg-slate-50 rounded-[5px] p-3 text-xs text-slate-600 space-y-1">
+                <div className="bg-slate-50 rounded-[5px] p-3 text-xs text-slate-600 space-y-1 dark:bg-slate-950 dark:text-slate-400">
                   <div className="flex justify-between">
                     <span>Total</span>
-                    <span className="font-semibold text-slate-900">৳{getEffectivePrice(renewPackages.find(p => p._id === renewData.packageId))}</span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">৳{getEffectivePrice(renewPackages.find(p => p._id === renewData.packageId))}</span>
                   </div>
                   {renewData.paymentType === 'full' && (
-                    <div className="flex justify-between text-green-700">
+                    <div className="flex justify-between text-green-700 dark:text-green-300">
                       <span>Paying now</span>
                       <span className="font-semibold">৳{getEffectivePrice(renewPackages.find(p => p._id === renewData.packageId))}</span>
                     </div>
                   )}
                   {renewData.paymentType === 'partial' && renewData.initialPayment && (
                     <>
-                      <div className="flex justify-between text-green-700">
+                      <div className="flex justify-between text-green-700 dark:text-green-300">
                         <span>Paying now</span>
                         <span className="font-semibold">৳{renewData.initialPayment}</span>
                       </div>
-                      <div className="flex justify-between text-red-600">
+                      <div className="flex justify-between text-red-600 dark:text-red-400">
                         <span>Due</span>
                         <span className="font-semibold">৳{getEffectivePrice(renewPackages.find(p => p._id === renewData.packageId)) - parseFloat(renewData.initialPayment || 0)}</span>
                       </div>
                     </>
                   )}
                   {renewData.paymentType === 'due' && (
-                    <div className="flex justify-between text-orange-600">
+                    <div className="flex justify-between text-orange-600 dark:text-orange-400">
                       <span>Due</span>
                       <span className="font-semibold">৳{getEffectivePrice(renewPackages.find(p => p._id === renewData.packageId))}</span>
                     </div>
@@ -891,7 +891,7 @@ const MemberDetails = () => {
                 <button
                   type="button"
                   onClick={() => setShowRenewModal(false)}
-                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   Cancel
                 </button>

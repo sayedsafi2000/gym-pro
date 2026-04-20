@@ -13,6 +13,21 @@ const formatTime = (date) =>
     minute: '2-digit',
   });
 
+const PAYMENT_TYPE_LABEL = {
+  full: 'Full',
+  partial: 'Partial',
+  due: 'Due',
+  monthly: 'Monthly',
+  monthly_renewal: 'Monthly Renewal',
+};
+const labelPaymentType = (t) => PAYMENT_TYPE_LABEL[t] || 'Partial';
+
+const formatDuration = (pkg) => {
+  if (!pkg) return '-';
+  if (pkg.isLifetime || pkg.duration === 0) return 'Lifetime';
+  return `${pkg.duration} days`;
+};
+
 const ReceiptCopy = ({ data, type, copyLabel }) => {
   const gym = data.gym || { name: 'GymPro Fitness', address: 'Dhaka, Bangladesh', phone: '' };
 
@@ -70,7 +85,7 @@ const ReceiptCopy = ({ data, type, copyLabel }) => {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Duration</span>
-            <span>{data.package?.duration} days</span>
+            <span>{formatDuration(data.package)}</span>
           </div>
           {data.package?.description && (
             <p className="text-[9px] text-slate-400 italic">{data.package.description}</p>
@@ -92,7 +107,7 @@ const ReceiptCopy = ({ data, type, copyLabel }) => {
           {data.payment?.discountAmount > 0 && (
             <div className="flex justify-between">
               <span className="text-slate-500">Discount</span>
-              <span className="text-green-700">
+              <span className="text-green-700 dark:text-green-300">
                 -{data.payment.discountAmount}{data.payment.discountType === 'percentage' ? '%' : '৳'}
               </span>
             </div>
@@ -113,7 +128,7 @@ const ReceiptCopy = ({ data, type, copyLabel }) => {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Type</span>
-            <span>{data.payment?.paymentType === 'full' ? 'Full' : 'Partial'}</span>
+            <span>{labelPaymentType(data.payment?.paymentType)}</span>
           </div>
           {data.payment?.note && (
             <div className="flex justify-between">
@@ -186,7 +201,7 @@ const buildReceiptHTML = (data, type) => {
     <tr><td style="color:#64748b">Phone</td><td style="text-align:right">${data.member?.phone}</td></tr>
     <tr><td colspan="2"><hr style="border:none;border-top:1px dotted #e2e8f0;margin:6px 0"></td></tr>
     <tr><td style="color:#64748b">Package</td><td style="text-align:right">${data.package?.name}</td></tr>
-    <tr><td style="color:#64748b">Duration</td><td style="text-align:right">${data.package?.duration} days</td></tr>
+    <tr><td style="color:#64748b">Duration</td><td style="text-align:right">${formatDuration(data.package)}</td></tr>
     ${data.package?.description ? `<tr><td colspan="2" style="font-size:9px;color:#94a3b8;font-style:italic;padding-top:2px">${data.package.description}</td></tr>` : ''}
     ${data.package?.benefits?.length ? `<tr><td colspan="2" style="padding-top:3px"><div style="font-size:9px;color:#94a3b8">${data.package.benefits.map(b => `<div>&#10003; ${b}</div>`).join('')}</div></td></tr>` : ''}
     <tr><td colspan="2"><hr style="border:none;border-top:1px dotted #e2e8f0;margin:6px 0"></td></tr>
@@ -196,7 +211,7 @@ const buildReceiptHTML = (data, type) => {
     <tr style="font-weight:700;font-size:14px"><td>TOTAL</td><td style="text-align:right">৳${data.payment?.finalAmount?.toLocaleString()}</td></tr>
     <tr><td colspan="2"><hr style="border:none;border-top:2px solid #0f172a;margin:6px 0"></td></tr>
     <tr><td style="color:#64748b">Method</td><td style="text-align:right">${data.payment?.paymentMethod}</td></tr>
-    <tr><td style="color:#64748b">Type</td><td style="text-align:right">${data.payment?.paymentType === 'full' ? 'Full' : 'Partial'}</td></tr>
+    <tr><td style="color:#64748b">Type</td><td style="text-align:right">${labelPaymentType(data.payment?.paymentType)}</td></tr>
     ${data.payment?.note ? `<tr><td style="color:#64748b">Note</td><td style="text-align:right;font-size:9px">${data.payment.note}</td></tr>` : ''}
   ` : `
     <tr style="font-weight:600"><td>Product</td><td style="text-align:right">${data.product?.name}</td></tr>
@@ -280,7 +295,7 @@ const ReceiptModal = ({ open, onClose, type, data }) => {
           <div className="flex gap-2">
             <button
               onClick={handlePrint}
-              className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition"
+              className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
             >
               Print (A4 Trifold)
             </button>

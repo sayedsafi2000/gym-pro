@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
+import Pagination from '../components/Pagination';
 
 const Attendance = () => {
   const { showSuccess, showError } = useToast();
@@ -132,26 +133,26 @@ const Attendance = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <section className="bg-white border border-slate-200 p-8 shadow-sm">
+      <section className="bg-white border border-slate-200 p-8 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Tracking</p>
-            <h1 className="text-3xl font-semibold text-slate-900 mt-3">Attendance</h1>
-            <p className="mt-2 text-sm text-slate-500 max-w-2xl">
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Tracking</p>
+            <h1 className="text-3xl font-semibold text-slate-900 mt-3 dark:text-slate-100">Attendance</h1>
+            <p className="mt-2 text-sm text-slate-500 max-w-2xl dark:text-slate-400">
               Fingerprint-based attendance logs from ZKTeco devices.
             </p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => { setShowManualModal(true); setSelectedMember(null); setMemberSearch(''); setMemberStatus(null); }}
-              className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition"
+              className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
             >
               + Manual Check-in
             </button>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:opacity-50"
+              className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:opacity-50 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
             >
               {syncing ? 'Syncing...' : 'Sync Now'}
             </button>
@@ -162,48 +163,48 @@ const Attendance = () => {
       {/* Today's Summary */}
       {todayStats && (
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white border border-slate-200 p-6 shadow-sm">
-            <p className="text-sm text-slate-500 uppercase tracking-wide">Check-ins Today</p>
-            <p className="mt-4 text-4xl font-semibold text-green-600">{todayStats.totalCheckIns}</p>
+          <div className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-sm text-slate-500 uppercase tracking-wide dark:text-slate-400">Check-ins Today</p>
+            <p className="mt-4 text-4xl font-semibold text-green-600 dark:text-green-400">{todayStats.totalCheckIns}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-6 shadow-sm">
-            <p className="text-sm text-slate-500 uppercase tracking-wide">Currently Present</p>
-            <p className="mt-4 text-4xl font-semibold text-blue-600">{todayStats.currentlyPresent}</p>
+          <div className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-sm text-slate-500 uppercase tracking-wide dark:text-slate-400">Currently Present</p>
+            <p className="mt-4 text-4xl font-semibold text-blue-600 dark:text-blue-400">{todayStats.currentlyPresent}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-6 shadow-sm">
-            <p className="text-sm text-slate-500 uppercase tracking-wide">Check-outs Today</p>
-            <p className="mt-4 text-4xl font-semibold text-slate-600">{todayStats.totalCheckOuts}</p>
+          <div className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-sm text-slate-500 uppercase tracking-wide dark:text-slate-400">Check-outs Today</p>
+            <p className="mt-4 text-4xl font-semibold text-slate-600 dark:text-slate-400">{todayStats.totalCheckOuts}</p>
           </div>
         </section>
       )}
 
       {/* Filters */}
-      <section className="bg-white border border-slate-200 p-6 shadow-sm">
+      <section className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Start Date</label>
+            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Start Date</label>
             <input
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm"
+              className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">End Date</label>
+            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">End Date</label>
             <input
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm"
+              className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Type</label>
+            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Type</label>
             <select
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm"
+              className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             >
               <option value="">All</option>
               <option value="check-in">Check-in</option>
@@ -211,18 +212,18 @@ const Attendance = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Search</label>
+            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Search</label>
             <input
               type="text"
               placeholder="Member name or ID..."
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm"
+              className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
           </div>
           <button
             type="submit"
-            className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+            className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             Filter
           </button>
@@ -230,53 +231,53 @@ const Attendance = () => {
       </section>
 
       {/* Attendance Table */}
-      <section className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+      <section className="bg-white border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Member</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Member ID</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Type</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Time</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Device</th>
+              <tr className="border-b border-slate-200 bg-slate-100 dark:bg-slate-800/60 dark:border-slate-700">
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Member</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Member ID</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Type</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Time</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Device</th>
               </tr>
             </thead>
             <tbody>
               {attendances.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-8 text-slate-500">
+                  <td colSpan="5" className="text-center py-8 text-slate-500 dark:text-slate-400">
                     No attendance records found.
                   </td>
                 </tr>
               ) : (
                 attendances.map((record) => (
-                  <tr key={record._id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-900">
+                  <tr key={record._id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-100">
                       {record.memberId?.name || (
-                        <span className="text-yellow-600">Unmapped (Device ID: {record.deviceUserId})</span>
+                        <span className="text-yellow-600 dark:text-yellow-400">Unmapped (Device ID: {record.deviceUserId})</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
                       {record.memberId?.memberId || '-'}
                     </td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border ${
                           record.type === 'check-in'
-                            ? 'border-green-200 bg-green-50 text-green-700'
-                            : 'border-red-200 bg-red-50 text-red-700'
+                            ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300'
+                            : 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-900/30 dark:text-red-300'
                         }`}
                       >
                         {record.type === 'check-in' ? 'Check-in' : 'Check-out'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
                       {new Date(record.timestamp).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
                       {record.source === 'manual' ? (
-                        <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border border-slate-200 bg-slate-50 text-slate-600">Manual</span>
+                        <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border border-slate-200 bg-slate-50 text-slate-600 dark:bg-slate-950 dark:text-slate-400 dark:border-slate-700">Manual</span>
                       ) : (
                         record.deviceId?.name || '-'
                       )}
@@ -289,27 +290,16 @@ const Attendance = () => {
         </div>
 
         {/* Pagination */}
-        {pagination.pages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
-            <p className="text-sm text-slate-500">
-              Page {pagination.page} of {pagination.pages} ({pagination.total} records)
+        {(pagination.totalPages ?? pagination.pages ?? 1) > 1 && (
+          <div className="flex items-center justify-between px-6 border-t border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+            <p className="text-xs text-slate-500 hidden sm:block dark:text-slate-400">
+              {pagination.total} records
             </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
-                disabled={pagination.page <= 1}
-                className="rounded-[5px] border border-slate-200 px-3 py-1 text-sm disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
-                disabled={pagination.page >= pagination.pages}
-                className="rounded-[5px] border border-slate-200 px-3 py-1 text-sm disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
+            <Pagination
+              page={pagination.page}
+              totalPages={pagination.totalPages ?? pagination.pages ?? 1}
+              onChange={(p) => setPagination({ ...pagination, page: p })}
+            />
           </div>
         )}
       </section>
@@ -317,29 +307,29 @@ const Attendance = () => {
       {showManualModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50" onClick={() => setShowManualModal(false)} />
-          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-md w-full mx-4 p-6 z-10">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Manual Check-in</h3>
+          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-md w-full mx-4 p-6 z-10 dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">Manual Check-in</h3>
 
             {/* Search */}
             <div className="relative mb-4">
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Search Member</label>
+              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Search Member</label>
               <input
                 type="text"
                 value={memberSearch}
                 onChange={(e) => handleMemberSearch(e.target.value)}
                 placeholder="Type member name, phone, or ID..."
-                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
               {searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-[5px] shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-[5px] shadow-lg max-h-48 overflow-y-auto dark:bg-slate-900 dark:border-slate-700">
                   {searchResults.map((m) => (
                     <button
                       key={m._id}
                       onClick={() => handleSelectMember(m)}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 dark:border-slate-800 last:border-0 dark:hover:bg-slate-800"
                     >
-                      <span className="font-medium text-slate-900">{m.name}</span>
-                      <span className="text-slate-500 ml-2">{m.memberId} | {m.phone}</span>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{m.name}</span>
+                      <span className="text-slate-500 ml-2 dark:text-slate-400">{m.memberId} | {m.phone}</span>
                     </button>
                   ))}
                 </div>
@@ -349,15 +339,15 @@ const Attendance = () => {
             {/* Selected member status */}
             {selectedMember && (
               <div className="space-y-4">
-                <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-3">
-                  <p className="text-sm font-semibold text-slate-900">{selectedMember.name}</p>
-                  <p className="text-xs text-slate-500">{selectedMember.memberId} | {selectedMember.phone}</p>
+                <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-3 dark:bg-slate-950 dark:border-slate-700">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{selectedMember.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{selectedMember.memberId} | {selectedMember.phone}</p>
                   {memberStatus && (
                     <p className="text-xs mt-1">
                       {memberStatus.checkedIn ? (
-                        <span className="text-green-700">Currently checked in (since {new Date(memberStatus.lastRecord.timestamp).toLocaleTimeString()})</span>
+                        <span className="text-green-700 dark:text-green-300">Currently checked in (since {new Date(memberStatus.lastRecord.timestamp).toLocaleTimeString()})</span>
                       ) : memberStatus.lastRecord ? (
-                        <span className="text-slate-500">Last: {memberStatus.lastRecord.type} at {new Date(memberStatus.lastRecord.timestamp).toLocaleTimeString()}</span>
+                        <span className="text-slate-500 dark:text-slate-400">Last: {memberStatus.lastRecord.type} at {new Date(memberStatus.lastRecord.timestamp).toLocaleTimeString()}</span>
                       ) : (
                         <span className="text-slate-400">No attendance today</span>
                       )}
@@ -367,7 +357,7 @@ const Attendance = () => {
 
                 {/* Type selector */}
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Action</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Action</label>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setManualType('check-in')}
@@ -392,14 +382,14 @@ const Attendance = () => {
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setShowManualModal(false)}
-                    className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                    className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleManualSubmit}
                     disabled={submittingManual}
-                    className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition disabled:opacity-50"
+                    className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                   >
                     {submittingManual ? 'Recording...' : `Confirm ${manualType === 'check-in' ? 'Check In' : 'Check Out'}`}
                   </button>

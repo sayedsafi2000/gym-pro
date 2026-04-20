@@ -3,24 +3,25 @@ import api from '../services/api';
 import useToast from '../hooks/useToast';
 import ConfirmModal from '../components/ConfirmModal';
 import ReceiptModal from '../components/ReceiptModal';
+import Pagination from '../components/Pagination';
 
 const CATEGORIES = ['Supplements', 'Apparel', 'Accessories', 'Equipment', 'Drinks'];
 
 const CATEGORY_COLORS = {
-  Supplements: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  Apparel: 'border-blue-200 bg-blue-50 text-blue-700',
-  Accessories: 'border-purple-200 bg-purple-50 text-purple-700',
-  Equipment: 'border-orange-200 bg-orange-50 text-orange-700',
-  Drinks: 'border-cyan-200 bg-cyan-50 text-cyan-700',
+  Supplements: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-900/30 dark:text-emerald-300',
+  Apparel: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800/60 dark:bg-blue-900/30 dark:text-blue-300',
+  Accessories: 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800/60 dark:bg-purple-900/30 dark:text-purple-300',
+  Equipment: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800/60 dark:bg-orange-900/30 dark:text-orange-300',
+  Drinks: 'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800/60 dark:bg-cyan-900/30 dark:text-cyan-300',
 };
 
 const getCategoryColor = (cat) =>
-  CATEGORY_COLORS[cat] || 'border-slate-200 bg-slate-50 text-slate-600';
+  CATEGORY_COLORS[cat] || 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300';
 
 const getStockBadge = (stock) => {
-  if (stock === 0) return { label: 'Out of Stock', cls: 'border-red-200 bg-red-50 text-red-700' };
-  if (stock < 10) return { label: `Low Stock (${stock})`, cls: 'border-yellow-200 bg-yellow-50 text-yellow-700' };
-  return { label: `In Stock (${stock})`, cls: 'border-green-200 bg-green-50 text-green-700' };
+  if (stock === 0) return { label: 'Out of Stock', cls: 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-900/30 dark:text-red-300' };
+  if (stock < 10) return { label: `Low Stock (${stock})`, cls: 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800/60 dark:bg-yellow-900/30 dark:text-yellow-300' };
+  return { label: `In Stock (${stock})`, cls: 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300' };
 };
 
 const Store = () => {
@@ -53,42 +54,68 @@ const Store = () => {
   const [receiptData, setReceiptData] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const LIMIT = 12;
+
   // Form
   const [formData, setFormData] = useState({
     name: '', category: '', description: '', price: '', stock: '',
   });
 
   useEffect(() => {
-    fetchAll();
+    setPage(1);
+  }, [search, categoryFilter]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [search, categoryFilter, page]);
+
+  useEffect(() => {
+    fetchStatsAndSales();
   }, []);
 
-  const fetchAll = async () => {
+  const fetchProducts = async () => {
     try {
-      const [prodRes, statsRes, salesRes] = await Promise.all([
-        api.get('/products'),
-        api.get('/products/stats'),
-        api.get('/products/sales?limit=20'),
-      ]);
+      const params = { page, limit: LIMIT };
+      if (search) params.search = search;
+      if (categoryFilter) params.category = categoryFilter;
+      const prodRes = await api.get('/products', { params });
       setProducts(prodRes.data.data);
-      setStats(statsRes.data.data);
-      setSales(salesRes.data.data);
+      setTotalPages(prodRes.data.pagination?.totalPages || 1);
     } catch (error) {
-      console.error('Error fetching store data:', error);
-      showError('Failed to load store data.');
+      console.error('Error fetching products:', error);
+      showError('Failed to load products.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter products client-side for instant feedback
-  const filtered = products.filter((p) => {
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
-    const matchCat = !categoryFilter || p.category === categoryFilter;
-    return matchSearch && matchCat;
-  });
+  const fetchStatsAndSales = async () => {
+    try {
+      const [statsRes, salesRes] = await Promise.all([
+        api.get('/products/stats'),
+        api.get('/products/sales?limit=20'),
+      ]);
+      setStats(statsRes.data.data);
+      setSales(salesRes.data.data);
+    } catch (error) {
+      console.error('Error fetching stats/sales:', error);
+    }
+  };
 
-  // Unique categories from data
-  const categories = [...new Set(products.map((p) => p.category))];
+  // Alias for handlers that refresh all store data
+  const fetchAll = () => {
+    fetchProducts();
+    fetchStatsAndSales();
+  };
+
+  // Server-filtered: render what came back
+  const filtered = products;
+
+  // Categories come from stats (union of all products, not current page)
+  const categories = stats?.categories || [];
 
   // --- Handlers ---
 
@@ -205,16 +232,16 @@ const Store = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <section className="bg-white border border-slate-200 p-8 shadow-sm">
+      <section className="bg-white border border-slate-200 p-8 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Inventory</p>
-            <h1 className="text-3xl font-semibold text-slate-900 mt-3">Store</h1>
-            <p className="mt-2 text-sm text-slate-500">Manage products, record sales, and track inventory.</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Inventory</p>
+            <h1 className="text-3xl font-semibold text-slate-900 mt-3 dark:text-slate-100">Store</h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Manage products, record sales, and track inventory.</p>
           </div>
           <button
             onClick={openAdd}
-            className="rounded-[5px] bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition"
+            className="rounded-[5px] bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             + Add Product
           </button>
@@ -224,45 +251,45 @@ const Store = () => {
       {/* Stats Bar */}
       {stats && (
         <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Products</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">{stats.totalProducts}</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Products</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-slate-100">{stats.totalProducts}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Stock Value</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">৳{stats.totalStockValue}</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Stock Value</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-slate-100">৳{stats.totalStockValue}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Low Stock</p>
-            <p className="mt-2 text-3xl font-semibold text-yellow-600">{stats.lowStockCount}</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Low Stock</p>
+            <p className="mt-2 text-3xl font-semibold text-yellow-600 dark:text-yellow-400">{stats.lowStockCount}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Out of Stock</p>
-            <p className="mt-2 text-3xl font-semibold text-red-600">{stats.outOfStockCount}</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Out of Stock</p>
+            <p className="mt-2 text-3xl font-semibold text-red-600 dark:text-red-400">{stats.outOfStockCount}</p>
           </div>
-          <div className="bg-white border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Today's Sales</p>
-            <p className="mt-2 text-3xl font-semibold text-green-600">৳{stats.todaySalesRevenue}</p>
+          <div className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+            <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Today's Sales</p>
+            <p className="mt-2 text-3xl font-semibold text-green-600 dark:text-green-400">৳{stats.todaySalesRevenue}</p>
             <p className="text-xs text-slate-400 mt-1">{stats.todaySalesCount} items</p>
           </div>
         </section>
       )}
 
       {/* Search + Category Filter + View Toggle */}
-      <section className="bg-white border border-slate-200 p-5 shadow-sm">
+      <section className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm flex-1 min-w-0 focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+            className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm flex-1 min-w-0 focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           />
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => setCategoryFilter('')}
               className={`rounded-[5px] px-3 py-1.5 text-xs font-medium transition ${
-                !categoryFilter ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                !categoryFilter ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
               }`}
             >
               All
@@ -272,18 +299,18 @@ const Store = () => {
                 key={cat}
                 onClick={() => setCategoryFilter(categoryFilter === cat ? '' : cat)}
                 className={`rounded-[5px] px-3 py-1.5 text-xs font-medium transition ${
-                  categoryFilter === cat ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  categoryFilter === cat ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                 }`}
               >
                 {cat}
               </button>
             ))}
           </div>
-          <div className="flex border border-slate-200 rounded-[5px] overflow-hidden">
+          <div className="flex border border-slate-200 rounded-[5px] overflow-hidden dark:border-slate-700">
             <button
               onClick={() => setViewMode('grid')}
               className={`px-3 py-1.5 text-xs font-medium transition ${
-                viewMode === 'grid' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+                viewMode === 'grid' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
               }`}
               aria-label="Grid view"
             >
@@ -294,7 +321,7 @@ const Store = () => {
             <button
               onClick={() => setViewMode('table')}
               className={`px-3 py-1.5 text-xs font-medium transition ${
-                viewMode === 'table' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'
+                viewMode === 'table' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
               }`}
               aria-label="Table view"
             >
@@ -308,11 +335,11 @@ const Store = () => {
 
       {/* Products */}
       {filtered.length === 0 ? (
-        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-8 text-center">
-          <p className="text-sm font-medium text-slate-700">
+        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-8 text-center dark:bg-slate-950 dark:border-slate-700">
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
             {products.length === 0 ? 'No products yet' : 'No products match your filter'}
           </p>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">
             {products.length === 0 ? 'Add your first product to get started.' : 'Try a different search or category.'}
           </p>
         </div>
@@ -321,7 +348,7 @@ const Store = () => {
           {filtered.map((product) => {
             const stockBadge = getStockBadge(product.stock);
             return (
-              <div key={product._id} className="bg-white border border-slate-200 p-5 shadow-sm flex flex-col">
+              <div key={product._id} className="bg-white border border-slate-200 p-5 shadow-sm flex flex-col dark:bg-slate-900 dark:border-slate-700">
                 <div className="flex items-start justify-between mb-3">
                   <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${getCategoryColor(product.category)}`}>
                     {product.category}
@@ -330,12 +357,12 @@ const Store = () => {
                     {stockBadge.label}
                   </span>
                 </div>
-                <h3 className="text-base font-semibold text-slate-900">{product.name}</h3>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{product.name}</h3>
                 {product.description && (
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{product.description}</p>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2 dark:text-slate-400">{product.description}</p>
                 )}
                 <div className="flex items-end justify-between mt-auto pt-4">
-                  <p className="text-xl font-semibold text-slate-900">৳{product.price}</p>
+                  <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">৳{product.price}</p>
                   <p className="text-xs text-slate-400">{product.soldCount} sold</p>
                 </div>
                 <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
@@ -348,19 +375,19 @@ const Store = () => {
                   </button>
                   <button
                     onClick={() => { setRestockProduct(product); setRestockQty(''); setShowRestockModal(true); }}
-                    className="rounded-[5px] border border-blue-200 px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-50 transition"
+                    className="rounded-[5px] border border-blue-200 dark:border-blue-800/60 px-3 py-2 text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition"
                   >
                     Restock
                   </button>
                   <button
                     onClick={() => openEdit(product)}
-                    className="rounded-[5px] border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                    className="rounded-[5px] border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => setDeletingId(product._id)}
-                    className="rounded-[5px] border border-red-200 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 transition"
+                    className="rounded-[5px] border border-red-200 dark:border-red-800/60 px-3 py-2 text-xs font-medium text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
                   >
                     Del
                   </button>
@@ -370,37 +397,37 @@ const Store = () => {
           })}
         </section>
       ) : (
-        <section className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+        <section className="bg-white border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Product</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Category</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Price</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Stock</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Sold</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Actions</th>
+                <tr className="border-b border-slate-200 bg-slate-100 dark:bg-slate-800/60 dark:border-slate-700">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Product</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Category</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Price</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Stock</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Sold</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((product) => {
                   const stockBadge = getStockBadge(product.stock);
                   return (
-                    <tr key={product._id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-6 py-3 font-medium text-slate-900">{product.name}</td>
+                    <tr key={product._id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                      <td className="px-6 py-3 font-medium text-slate-900 dark:text-slate-100">{product.name}</td>
                       <td className="px-6 py-3">
                         <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${getCategoryColor(product.category)}`}>
                           {product.category}
                         </span>
                       </td>
-                      <td className="px-6 py-3 text-slate-600">৳{product.price}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">৳{product.price}</td>
                       <td className="px-6 py-3">
                         <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${stockBadge.cls}`}>
                           {stockBadge.label}
                         </span>
                       </td>
-                      <td className="px-6 py-3 text-slate-600">{product.soldCount}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{product.soldCount}</td>
                       <td className="px-6 py-3">
                         <div className="flex gap-1.5">
                           <button
@@ -412,12 +439,12 @@ const Store = () => {
                           </button>
                           <button
                             onClick={() => { setRestockProduct(product); setRestockQty(''); setShowRestockModal(true); }}
-                            className="rounded-[5px] border border-blue-200 px-2.5 py-1 text-xs text-blue-700 hover:bg-blue-50"
+                            className="rounded-[5px] border border-blue-200 dark:border-blue-800/60 px-2.5 py-1 text-xs text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                           >
                             Restock
                           </button>
-                          <button onClick={() => openEdit(product)} className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-50">Edit</button>
-                          <button onClick={() => setDeletingId(product._id)} className="rounded-[5px] border border-red-200 px-2.5 py-1 text-xs text-red-700 hover:bg-red-50">Del</button>
+                          <button onClick={() => openEdit(product)} className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100">Edit</button>
+                          <button onClick={() => setDeletingId(product._id)} className="rounded-[5px] border border-red-200 dark:border-red-800/60 px-2.5 py-1 text-xs text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30">Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -429,13 +456,19 @@ const Store = () => {
         </section>
       )}
 
+      {filtered.length > 0 && (
+        <div className="bg-white border border-slate-200 px-4 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+        </div>
+      )}
+
       {/* Recent Sales */}
-      <section className="bg-white border border-slate-200 shadow-sm">
+      <section className="bg-white border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <button
           onClick={() => setShowSales(!showSales)}
-          className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
+          className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition dark:hover:bg-slate-800"
         >
-          <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
+          <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide dark:text-slate-100">
             Recent Sales ({sales.length})
           </h2>
           <svg
@@ -446,35 +479,35 @@ const Store = () => {
           </svg>
         </button>
         {showSales && (
-          <div className="border-t border-slate-200 overflow-x-auto">
+          <div className="border-t border-slate-200 overflow-x-auto dark:border-slate-700">
             {sales.length === 0 ? (
-              <div className="px-6 py-8 text-center text-sm text-slate-500">No sales recorded yet.</div>
+              <div className="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No sales recorded yet.</div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Product</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Qty</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Unit Price</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Total</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Note</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide">Date</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide"></th>
+                  <tr className="border-b border-slate-200 bg-slate-100 dark:bg-slate-800/60 dark:border-slate-700">
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Product</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Qty</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Unit Price</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Total</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Note</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400">Date</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide dark:text-slate-400"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {sales.map((sale) => (
-                    <tr key={sale._id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-6 py-3 font-medium text-slate-900">{sale.productName}</td>
-                      <td className="px-6 py-3 text-slate-600">{sale.quantity}</td>
-                      <td className="px-6 py-3 text-slate-600">৳{sale.unitPrice}</td>
-                      <td className="px-6 py-3 font-semibold text-slate-900">৳{sale.totalAmount}</td>
-                      <td className="px-6 py-3 text-slate-500 text-xs">{sale.note || '-'}</td>
-                      <td className="px-6 py-3 text-slate-600">{new Date(sale.soldAt).toLocaleString()}</td>
+                    <tr key={sale._id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                      <td className="px-6 py-3 font-medium text-slate-900 dark:text-slate-100">{sale.productName}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{sale.quantity}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">৳{sale.unitPrice}</td>
+                      <td className="px-6 py-3 font-semibold text-slate-900 dark:text-slate-100">৳{sale.totalAmount}</td>
+                      <td className="px-6 py-3 text-slate-500 text-xs dark:text-slate-400">{sale.note || '-'}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{new Date(sale.soldAt).toLocaleString()}</td>
                       <td className="px-6 py-3">
                         <button
                           onClick={() => handleViewReceipt(sale._id)}
-                          className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                          className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                         >
                           Receipt
                         </button>
@@ -494,28 +527,28 @@ const Store = () => {
       {showAddEdit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50" onClick={() => setShowAddEdit(false)} />
-          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-md w-full mx-4 p-6 z-10 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-md w-full mx-4 p-6 z-10 max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">
               {editingProduct ? 'Edit Product' : 'Add Product'}
             </h3>
             <form onSubmit={handleAddEdit} className="space-y-4">
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Name</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Name</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Category</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Category</label>
                 <select
                   required
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="">Select category</option>
                   {CATEGORIES.map((c) => (
@@ -525,35 +558,35 @@ const Store = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Description</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Description</label>
                 <textarea
                   rows={2}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent resize-none"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent resize-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Price (৳)</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Price (৳)</label>
                   <input
                     type="number"
                     required
                     min="0"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Stock</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Stock</label>
                   <input
                     type="number"
                     required
                     min="0"
                     value={formData.stock}
                     onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -561,14 +594,14 @@ const Store = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddEdit(false)}
-                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition disabled:opacity-50"
+                  className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                 >
                   {submitting ? 'Saving...' : editingProduct ? 'Update' : 'Add Product'}
                 </button>
@@ -582,40 +615,40 @@ const Store = () => {
       {showSellModal && sellProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50" onClick={() => setShowSellModal(false)} />
-          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-sm w-full mx-4 p-6 z-10">
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">Sell {sellProduct.name}</h3>
-            <p className="text-xs text-slate-500 mb-4">Current stock: {sellProduct.stock}</p>
+          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-sm w-full mx-4 p-6 z-10 dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 mb-1 dark:text-slate-100">Sell {sellProduct.name}</h3>
+            <p className="text-xs text-slate-500 mb-4 dark:text-slate-400">Current stock: {sellProduct.stock}</p>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Quantity</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Quantity</label>
                 <input
                   type="number"
                   min={1}
                   max={sellProduct.stock}
                   value={sellQty}
                   onChange={(e) => setSellQty(Math.min(parseInt(e.target.value, 10) || 1, sellProduct.stock))}
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-3 flex justify-between items-center">
-                <span className="text-sm text-slate-600">Total</span>
-                <span className="text-xl font-semibold text-slate-900">৳{sellQty * sellProduct.price}</span>
+              <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-3 flex justify-between items-center dark:bg-slate-950 dark:border-slate-700">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Total</span>
+                <span className="text-xl font-semibold text-slate-900 dark:text-slate-100">৳{sellQty * sellProduct.price}</span>
               </div>
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Note (optional)</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Note (optional)</label>
                 <input
                   type="text"
                   value={sellNote}
                   onChange={(e) => setSellNote(e.target.value)}
                   placeholder="e.g., Member name or receipt #"
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowSellModal(false)}
-                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   Cancel
                 </button>
@@ -636,26 +669,26 @@ const Store = () => {
       {showRestockModal && restockProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50" onClick={() => setShowRestockModal(false)} />
-          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-sm w-full mx-4 p-6 z-10">
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">Restock {restockProduct.name}</h3>
-            <p className="text-xs text-slate-500 mb-4">Current stock: {restockProduct.stock}</p>
+          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-sm w-full mx-4 p-6 z-10 dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 mb-1 dark:text-slate-100">Restock {restockProduct.name}</h3>
+            <p className="text-xs text-slate-500 mb-4 dark:text-slate-400">Current stock: {restockProduct.stock}</p>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Quantity to Add</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Quantity to Add</label>
                 <input
                   type="number"
                   min={1}
                   value={restockQty}
                   onChange={(e) => setRestockQty(e.target.value)}
                   placeholder="Enter quantity"
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowRestockModal(false)}
-                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   Cancel
                 </button>

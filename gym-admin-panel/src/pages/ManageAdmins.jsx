@@ -20,6 +20,7 @@ const ManageAdmins = () => {
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '', password: '', name: '', role: 'admin',
     permissions: {
@@ -122,16 +123,16 @@ const ManageAdmins = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <section className="bg-white border border-slate-200 p-8 shadow-sm">
+      <section className="bg-white border border-slate-200 p-8 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Access Control</p>
-            <h1 className="text-3xl font-semibold text-slate-900 mt-3">Manage Admins</h1>
-            <p className="mt-2 text-sm text-slate-500">Create admin accounts and control their permissions.</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Access Control</p>
+            <h1 className="text-3xl font-semibold text-slate-900 mt-3 dark:text-slate-100">Manage Admins</h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Create admin accounts and control their permissions.</p>
           </div>
           <button
             onClick={openAdd}
-            className="rounded-[5px] bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition"
+            className="rounded-[5px] bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             + Add Admin
           </button>
@@ -141,16 +142,16 @@ const ManageAdmins = () => {
       {/* Admin Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {admins.map((admin) => (
-          <div key={admin._id} className="bg-white border border-slate-200 p-5 shadow-sm">
+          <div key={admin._id} className="bg-white border border-slate-200 p-5 shadow-sm dark:bg-slate-900 dark:border-slate-700">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">{admin.name || admin.email}</h3>
-                <p className="text-xs text-slate-500">{admin.email}</p>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{admin.name || admin.email}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{admin.email}</p>
               </div>
               <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${
                 admin.role === 'super_admin'
-                  ? 'border-purple-200 bg-purple-50 text-purple-700'
-                  : 'border-slate-200 bg-slate-50 text-slate-600'
+                  ? 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800/60 dark:bg-purple-900/30 dark:text-purple-300'
+                  : 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300'
               }`}>
                 {admin.role === 'super_admin' ? 'Super Admin' : 'Admin'}
               </span>
@@ -164,7 +165,7 @@ const ManageAdmins = () => {
                     key={key}
                     className={`text-[10px] px-1.5 py-0.5 rounded-[5px] border ${
                       admin.permissions?.[key]
-                        ? 'border-green-200 bg-green-50 text-green-700'
+                        ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300'
                         : 'border-slate-100 bg-slate-50 text-slate-400'
                     }`}
                   >
@@ -178,14 +179,14 @@ const ManageAdmins = () => {
             <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100">
               <button
                 onClick={() => openEdit(admin)}
-                className="flex-1 rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                className="flex-1 rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
               >
                 Edit
               </button>
               {admin.role !== 'super_admin' && (
                 <button
                   onClick={() => setDeletingId(admin._id)}
-                  className="rounded-[5px] border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 transition"
+                  className="rounded-[5px] border border-red-200 dark:border-red-800/60 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
                 >
                   Delete
                 </button>
@@ -199,47 +200,56 @@ const ManageAdmins = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50" onClick={() => setShowModal(false)} />
-          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-md w-full mx-4 p-6 z-10 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-md w-full mx-4 p-6 z-10 max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">
               {editingAdmin ? 'Edit Admin' : 'Add Admin'}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Name</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Name</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Admin name"
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Email</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Email</label>
                 <input
                   type="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   disabled={!!editingAdmin}
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent disabled:bg-slate-100"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               {!editingAdmin && (
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Password</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
-                  />
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Password (min 8 chars)</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      minLength={8}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full rounded-[5px] border border-slate-200 px-3 py-2 pr-16 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 px-3 text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400"
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
               )}
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Role</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Role</label>
                 <div className="flex gap-2">
                   {['admin', 'super_admin'].map((r) => (
                     <button
@@ -258,7 +268,7 @@ const ManageAdmins = () => {
 
               {formData.role === 'admin' && (
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-2">Permissions</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-2 dark:text-slate-400">Permissions</label>
                   <div className="space-y-2">
                     {Object.entries(PERMISSION_LABELS).map(([key, label]) => (
                       <label key={key} className="flex items-center gap-2 cursor-pointer">
@@ -266,9 +276,9 @@ const ManageAdmins = () => {
                           type="checkbox"
                           checked={formData.permissions[key] || false}
                           onChange={() => togglePermission(key)}
-                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-300"
+                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-300 accent-slate-900 dark:accent-slate-100 dark:bg-slate-800 dark:border-slate-600"
                         />
-                        <span className="text-sm text-slate-700">{label}</span>
+                        <span className="text-sm text-slate-700 dark:text-slate-300">{label}</span>
                       </label>
                     ))}
                   </div>
@@ -279,14 +289,14 @@ const ManageAdmins = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition disabled:opacity-50"
+                  className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                 >
                   {submitting ? 'Saving...' : editingAdmin ? 'Update' : 'Create Admin'}
                 </button>

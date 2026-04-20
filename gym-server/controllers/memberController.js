@@ -3,12 +3,13 @@ const Package = require('../models/Package');
 const Payment = require('../models/Payment');
 const Installment = require('../models/Installment');
 const Subscription = require('../models/Subscription');
+const paginate = require('../utils/paginate');
 
 // @desc    Get all members (with optional filters)
 // @route   GET /api/members
 const getMembers = async (req, res) => {
   try {
-    const { status, search } = req.query;
+    const { status, search, page, limit } = req.query;
     const now = new Date();
     const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -40,11 +41,15 @@ const getMembers = async (req, res) => {
       query.expiryDate = { $ne: null, $gte: now, $lte: threeDaysLater };
     }
 
-    const members = await Member.find(query)
-      .populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime')
-      .sort({ createdAt: -1 });
+    const result = await paginate(Member, {
+      filter: query,
+      page,
+      limit,
+      sort: { createdAt: -1 },
+      populate: { path: 'packageId', select: 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime' },
+    });
 
-    res.json({ success: true, count: members.length, data: members });
+    res.json({ success: true, count: result.data.length, data: result.data, pagination: result.pagination });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -298,28 +303,52 @@ const updateMember = async (req, res) => {
       }
     }
 
-    // Recalculate expiry and payment amounts if package or joinDate changes
+    // Recalculate expiry + totals ONLY when package or joinDate truly changed.
+    // Prior bug: form always posts packageId+joinDate; branch fired on every edit
+    // and overwrote expiryDate, revoking monthly-renewal extensions on lifetime members.
     if (packageId || joinDate) {
       const member = await Member.findById(req.params.id);
       if (!member) {
         return res.status(404).json({ success: false, message: 'Member not found' });
       }
 
-      const pkgId = packageId || member.packageId;
-      const pkg = await Package.findById(pkgId);
-      if (!pkg) {
-        return res.status(404).json({ success: false, message: 'Package not found' });
+      const currentPkgId = member.packageId ? String(member.packageId) : null;
+      const incomingPkgId = packageId ? String(packageId) : currentPkgId;
+      const pkgChanged = incomingPkgId !== currentPkgId;
+
+      const currentJoinMs = member.joinDate ? new Date(member.joinDate).getTime() : null;
+      const incomingJoinMs = joinDate ? new Date(joinDate).getTime() : currentJoinMs;
+      const joinChanged = currentJoinMs !== incomingJoinMs;
+
+      if (pkgChanged || joinChanged) {
+        const pkg = await Package.findById(incomingPkgId);
+        if (!pkg) {
+          return res.status(404).json({ success: false, message: 'Package not found' });
+        }
+
+        const join = joinDate ? new Date(joinDate) : member.joinDate;
+        // Match create-member logic (line 85-87)
+        const recalcExpiry = pkg.isLifetime
+          ? new Date(join.getTime() + (pkg.freeMonths || 0) * 30 * 24 * 60 * 60 * 1000)
+          : new Date(join.getTime() + pkg.duration * 24 * 60 * 60 * 1000);
+
+        // Never shorten: monthly-renewal may have pushed expiry past recalc.
+        const existingExpiryMs = member.expiryDate ? new Date(member.expiryDate).getTime() : 0;
+        const newExpiry = recalcExpiry.getTime() > existingExpiryMs ? recalcExpiry : member.expiryDate;
+
+        req.body.expiryDate = newExpiry;
+        req.body.joinDate = join;
+
+        const memberGender = req.body.gender || member.gender;
+        const newTotal = pkg.getTotalForGender(memberGender);
+        req.body.totalAmount = newTotal;
+        req.body.dueAmount = newTotal - (req.body.paidAmount || member.paidAmount);
+      } else {
+        // Nothing actually changed — strip the noop fields so findByIdAndUpdate
+        // doesn't re-stamp joinDate and cause sync side effects.
+        delete req.body.joinDate;
+        delete req.body.packageId;
       }
-
-      const join = joinDate ? new Date(joinDate) : member.joinDate;
-      req.body.expiryDate = new Date(join.getTime() + pkg.duration * 24 * 60 * 60 * 1000);
-      req.body.joinDate = join;
-
-      // Update total amount and recalculate due amount using member gender
-      const memberGender = req.body.gender || member.gender;
-      const newTotal = pkg.getTotalForGender(memberGender);
-      req.body.totalAmount = newTotal;
-      req.body.dueAmount = newTotal - (req.body.paidAmount || member.paidAmount);
     }
 
     const member = await Member.findByIdAndUpdate(req.params.id, req.body, {

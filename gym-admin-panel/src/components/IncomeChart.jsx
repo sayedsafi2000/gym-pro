@@ -16,7 +16,7 @@ const IncomeChart = ({ data, monthlyIncome }) => {
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-slate-500">No payment data available</p>
+        <p className="text-slate-500 dark:text-slate-400">No payment data available</p>
       </div>
     );
   }
@@ -45,23 +45,23 @@ const IncomeChart = ({ data, monthlyIncome }) => {
     <div className="space-y-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Total (30 Days)</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">৳{monthlyIncome || 0}</p>
+        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-4 dark:bg-slate-950 dark:border-slate-700">
+          <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Total (30 Days)</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">৳{monthlyIncome || 0}</p>
         </div>
-        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Daily Average</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">৳{avgIncome}</p>
+        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-4 dark:bg-slate-950 dark:border-slate-700">
+          <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Daily Average</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">৳{avgIncome}</p>
         </div>
-        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Days Recorded</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{data.length}</p>
+        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-4 dark:bg-slate-950 dark:border-slate-700">
+          <p className="text-xs text-slate-500 uppercase tracking-wide dark:text-slate-400">Days Recorded</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{data.length}</p>
         </div>
       </div>
 
       {/* Line Chart */}
-      <div className="bg-white border border-slate-200 rounded-[5px] p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Income Trend</h3>
+      <div className="bg-white border border-slate-200 rounded-[5px] p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">Income Trend</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
             <defs>
@@ -103,8 +103,8 @@ const IncomeChart = ({ data, monthlyIncome }) => {
       </div>
 
       {/* Bar Chart */}
-      <div className="bg-white border border-slate-200 rounded-[5px] p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Daily Breakdown</h3>
+      <div className="bg-white border border-slate-200 rounded-[5px] p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">Daily Breakdown</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />

@@ -48,7 +48,7 @@ const DeviceManagement = () => {
     try {
       const [usersRes, membersRes] = await Promise.all([
         api.get(`/devices/${deviceId}/users`),
-        api.get('/members'),
+        api.get('/members?limit=500'),
       ]);
       setDeviceUsers(usersRes.data.data);
       setMembers(membersRes.data.data);
@@ -162,11 +162,11 @@ const DeviceManagement = () => {
 
     if (liveStatus) {
       return liveStatus.online ? (
-        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-green-200 bg-green-50 text-green-700">
+        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-green-200 dark:border-green-800/60 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">
           Online
         </span>
       ) : (
-        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-red-200 bg-red-50 text-red-700">
+        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
           Offline
         </span>
       );
@@ -174,18 +174,18 @@ const DeviceManagement = () => {
 
     if (device.lastSyncStatus === 'never') {
       return (
-        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-slate-200 bg-slate-50 text-slate-600">
+        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-slate-200 bg-slate-50 text-slate-600 dark:bg-slate-950 dark:text-slate-400 dark:border-slate-700">
           Never Synced
         </span>
       );
     }
 
     return device.lastSyncStatus === 'success' ? (
-      <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-green-200 bg-green-50 text-green-700">
+      <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-green-200 dark:border-green-800/60 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">
         Last Sync OK
       </span>
     ) : (
-      <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-red-200 bg-red-50 text-red-700">
+      <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
         Sync Failed
       </span>
     );
@@ -213,12 +213,12 @@ const DeviceManagement = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <section className="bg-white border border-slate-200 p-8 shadow-sm">
+      <section className="bg-white border border-slate-200 p-8 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Configuration</p>
-            <h1 className="text-3xl font-semibold text-slate-900 mt-3">Device Management</h1>
-            <p className="mt-2 text-sm text-slate-500 max-w-2xl">
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Configuration</p>
+            <h1 className="text-3xl font-semibold text-slate-900 mt-3 dark:text-slate-100">Device Management</h1>
+            <p className="mt-2 text-sm text-slate-500 max-w-2xl dark:text-slate-400">
               Manage ZKTeco fingerprint devices connected to your gym.
             </p>
           </div>
@@ -230,7 +230,7 @@ const DeviceManagement = () => {
               setError('');
               setSuccess('');
             }}
-            className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+            className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             {showForm ? 'Cancel' : '+ Add Device'}
           </button>
@@ -239,59 +239,59 @@ const DeviceManagement = () => {
 
       {/* Messages */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-[5px] text-sm">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-300 px-4 py-3 rounded-[5px] text-sm">
           {error}
         </div>
       )}
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-[5px] text-sm">
+        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800/60 text-green-700 dark:text-green-300 px-4 py-3 rounded-[5px] text-sm">
           {success}
         </div>
       )}
 
       {/* Add/Edit Form */}
       {showForm && (
-        <section className="bg-white border border-slate-200 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">
+        <section className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">
             {editingDevice ? 'Edit Device' : 'Add New Device'}
           </h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Device Name</label>
+              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Device Name</label>
               <input
                 type="text"
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Main Entrance"
-                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm"
+                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">IP Address</label>
+              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">IP Address</label>
               <input
                 type="text"
                 required
                 value={formData.ip}
                 onChange={(e) => setFormData({ ...formData, ip: e.target.value })}
                 placeholder="e.g., 192.168.1.201"
-                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm"
+                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Port</label>
+              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Port</label>
               <input
                 type="number"
                 value={formData.port}
                 onChange={(e) => setFormData({ ...formData, port: e.target.value })}
-                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm"
+                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </div>
             <div className="sm:col-span-3">
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-[5px] bg-slate-900 px-6 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-[5px] bg-slate-900 px-6 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
               >
                 {submitting ? 'Saving...' : editingDevice ? 'Update Device' : 'Add Device'}
               </button>
@@ -303,16 +303,16 @@ const DeviceManagement = () => {
       {/* Device Cards */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {devices.length === 0 ? (
-          <div className="col-span-2 bg-white border border-slate-200 p-8 text-center text-slate-500 shadow-sm">
+          <div className="col-span-2 bg-white border border-slate-200 p-8 text-center text-slate-500 shadow-sm dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700">
             No devices configured. Add a device to start tracking attendance.
           </div>
         ) : (
           devices.map((device) => (
-            <div key={device._id} className="bg-white border border-slate-200 p-6 shadow-sm">
+            <div key={device._id} className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">{device.name}</h3>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{device.name}</h3>
+                  <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">
                     {device.ip}:{device.port}
                   </p>
                 </div>
@@ -321,8 +321,8 @@ const DeviceManagement = () => {
                   <span
                     className={`inline-flex px-2 py-1 text-xs rounded-[5px] border ${
                       device.isActive
-                        ? 'border-green-200 bg-green-50 text-green-700'
-                        : 'border-slate-200 bg-slate-50 text-slate-500'
+                        ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300'
+                        : 'border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300'
                     }`}
                   >
                     {device.isActive ? 'Active' : 'Disabled'}
@@ -330,13 +330,13 @@ const DeviceManagement = () => {
                 </div>
               </div>
 
-              <div className="space-y-2 text-sm text-slate-600 mb-4">
+              <div className="space-y-2 text-sm text-slate-600 mb-4 dark:text-slate-400">
                 <div className="flex justify-between">
                   <span>Last Sync</span>
                   <span>{timeAgo(device.lastSyncAt)}</span>
                 </div>
                 {device.lastError && (
-                  <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-[5px] px-3 py-2">
+                  <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-100 rounded-[5px] px-3 py-2">
                     {device.lastError}
                   </div>
                 )}
@@ -356,32 +356,32 @@ const DeviceManagement = () => {
                 <button
                   onClick={() => handleCheckStatus(device._id)}
                   disabled={checkingStatusId === device._id}
-                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   {checkingStatusId === device._id ? 'Checking...' : 'Check Status'}
                 </button>
                 <button
                   onClick={() => handleSync(device._id)}
                   disabled={syncingDeviceId === device._id}
-                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   {syncingDeviceId === device._id ? 'Syncing...' : 'Sync Now'}
                 </button>
                 <button
                   onClick={() => handleToggleActive(device)}
-                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   {device.isActive ? 'Disable' : 'Enable'}
                 </button>
                 <button
                   onClick={() => handleEdit(device)}
-                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => setDeletingDeviceId(device._id)}
-                  className="rounded-[5px] border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50"
+                  className="rounded-[5px] border border-red-200 dark:border-red-800/60 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-300 transition hover:bg-red-50 dark:hover:bg-red-900/30"
                 >
                   Delete
                 </button>
@@ -389,25 +389,25 @@ const DeviceManagement = () => {
 
               {/* Device Users Panel */}
               {viewingUsersDeviceId === device._id && (
-                <div className="mt-4 border-t border-slate-200 pt-4">
-                  <h4 className="text-sm font-semibold text-slate-800 mb-3">Users on Device</h4>
+                <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+                  <h4 className="text-sm font-semibold text-slate-800 mb-3 dark:text-slate-200">Users on Device</h4>
                   {loadingUsers ? (
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600"></div>
                       Loading users from device...
                     </div>
                   ) : deviceUsers.length === 0 ? (
-                    <p className="text-sm text-slate-500">No users found on this device.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">No users found on this device.</p>
                   ) : (
                     <div className="space-y-2">
                       {deviceUsers.map((u) => (
-                        <div key={u.uid} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-[5px] px-4 py-2.5">
+                        <div key={u.uid} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-[5px] px-4 py-2.5 dark:bg-slate-950">
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-mono text-slate-500">UID: {u.uid}</span>
-                            <span className="text-sm text-slate-800">{u.name || 'Unnamed'}</span>
+                            <span className="text-xs font-mono text-slate-500 dark:text-slate-400">UID: {u.uid}</span>
+                            <span className="text-sm text-slate-800 dark:text-slate-200">{u.name || 'Unnamed'}</span>
                           </div>
                           {u.member ? (
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-green-200 bg-green-50 text-green-700">
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-green-200 dark:border-green-800/60 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">
                               {u.member.name} ({u.member.memberId})
                             </span>
                           ) : linkingUid === u.uid ? (
@@ -415,7 +415,7 @@ const DeviceManagement = () => {
                               <select
                                 value={linkMemberId}
                                 onChange={(e) => setLinkMemberId(e.target.value)}
-                                className="rounded-[5px] border border-slate-200 px-2 py-1 text-xs"
+                                className="rounded-[5px] border border-slate-200 px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                               >
                                 <option value="">Select member...</option>
                                 {members
@@ -429,13 +429,13 @@ const DeviceManagement = () => {
                               <button
                                 onClick={() => handleLinkUser(device._id, u.uid)}
                                 disabled={!linkMemberId}
-                                className="rounded-[5px] bg-slate-900 px-3 py-1 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                                className="rounded-[5px] bg-slate-900 px-3 py-1 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                               >
                                 Link
                               </button>
                               <button
                                 onClick={() => { setLinkingUid(null); setLinkMemberId(''); }}
-                                className="text-xs text-slate-500 hover:text-slate-700"
+                                className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400"
                               >
                                 Cancel
                               </button>
@@ -443,7 +443,7 @@ const DeviceManagement = () => {
                           ) : (
                             <button
                               onClick={() => { setLinkingUid(u.uid); setLinkMemberId(''); }}
-                              className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-yellow-200 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 transition"
+                              className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-yellow-200 dark:border-yellow-800/60 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 transition"
                             >
                               Unlinked - Click to Link
                             </button>

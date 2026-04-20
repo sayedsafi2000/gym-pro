@@ -90,23 +90,23 @@ const AttendanceCalendar = ({ calendarData, year, month, joinDate, expiryDate, o
   }
 
   return (
-    <div className="bg-white border border-slate-200 p-6 shadow-sm">
+    <div className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={handlePrev}
           aria-label="Previous month"
-          className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+          className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
         >
           &lt;
         </button>
-        <h3 className="text-lg font-semibold text-slate-900">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {MONTH_NAMES[month - 1]} {year}
         </h3>
         <button
           onClick={handleNext}
           aria-label="Next month"
-          className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+          className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
         >
           &gt;
         </button>
@@ -115,11 +115,11 @@ const AttendanceCalendar = ({ calendarData, year, month, joinDate, expiryDate, o
       {/* Month summary */}
       <div className="flex gap-4 mb-4 text-xs">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-green-100 border border-green-200"></span>
+          <span className="w-3 h-3 rounded-sm bg-green-100 border border-green-200 dark:border-green-800/60"></span>
           Present: {presentCount}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-red-50 border border-red-200"></span>
+          <span className="w-3 h-3 rounded-sm bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/60"></span>
           Absent: {absentCount}
         </span>
       </div>
@@ -127,7 +127,7 @@ const AttendanceCalendar = ({ calendarData, year, month, joinDate, expiryDate, o
       {/* Weekday headers */}
       <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAYS.map((day, i) => (
-          <div key={day} className="text-center text-xs font-semibold text-slate-500 uppercase py-1">
+          <div key={day} className="text-center text-xs font-semibold text-slate-500 uppercase py-1 dark:text-slate-400">
             <span className="hidden sm:inline">{day}</span>
             <span className="sm:hidden">{WEEKDAYS_SHORT[i]}</span>
           </div>
@@ -179,8 +179,8 @@ const AttendanceCalendar = ({ calendarData, year, month, joinDate, expiryDate, o
       </div>
 
       {presentCount === 0 && absentCount === 0 && (
-        <div className="mt-3 bg-slate-50 border border-slate-200 rounded-[5px] px-4 py-3 text-center">
-          <p className="text-xs text-slate-500">No attendance recorded this month</p>
+        <div className="mt-3 bg-slate-50 border border-slate-200 rounded-[5px] px-4 py-3 text-center dark:bg-slate-950 dark:border-slate-700">
+          <p className="text-xs text-slate-500 dark:text-slate-400">No attendance recorded this month</p>
         </div>
       )}
     </div>

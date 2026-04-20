@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4 needs this explicit directive for the class-based dark variant */
+@variant dark (&:where(.dark, .dark *));
+
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -7,6 +10,12 @@
   font-family: 'Work Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #111827;
   background-color: #f8fafc;
+}
+
+html.dark {
+  color-scheme: dark;
+  color: #f1f5f9;
+  background-color: #020617;
 }
 
 html {
@@ -18,6 +27,11 @@ body {
   min-height: 100vh;
   background: #f8fafc;
   color: #111827;
+}
+
+html.dark body {
+  background: #020617;
+  color: #f1f5f9;
 }
 
 * {

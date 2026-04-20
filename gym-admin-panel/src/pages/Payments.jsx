@@ -3,6 +3,7 @@ import api from '../services/api';
 import useToast from '../hooks/useToast';
 import ConfirmModal from '../components/ConfirmModal';
 import ReceiptModal from '../components/ReceiptModal';
+import Pagination from '../components/Pagination';
 
 const Payments = () => {
   const [payments, setPayments] = useState([]);
@@ -17,9 +18,9 @@ const Payments = () => {
     discountAmount: '',
     discountType: 'fixed',
     paymentMethod: 'Cash',
-    date: '',
+    date: new Date().toISOString().slice(0, 10),
     note: '',
-    paymentType: 'partial'
+    paymentType: 'full'
   });
   const [packages, setPackages] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -30,6 +31,9 @@ const Payments = () => {
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const LIMIT = 20;
   const { showSuccess, showError } = useToast();
 
   const getPackageFromPayment = (payment) => {
@@ -71,21 +75,20 @@ const Payments = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page]);
 
   const fetchData = async () => {
     try {
       const [paymentsRes, membersRes, packagesRes] = await Promise.all([
-        api.get('/payments'),
-        api.get('/members'),
+        api.get(`/payments?page=${page}&limit=${LIMIT}`),
+        api.get('/members?limit=500'),
         api.get('/packages'),
       ]);
       setPayments(paymentsRes.data.data);
+      setTotalPages(paymentsRes.data.pagination?.totalPages || 1);
       setSelectedPaymentIds([]);
       setMembers(membersRes.data.data);
       setPackages(packagesRes.data.data);
-      console.log('Payments data:', paymentsRes.data.data);
-      console.log('Members data:', membersRes.data.data);
       setError('');
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -150,9 +153,9 @@ const Payments = () => {
         discountAmount: '',
         discountType: 'fixed',
         paymentMethod: 'Cash',
-        date: '',
+        date: new Date().toISOString().slice(0, 10),
         note: '',
-        paymentType: 'partial'
+        paymentType: 'full'
       });
       setSelectedMember(null);
       setShowForm(false);
@@ -238,10 +241,10 @@ const Payments = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-slate-200 p-8 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="bg-white border border-slate-200 p-8 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4 dark:bg-slate-900 dark:border-slate-700">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Payments</h1>
-          <p className="text-sm text-slate-500 mt-2">Record payments and generate clean receipts.</p>
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Payments</h1>
+          <p className="text-sm text-slate-500 mt-2 dark:text-slate-400">Record payments and generate clean receipts.</p>
         </div>
         <button
           onClick={() => {
@@ -249,39 +252,39 @@ const Payments = () => {
             setError('');
             setSuccess('');
           }}
-          className="rounded-[5px] border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
+          className="rounded-[5px] border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
         >
           {showForm ? 'Cancel' : 'Add Payment'}
         </button>
       </div>
 
       {success && !showForm && (
-        <div className="bg-green-50 border border-green-200 rounded-[5px] p-4 text-green-700 text-sm">
+        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800/60 rounded-[5px] p-4 text-green-700 dark:text-green-300 text-sm">
           {success}
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-[5px] p-4 text-red-700 text-sm">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/60 rounded-[5px] p-4 text-red-700 dark:text-red-300 text-sm">
           {error}
         </div>
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-[5px] text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/60 rounded-[5px] text-red-700 dark:text-red-300 text-sm">
               {error}
             </div>
           )}
           {success && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-[5px] text-green-700 text-sm">
+            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800/60 rounded-[5px] text-green-700 dark:text-green-300 text-sm">
               {success}
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Member *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Member *</label>
               <select
                 value={formData.memberId}
                 onChange={(e) => {
@@ -306,7 +309,7 @@ const Payments = () => {
                   });
                   setSelectedMember(member);
                 }}
-                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-600"
                 required
               >
                 <option value="">Select Member</option>
@@ -318,7 +321,7 @@ const Payments = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Package *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Package *</label>
               <select
                 value={formData.packageId}
                 onChange={(e) => {
@@ -338,7 +341,7 @@ const Payments = () => {
                     paymentType: 'partial',
                   });
                 }}
-                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-600"
                 required
               >
                 <option value="">Select Package</option>
@@ -351,7 +354,7 @@ const Payments = () => {
               {selectedPackage && (() => {
                 const pkgPrice = selectedMember?.gender === 'Female' ? selectedPackage.priceLadies : selectedPackage.priceGents;
                 return (
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                     Suggested amount: ৳
                     {selectedMember?.dueAmount > 0
                       ? Math.max(1, Math.ceil(Math.min(selectedMember.dueAmount, pkgPrice) * 0.5))
@@ -361,13 +364,13 @@ const Payments = () => {
               })()}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Original Amount *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Original Amount *</label>
               <input
                 type="number"
                 placeholder="Original Amount"
                 value={formData.originalAmount}
                 onChange={(e) => setFormData({ ...formData, originalAmount: e.target.value })}
-                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-600"
                 min="0.01"
                 step="0.01"
                 required
@@ -381,7 +384,7 @@ const Payments = () => {
                     onClick={() =>
                       setFormData({ ...formData, originalAmount: String(selectedMember.dueAmount), paymentType: 'full' })
                     }
-                    className="rounded-[5px] border border-green-300 bg-green-50 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-100"
+                    className="rounded-[5px] border border-green-300 bg-green-50 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-100"
                   >
                     Pay Full Due (৳{selectedMember.dueAmount})
                   </button>
@@ -410,7 +413,7 @@ const Payments = () => {
                           paymentType: selectedMember.dueAmount <= pkgPrice ? 'full' : 'partial',
                         })
                       }
-                      className="rounded-[5px] border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                      className="rounded-[5px] border border-blue-300 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100"
                     >
                       Set to Package Price (৳{Math.min(selectedMember.dueAmount, pkgPrice)})
                     </button>
@@ -420,34 +423,56 @@ const Payments = () => {
               })()}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Discount Amount</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Discount Amount</label>
               <input
                 type="number"
                 placeholder="Discount Amount"
                 value={formData.discountAmount}
                 onChange={(e) => setFormData({ ...formData, discountAmount: e.target.value })}
-                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-600"
                 min="0"
                 step="0.01"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Discount Type</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Discount Type</label>
               <select
                 value={formData.discountType}
                 onChange={(e) => setFormData({ ...formData, discountType: e.target.value })}
-                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-600"
               >
                 <option value="fixed">Fixed Amount (BDT)</option>
                 <option value="percentage">Percentage (%)</option>
               </select>
             </div>
+            <div className="md:col-span-2">
+              {(() => {
+                const orig = parseFloat(formData.originalAmount) || 0;
+                const disc = parseFloat(formData.discountAmount) || 0;
+                if (!orig) return null;
+                const final = formData.discountType === 'percentage'
+                  ? Math.max(0, orig * (1 - disc / 100))
+                  : Math.max(0, orig - disc);
+                const showDiscount = disc > 0;
+                return (
+                  <div className="rounded-[5px] bg-emerald-50 border border-emerald-200 px-4 py-2 text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">Final Amount:</span>{' '}
+                    <span className="font-semibold text-emerald-700">৳{final.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                    {showDiscount && (
+                      <span className="text-xs text-slate-500 ml-2 dark:text-slate-400">
+                        (৳{orig.toLocaleString()} − {formData.discountType === 'percentage' ? `${disc}%` : `৳${disc.toLocaleString()}`})
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Payment Method *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Payment Method *</label>
               <select
                 value={formData.paymentMethod}
                 onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-600"
                 required
               >
                 <option value="Cash">Cash</option>
@@ -457,59 +482,59 @@ const Payments = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Payment Type</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Payment Type</label>
               <select
                 value={formData.paymentType}
                 onChange={(e) => setFormData({ ...formData, paymentType: e.target.value })}
-                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-600"
               >
                 <option value="partial">Partial Payment</option>
                 <option value="full">Full Payment</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Date</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Date</label>
               <input
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200"
+                className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-600"
               />
             </div>
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Note</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Note</label>
             <textarea
               placeholder="Optional note"
               value={formData.note}
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}
               rows="3"
-              className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 resize-none"
+              className="w-full rounded-[5px] border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 transition duration-200 resize-none dark:bg-slate-950 dark:text-slate-100 dark:border-slate-600"
             />
           </div>
 
           {selectedMember && (
-            <div className="mt-6 p-4 bg-slate-50 rounded-[5px] border border-slate-200">
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Payment Status</h3>
+            <div className="mt-6 p-4 bg-slate-50 rounded-[5px] border border-slate-200 dark:bg-slate-950 dark:border-slate-700">
+              <h3 className="text-sm font-semibold text-slate-900 mb-3 dark:text-slate-100">Payment Status</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-slate-500">Total Amount:</span>
-                  <span className="ml-2 font-semibold text-slate-900">৳{selectedMember.totalAmount || 0}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Total Amount:</span>
+                  <span className="ml-2 font-semibold text-slate-900 dark:text-slate-100">৳{selectedMember.totalAmount || 0}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500">Paid Amount:</span>
-                  <span className="ml-2 font-semibold text-green-600">৳{selectedMember.paidAmount || 0}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Paid Amount:</span>
+                  <span className="ml-2 font-semibold text-green-600 dark:text-green-400">৳{selectedMember.paidAmount || 0}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500">Due Amount:</span>
+                  <span className="text-slate-500 dark:text-slate-400">Due Amount:</span>
                   <span className={`ml-2 font-semibold ${selectedMember.dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
                     ৳{selectedMember.dueAmount || 0}
                   </span>
                 </div>
               </div>
               {selectedMember.dueAmount > 0 && (
-                <p className="mt-3 text-xs text-slate-600">
+                <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">
                   Maximum payment allowed: ৳{selectedMember.dueAmount}
                 </p>
               )}
@@ -519,7 +544,7 @@ const Payments = () => {
           <button
             type="submit"
             disabled={submitting || !formData.memberId || !formData.packageId || !formData.originalAmount}
-            className="mt-6 rounded-[5px] bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+            className="mt-6 rounded-[5px] bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             {submitting ? (
               <div className="flex items-center">
@@ -533,9 +558,9 @@ const Payments = () => {
         </form>
       )}
 
-      <div className="bg-white border border-slate-200 overflow-hidden shadow-sm">
-        <div className="px-6 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-          <p className="text-sm text-slate-600">
+      <div className="bg-white border border-slate-200 overflow-hidden shadow-sm dark:bg-slate-900 dark:border-slate-700">
+        <div className="px-6 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between dark:bg-slate-950 dark:border-slate-700">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             {selectedPaymentIds.length > 0
               ? `${selectedPaymentIds.length} selected`
               : 'Select payments to bulk delete'}
@@ -544,72 +569,72 @@ const Payments = () => {
               type="button"
               onClick={() => { if (selectedPaymentIds.length) setConfirmBulkDelete(true); }}
               disabled={!selectedPaymentIds.length}
-              className="rounded-[5px] border border-red-300 bg-red-50 px-4 py-2 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-[5px] border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/40 px-4 py-2 text-xs font-medium text-red-700 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/60 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
               Delete Selected
             </button>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-100 dark:bg-slate-800/60">
               <tr>
                 <th className="px-6 py-4 text-left">
                   <input
                     type="checkbox"
                     checked={payments.length > 0 && selectedPaymentIds.length === payments.length}
                     onChange={toggleSelectAllPayments}
-                    className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
+                    className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300 accent-slate-900 dark:accent-slate-100 dark:bg-slate-800 dark:border-slate-600"
                   />
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Member</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Package</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Method</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">Member</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">Package</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">Amount</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">Method</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">Type</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">Date</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-200">
+            <tbody className="bg-white divide-y divide-slate-200 dark:divide-slate-700 dark:bg-slate-900">
               {payments.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center py-8">
-                    <p className="text-sm font-medium text-slate-500">No payments found</p>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">No payments found</p>
                     <p className="text-xs text-slate-400 mt-1">Record a payment to get started.</p>
                   </td>
                 </tr>
               ) : payments.map((payment) => (
-                <tr key={payment._id} className="hover:bg-slate-50 transition duration-200">
+                <tr key={payment._id} className="hover:bg-slate-50 transition duration-200 dark:hover:bg-slate-800">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedPaymentIds.includes(payment._id)}
                       onChange={() => toggleSelectPayment(payment._id)}
-                      className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300"
+                      className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-300 accent-slate-900 dark:accent-slate-100 dark:bg-slate-800 dark:border-slate-600"
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
                     <div>
                       <div>{payment.memberId?.name || 'Unknown'} ({payment.memberId?.memberId || 'N/A'})</div>
-                      <div className="text-xs text-slate-500 mt-1">
+                      <div className="text-xs text-slate-500 mt-1 dark:text-slate-400">
                         Paid: ৳{payment.memberId?.paidAmount || 0} / Due: ৳{payment.memberId?.dueAmount || 0}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
                     {getPackageLabel(payment)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
                     <div>
                       <div className="font-semibold">৳{payment.finalAmount || payment.amount || 0}</div>
                       {payment.discountAmount > 0 && payment.originalAmount && (
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
                           Original: ৳{payment.originalAmount} (-{payment.discountType === 'percentage' ? `${payment.discountAmount}%` : `৳${payment.discountAmount}`})
                         </div>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
                     {getPaymentMethodLabel(payment)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -621,20 +646,20 @@ const Payments = () => {
                       {payment.paymentType === 'full' ? 'Full' : 'Partial'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
                     {new Date(payment.date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
                       <button
                         onClick={() => generateReceipt(payment)}
-                        className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                        className="rounded-[5px] border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                       >
                         Receipt
                       </button>
                       <button
                         onClick={() => setDeletingPaymentId(payment._id)}
-                        className="rounded-[5px] border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50 transition"
+                        className="rounded-[5px] border border-red-200 dark:border-red-800/60 px-2.5 py-1 text-xs font-medium text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
                       >
                         Delete
                       </button>
@@ -645,6 +670,9 @@ const Payments = () => {
             </tbody>
 
           </table>
+          <div className="px-4 border-t border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          </div>
         </div>
       </div>
 

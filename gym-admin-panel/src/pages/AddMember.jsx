@@ -17,9 +17,9 @@ const AddMember = () => {
     emergencyPhone: '',
     address: '',
     gender: '',
-    joinDate: '',
+    joinDate: new Date().toISOString().slice(0, 10),
     packageId: '',
-    paymentType: 'due', // 'full', 'partial', 'due'
+    paymentType: 'full', // 'full', 'partial', 'due'
     initialPayment: '',
     installmentMonths: '',
   });
@@ -86,26 +86,26 @@ const AddMember = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
-      <div className="bg-white border border-slate-200 p-8 shadow-sm rounded-[5px]">
+      <div className="bg-white border border-slate-200 p-8 shadow-sm rounded-[5px] dark:bg-slate-900 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-semibold mb-2 text-slate-900">Add New Member</h1>
-            <p className="text-slate-500">Register a new gym member</p>
+            <h1 className="text-3xl font-semibold mb-2 text-slate-900 dark:text-slate-100">Add New Member</h1>
+            <p className="text-slate-500 dark:text-slate-400">Register a new gym member</p>
           </div>
         </div>
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-[5px] shadow-sm p-8">
+      <div className="bg-white rounded-[5px] shadow-sm p-8 dark:bg-slate-900">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Personal Information */}
           <div>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6 dark:text-slate-200">
               Personal Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-slate-300">
                   Full Name *
                 </label>
                 <input
@@ -113,13 +113,13 @@ const AddMember = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   placeholder="Enter full name"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-slate-300">
                   Phone Number *
                 </label>
                 <input
@@ -127,24 +127,24 @@ const AddMember = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   placeholder="Enter phone number"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Emergency Phone</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-slate-300">Emergency Phone</label>
                 <input
                   type="tel"
                   name="emergencyPhone"
                   value={formData.emergencyPhone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   placeholder="Emergency contact number (optional)"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-slate-300">
                   Address
                 </label>
                 <textarea
@@ -152,19 +152,19 @@ const AddMember = () => {
                   value={formData.address}
                   onChange={handleChange}
                   rows="3"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 resize-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   placeholder="Enter address (optional)"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-slate-300">
                   Gender *
                 </label>
                 <select
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   required
                 >
                   <option value="">Select Gender</option>
@@ -178,12 +178,12 @@ const AddMember = () => {
 
           {/* Membership Details */}
           <div>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6 dark:text-slate-200">
               Membership Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-slate-300">
                   Join Date *
                 </label>
                 <input
@@ -191,16 +191,16 @@ const AddMember = () => {
                   name="joinDate"
                   value={formData.joinDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-slate-300">
                   Package *
                 </label>
                 {packages.length === 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-[5px] px-4 py-3 text-sm text-yellow-700 mb-2">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800/60 rounded-[5px] px-4 py-3 text-sm text-yellow-700 dark:text-yellow-300 mb-2">
                     No packages available. <a href="/packages" className="underline font-medium">Create a package first</a> before adding members.
                   </div>
                 )}
@@ -208,7 +208,7 @@ const AddMember = () => {
                   name="packageId"
                   value={formData.packageId}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   required
                 >
                   <option value="">Select Package</option>
@@ -222,27 +222,27 @@ const AddMember = () => {
                   const selectedPkg = packages.find(p => p._id === formData.packageId);
                   if (!selectedPkg) return null;
                   return (
-                    <div className="mt-3 bg-slate-50 border border-slate-200 rounded-[5px] p-4">
+                    <div className="mt-3 bg-slate-50 border border-slate-200 rounded-[5px] p-4 dark:bg-slate-950 dark:border-slate-700">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-semibold text-slate-900">{selectedPkg.name}</h4>
+                        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{selectedPkg.name}</h4>
                         {selectedPkg.category === 'special' && (
-                          <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border border-orange-200 bg-orange-50 text-orange-700">Special Offer</span>
+                          <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border border-orange-200 dark:border-orange-800/60 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300">Special Offer</span>
                         )}
                       </div>
                       {selectedPkg.description && (
-                        <p className="text-xs text-slate-500 mb-2">{selectedPkg.description}</p>
+                        <p className="text-xs text-slate-500 mb-2 dark:text-slate-400">{selectedPkg.description}</p>
                       )}
-                      <div className="flex gap-4 text-xs text-slate-600">
+                      <div className="flex gap-4 text-xs text-slate-600 dark:text-slate-400">
                         <span>৳{getEffectivePrice(selectedPkg, formData.gender).toLocaleString()}</span>
                         <span>{selectedPkg.isLifetime ? 'Lifetime' : `${selectedPkg.duration} days`}</span>
                         {!selectedPkg.includesAdmission && selectedPkg.admissionFee > 0 && (
-                          <span className="text-amber-600">incl. ৳{selectedPkg.admissionFee} admission</span>
+                          <span className="text-amber-600 dark:text-amber-400">incl. ৳{selectedPkg.admissionFee} admission</span>
                         )}
                       </div>
                       {selectedPkg.benefits && selectedPkg.benefits.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-slate-200 space-y-1">
+                        <div className="mt-2 pt-2 border-t border-slate-200 space-y-1 dark:border-slate-700">
                           {selectedPkg.benefits.map((b, i) => (
-                            <div key={i} className="flex items-center gap-1.5 text-xs text-slate-600">
+                            <div key={i} className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
                               <svg className="w-3 h-3 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
@@ -260,12 +260,12 @@ const AddMember = () => {
 
           {/* Payment Options */}
           <div>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6 dark:text-slate-200">
               Payment Options
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                <label className="block text-sm font-semibold text-slate-700 mb-3 dark:text-slate-300">
                   Payment Type *
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -278,10 +278,10 @@ const AddMember = () => {
                       onChange={handleChange}
                       className="sr-only peer"
                     />
-                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-200 hover:border-green-300">
+                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-50 dark:peer-checked:bg-green-900/30 dark:peer-checked:border-green-500 transition-all duration-200 hover:border-green-300 dark:border-slate-700 dark:bg-slate-900">
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-slate-800">Full Payment</div>
-                        <div className="text-sm text-slate-600">Pay complete amount now</div>
+                        <div className="text-lg font-semibold text-slate-800 dark:text-slate-200">Full Payment</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">Pay complete amount now</div>
                       </div>
                     </div>
                   </label>
@@ -294,10 +294,10 @@ const AddMember = () => {
                       onChange={handleChange}
                       className="sr-only peer"
                     />
-                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-200 hover:border-blue-300">
+                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 dark:peer-checked:border-blue-500 transition-all duration-200 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-900">
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-slate-800">Partial Payment</div>
-                        <div className="text-sm text-slate-600">Pay part of the amount</div>
+                        <div className="text-lg font-semibold text-slate-800 dark:text-slate-200">Partial Payment</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">Pay part of the amount</div>
                       </div>
                     </div>
                   </label>
@@ -310,10 +310,10 @@ const AddMember = () => {
                       onChange={handleChange}
                       className="sr-only peer"
                     />
-                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-orange-500 peer-checked:bg-orange-50 transition-all duration-200 hover:border-orange-300">
+                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/30 dark:peer-checked:border-orange-500 transition-all duration-200 hover:border-orange-300 dark:border-slate-700 dark:bg-slate-900">
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-slate-800">Due Payment</div>
-                        <div className="text-sm text-slate-600">Pay later</div>
+                        <div className="text-lg font-semibold text-slate-800 dark:text-slate-200">Due Payment</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">Pay later</div>
                       </div>
                     </div>
                   </label>
@@ -326,11 +326,11 @@ const AddMember = () => {
                       onChange={handleChange}
                       className="sr-only peer"
                     />
-                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 transition-all duration-200 hover:border-purple-300">
+                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 dark:peer-checked:bg-purple-900/30 dark:peer-checked:border-purple-500 transition-all duration-200 hover:border-purple-300 dark:border-slate-700 dark:bg-slate-900">
                       <div className="flex items-center gap-2">
-                        <div className="text-lg font-semibold text-slate-800">Monthly Installment</div>
+                        <div className="text-lg font-semibold text-slate-800 dark:text-slate-200">Monthly Installment</div>
                       </div>
-                      <div className="text-sm text-slate-600">Pay in equal monthly installments</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">Pay in equal monthly installments</div>
                     </div>
                   </label>
                 </div>
@@ -338,7 +338,7 @@ const AddMember = () => {
 
               {formData.paymentType === 'partial' && (
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-slate-300">
                     Initial Payment Amount *
                   </label>
                   <input
@@ -349,12 +349,12 @@ const AddMember = () => {
                     min="0"
                     step="0.01"
                     max={getEffectivePrice(packages.find(p => p._id === formData.packageId), formData.gender)}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                     placeholder="Enter payment amount"
                     required={formData.paymentType === 'partial'}
                   />
                   {packages.find(p => p._id === formData.packageId) && (
-                    <p className="text-sm text-slate-600 mt-1">
+                    <p className="text-sm text-slate-600 mt-1 dark:text-slate-400">
                       Maximum amount: ৳{getEffectivePrice(packages.find(p => p._id === formData.packageId), formData.gender)}
                     </p>
                   )}
@@ -368,9 +368,9 @@ const AddMember = () => {
                 const months = parseInt(formData.installmentMonths, 10) || Math.ceil(selectedPkg.duration / 30) || 1;
                 const monthlyAmt = Math.ceil(effectivePrice / months);
                 return (
-                  <div className="mt-4 bg-purple-50 border border-purple-200 rounded-[5px] p-4 space-y-3">
+                  <div className="mt-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800/60 rounded-[5px] p-4 space-y-3">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Number of Months</label>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2 dark:text-slate-300">Number of Months</label>
                       <input
                         type="number"
                         name="installmentMonths"
@@ -378,21 +378,21 @@ const AddMember = () => {
                         onChange={handleChange}
                         min="2"
                         max="24"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
+                        className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                       />
                     </div>
-                    <div className="text-sm text-slate-700 space-y-1">
+                    <div className="text-sm text-slate-700 space-y-1 dark:text-slate-300">
                       <div className="flex justify-between">
                         <span>Total Amount</span>
                         <span className="font-semibold">৳{effectivePrice.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Monthly Payment</span>
-                        <span className="font-semibold text-purple-700">৳{monthlyAmt.toLocaleString()}/month</span>
+                        <span className="font-semibold text-purple-700 dark:text-purple-300">৳{monthlyAmt.toLocaleString()}/month</span>
                       </div>
                       <div className="flex justify-between">
                         <span>First Payment (today)</span>
-                        <span className="font-semibold text-green-700">৳{monthlyAmt.toLocaleString()}</span>
+                        <span className="font-semibold text-green-700 dark:text-green-300">৳{monthlyAmt.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -401,18 +401,18 @@ const AddMember = () => {
             </div>
           </div>
           {formData.packageId && (
-            <div className="bg-slate-50 rounded-[5px] p-6 border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">
+            <div className="bg-slate-50 rounded-[5px] p-6 border border-slate-200 dark:bg-slate-950 dark:border-slate-700">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4 dark:text-slate-200">
                 Membership Preview
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">Member ID:</span>
-                  <span className="font-semibold text-slate-800 ml-2">Will be auto-generated</span>
+                <div className="bg-white p-4 rounded-[5px] dark:bg-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">Member ID:</span>
+                  <span className="font-semibold text-slate-800 ml-2 dark:text-slate-200">Will be auto-generated</span>
                 </div>
-                <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">{packages.find(p => p._id === formData.packageId)?.isLifetime ? 'Free Months End:' : 'Expiry Date:'}</span>
-                  <span className="font-semibold text-slate-800 ml-2">
+                <div className="bg-white p-4 rounded-[5px] dark:bg-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">{packages.find(p => p._id === formData.packageId)?.isLifetime ? 'Free Months End:' : 'Expiry Date:'}</span>
+                  <span className="font-semibold text-slate-800 ml-2 dark:text-slate-200">
                     {formData.joinDate && packages.find(p => p._id === formData.packageId) ?
                       (() => {
                         const pkg = packages.find(p => p._id === formData.packageId);
@@ -427,14 +427,14 @@ const AddMember = () => {
                     }
                   </span>
                 </div>
-                <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">Total Amount:</span>
-                  <span className="font-semibold text-green-600 ml-2">
+                <div className="bg-white p-4 rounded-[5px] dark:bg-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">Total Amount:</span>
+                  <span className="font-semibold text-green-600 dark:text-green-400 ml-2">
                     ৳{getEffectivePrice(packages.find(p => p._id === formData.packageId), formData.gender)}
                   </span>
                 </div>
-                <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">Payment Status:</span>
+                <div className="bg-white p-4 rounded-[5px] dark:bg-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">Payment Status:</span>
                   {(() => {
                     const total = getEffectivePrice(packages.find(p => p._id === formData.packageId), formData.gender);
                     return (
@@ -454,18 +454,18 @@ const AddMember = () => {
           )}
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-slate-200">
+          <div className="flex justify-end space-x-4 pt-6 border-t border-slate-200 dark:border-slate-700">
             <button
               type="button"
               onClick={() => navigate('/members')}
-              className="px-6 py-3 border border-slate-200 text-slate-700 rounded-[5px] hover:bg-slate-50 transition-all duration-200"
+              className="px-6 py-3 border border-slate-200 text-slate-700 rounded-[5px] hover:bg-slate-50 transition-all duration-200 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-3 bg-slate-900 text-white rounded-[5px] hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="px-8 py-3 bg-slate-900 text-white rounded-[5px] hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
             >
               {loading ? (
                 <div className="flex items-center">

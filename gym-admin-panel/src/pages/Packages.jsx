@@ -4,8 +4,8 @@ import useToast from '../hooks/useToast';
 import ConfirmModal from '../components/ConfirmModal';
 
 const CATEGORY_STYLES = {
-  regular: 'border-slate-200 bg-slate-50 text-slate-600',
-  special: 'border-orange-200 bg-orange-50 text-orange-700',
+  regular: 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  special: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800/60 dark:bg-orange-900/30 dark:text-orange-300',
 };
 
 const Packages = () => {
@@ -20,7 +20,7 @@ const Packages = () => {
 
   const defaultForm = {
     name: '', duration: '', priceGents: '', priceLadies: '', description: '',
-    category: 'regular', benefits: [], isLifetime: false,
+    category: 'regular', benefits: [], isLifetime: true,
     admissionFee: '0', includesAdmission: false, freeMonths: '0',
   };
 
@@ -143,16 +143,16 @@ const Packages = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <section className="bg-white border border-slate-200 p-8 shadow-sm">
+      <section className="bg-white border border-slate-200 p-8 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Membership</p>
-            <h1 className="text-3xl font-semibold text-slate-900 mt-3">Packages</h1>
-            <p className="mt-2 text-sm text-slate-500">Create and manage membership packages with pricing and benefits.</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Membership</p>
+            <h1 className="text-3xl font-semibold text-slate-900 mt-3 dark:text-slate-100">Packages</h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Create and manage membership packages with pricing and benefits.</p>
           </div>
           <button
             onClick={openAdd}
-            className="rounded-[5px] bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition"
+            className="rounded-[5px] bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             + Add Package
           </button>
@@ -161,14 +161,14 @@ const Packages = () => {
 
       {/* Package Cards */}
       {packages.length === 0 ? (
-        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-8 text-center">
-          <p className="text-sm font-medium text-slate-700">No packages yet</p>
-          <p className="text-xs text-slate-500 mt-1">Create your first membership package to start enrolling members.</p>
+        <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-8 text-center dark:bg-slate-950 dark:border-slate-700">
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">No packages yet</p>
+          <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">Create your first membership package to start enrolling members.</p>
         </div>
       ) : (
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {packages.map((pkg) => (
-            <div key={pkg._id} className="bg-white border border-slate-200 p-6 shadow-sm flex flex-col">
+            <div key={pkg._id} className="bg-white border border-slate-200 p-6 shadow-sm flex flex-col dark:bg-slate-900 dark:border-slate-700">
               {/* Category + Duration */}
               <div className="flex items-center justify-between mb-3">
                 <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-[5px] border ${CATEGORY_STYLES[pkg.category] || CATEGORY_STYLES.regular}`}>
@@ -178,18 +178,18 @@ const Packages = () => {
               </div>
 
               {/* Name + Description */}
-              <h3 className="text-lg font-semibold text-slate-900">{pkg.name}</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{pkg.name}</h3>
               {pkg.description && (
-                <p className="text-xs text-slate-500 mt-1">{pkg.description}</p>
+                <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">{pkg.description}</p>
               )}
 
               {/* Price */}
               <div className="mt-4">
                 {(pkg.priceGents ?? pkg.price) === (pkg.priceLadies ?? pkg.price) ? (
-                  <p className="text-2xl font-semibold text-slate-900">৳{(pkg.priceGents ?? pkg.price ?? 0).toLocaleString()}</p>
+                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">৳{(pkg.priceGents ?? pkg.price ?? 0).toLocaleString()}</p>
                 ) : (
                   <div className="space-y-0.5">
-                    <p className="text-xl font-semibold text-slate-900">
+                    <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                       ♂ ৳{(pkg.priceGents ?? 0).toLocaleString()}
                       <span className="text-slate-300 mx-2">|</span>
                       ♀ ৳{(pkg.priceLadies ?? 0).toLocaleString()}
@@ -204,17 +204,17 @@ const Packages = () => {
 
               {/* Admission fee info */}
               {!pkg.includesAdmission && (pkg.admissionFee || 0) > 0 && (
-                <p className="text-xs text-amber-600 mt-1">+ ৳{(pkg.admissionFee || 0).toLocaleString()} admission fee</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">+ ৳{(pkg.admissionFee || 0).toLocaleString()} admission fee</p>
               )}
               {pkg.includesAdmission && (
-                <p className="text-xs text-green-600 mt-1">Admission fee included</p>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">Admission fee included</p>
               )}
 
               {/* Benefits */}
               {pkg.benefits && pkg.benefits.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-slate-100 space-y-1.5">
                   {pkg.benefits.map((b, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-slate-600">
+                    <div key={i} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
                       <svg className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
@@ -228,13 +228,13 @@ const Packages = () => {
               <div className="flex gap-2 mt-auto pt-4">
                 <button
                   onClick={() => openEdit(pkg)}
-                  className="flex-1 rounded-[5px] border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                  className="flex-1 rounded-[5px] border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => setDeletingId(pkg._id)}
-                  className="rounded-[5px] border border-red-200 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 transition"
+                  className="rounded-[5px] border border-red-200 dark:border-red-800/60 px-3 py-2 text-xs font-medium text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
                 >
                   Delete
                 </button>
@@ -248,27 +248,27 @@ const Packages = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-slate-900/50" onClick={() => setShowModal(false)} />
-          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-lg w-full mx-4 p-6 z-10 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+          <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-lg w-full mx-4 p-6 z-10 max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">
               {editingPkg ? 'Edit Package' : 'Add Package'}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Package Name</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Package Name</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Super Saver Plus"
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Category</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Category</label>
                 <div className="flex gap-2">
                   {['regular', 'special'].map((cat) => (
                     <button
@@ -289,13 +289,13 @@ const Packages = () => {
 
               {/* Description */}
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Description</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Description</label>
                 <textarea
                   rows={2}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="e.g., Lifetime Membership + 6 Months Free"
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent resize-none"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent resize-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
 
@@ -308,33 +308,33 @@ const Packages = () => {
                     onChange={(e) => setFormData({ ...formData, isLifetime: e.target.checked, duration: e.target.checked ? '' : formData.duration })}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                  <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-focus:ring-2 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
-                <span className="text-sm text-slate-700">Lifetime package (no expiry)</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300">Lifetime package (no expiry)</span>
               </div>
 
               {/* Prices: Gents + Ladies */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Price - Gents (৳)</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Price - Gents (৳)</label>
                   <input
                     type="number"
                     required
                     min="0"
                     value={formData.priceGents}
                     onChange={(e) => setFormData({ ...formData, priceGents: e.target.value })}
-                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Price - Ladies (৳)</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Price - Ladies (৳)</label>
                   <input
                     type="number"
                     required
                     min="0"
                     value={formData.priceLadies}
                     onChange={(e) => setFormData({ ...formData, priceLadies: e.target.value })}
-                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -342,14 +342,14 @@ const Packages = () => {
               {/* Duration (if not lifetime) */}
               {!formData.isLifetime && (
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Duration (days)</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Duration (days)</label>
                   <input
                     type="number"
                     required
                     min="1"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                   {formData.duration && (
                     <p className="text-xs text-slate-400 mt-1">{formatDuration(Number(formData.duration))}</p>
@@ -360,13 +360,13 @@ const Packages = () => {
               {/* Admission Fee + Includes Toggle */}
               <div className="grid grid-cols-2 gap-4 items-end">
                 <div>
-                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Admission Fee (৳)</label>
+                  <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Admission Fee (৳)</label>
                   <input
                     type="number"
                     min="0"
                     value={formData.admissionFee}
                     onChange={(e) => setFormData({ ...formData, admissionFee: e.target.value })}
-                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                    className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
                 <div className="flex items-center gap-2 pb-2">
@@ -379,26 +379,26 @@ const Packages = () => {
                     />
                     <div className="w-9 h-5 bg-slate-200 peer-focus:ring-2 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
                   </label>
-                  <span className="text-xs text-slate-600">Admission included in price</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400">Admission included in price</span>
                 </div>
               </div>
 
               {/* Free Months */}
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Free Months Included</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Free Months Included</label>
                 <input
                   type="number"
                   min="0"
                   value={formData.freeMonths}
                   onChange={(e) => setFormData({ ...formData, freeMonths: e.target.value })}
                   placeholder="0"
-                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                  className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
 
               {/* Benefits */}
               <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Benefits</label>
+                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Benefits</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -406,12 +406,12 @@ const Packages = () => {
                     onChange={(e) => setBenefitInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addBenefit(); } }}
                     placeholder="Type a benefit and press Enter"
-                    className="flex-1 rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
+                    className="flex-1 rounded-[5px] border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                   <button
                     type="button"
                     onClick={addBenefit}
-                    className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
+                    className="rounded-[5px] border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                   >
                     Add
                   </button>
@@ -421,7 +421,7 @@ const Packages = () => {
                     {formData.benefits.map((b, i) => (
                       <span
                         key={i}
-                        className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-[5px]"
+                        className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-[5px] dark:bg-slate-800 dark:text-slate-300"
                       >
                         {b}
                         <button
@@ -442,14 +442,14 @@ const Packages = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                  className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition disabled:opacity-50"
+                  className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                 >
                   {submitting ? 'Saving...' : editingPkg ? 'Update Package' : 'Add Package'}
                 </button>
