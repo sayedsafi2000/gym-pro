@@ -33,10 +33,10 @@ const ToastProvider = ({ children }) => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`px-4 py-3 rounded-[5px] text-sm font-medium shadow-lg transition-all duration-300 animate-slide-in flex items-center justify-between gap-3 ${
+            className={`px-4 py-3 rounded-control text-sm font-medium shadow-card-lg transition-all duration-300 animate-slide-in flex items-center justify-between gap-3 ${
               toast.type === 'error'
                 ? 'bg-red-600 text-white'
-                : 'bg-slate-900 text-white'
+                : 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
             }`}
           >
             <span>{toast.message}</span>

@@ -79,7 +79,18 @@
       "Bash(node .gstack/qa-reports/dark-sweep-safe.mjs)",
       "Bash(node .gstack/qa-reports/dark-tables-fix.mjs)",
       "Bash(node .gstack/qa-reports/dark-audit-all.mjs)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(npx --yes depcheck --json)",
+      "Bash(npx --yes knip --reporter json)",
+      "Bash(grep -n \"App\\\\.css\" gym-admin-panel/src/App.jsx gym-admin-panel/src/main.jsx)",
+      "Bash(grep -rn \"from '.*utils/auth'\" gym-admin-panel/src)",
+      "Bash(cat .env.example)",
+      "Bash(cat gym-server/.env.example)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(npx eslint *)",
+      "Bash(grep -rn \"setFormData\\({ \\\\.\\\\.\\\\.formData,\" gym-admin-panel/src)",
+      "Bash(sort -t: -k2 -n -r)"
     ]
   }
 }

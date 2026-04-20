@@ -23,9 +23,9 @@ const Pagination = ({ page, totalPages, onChange, className = '' }) => {
   const safe = Math.min(Math.max(1, page || 1), totalPages);
   const items = buildPages(safe, totalPages);
 
-  const btn = 'inline-flex items-center justify-center min-w-[32px] h-8 px-2 rounded-[5px] border text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
+  const btn = 'inline-flex items-center justify-center min-w-[32px] h-8 px-2 rounded-control border text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
   const idle = 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800';
-  const active = 'border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900';
+  const active = 'border-brand-600 bg-brand-600 text-white dark:border-brand-500 dark:bg-brand-500';
 
   return (
     <nav className={`flex items-center justify-between gap-2 py-3 ${className}`} aria-label="Pagination">

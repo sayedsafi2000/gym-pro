@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { requireRole, requirePermission } = require('../middleware/authMiddleware');
+const validate = require('../middleware/validate');
+const schemas = require('../schemas');
 const {
   getMembers,
   getMember,
@@ -12,7 +14,7 @@ const {
   rejectMember,
 } = require('../controllers/memberController');
 
-router.route('/').get(getMembers).post(createMember);
+router.route('/').get(getMembers).post(validate(schemas.createMember), createMember);
 router.get('/pending', requireRole('super_admin'), getPendingMembers);
 router.put('/:id/approve', requireRole('super_admin'), approveMember);
 router.delete('/:id/reject', requireRole('super_admin'), rejectMember);

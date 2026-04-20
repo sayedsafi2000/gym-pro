@@ -1,4 +1,6 @@
 import React from 'react';
+import Modal from './ui/Modal';
+import Button from './ui/Button';
 
 const formatDate = (date) =>
   new Date(date).toLocaleDateString('en-GB', {
@@ -32,7 +34,7 @@ const ReceiptCopy = ({ data, type, copyLabel }) => {
   const gym = data.gym || { name: 'GymPro Fitness', address: 'Dhaka, Bangladesh', phone: '' };
 
   return (
-    <div className="receipt-copy w-full max-w-[260px] mx-auto border border-slate-300 bg-white p-5 text-[11px] font-mono">
+    <div className="receipt-copy w-full max-w-[260px] mx-auto border border-slate-300 bg-white p-5 text-[11px] font-mono text-slate-900">
       {/* Gym Header */}
       <div className="text-center mb-3">
         <h2 className="text-[13px] font-bold tracking-[2px] uppercase">{gym.name}</h2>
@@ -283,43 +285,32 @@ const ReceiptModal = ({ open, onClose, type, data }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-slate-900/50" onClick={onClose} />
-
-      <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-4xl w-full mx-4 z-10 max-h-[95vh] overflow-y-auto">
-        {/* Action buttons */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-semibold text-slate-900">
-            {type === 'payment' ? 'Payment Receipt' : 'Sale Receipt'}
-          </h3>
-          <div className="flex gap-2">
-            <button
-              onClick={handlePrint}
-              className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-            >
-              Print (A4 Trifold)
-            </button>
-            <button
-              onClick={onClose}
-              className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-
-        {/* Receipt preview — 3 copies */}
-        <div className="p-6 bg-slate-50">
-          <div className="flex flex-col lg:flex-row gap-4 justify-center items-start">
-            <ReceiptCopy data={data} type={type} copyLabel="CUSTOMER COPY" />
-            <div className="hidden lg:block border-l border-dashed border-slate-300 self-stretch" />
-            <ReceiptCopy data={data} type={type} copyLabel="OFFICE COPY" />
-            <div className="hidden lg:block border-l border-dashed border-slate-300 self-stretch" />
-            <ReceiptCopy data={data} type={type} copyLabel="ACCOUNTS COPY" />
-          </div>
+    <Modal open={open} onClose={onClose} size="4xl">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          {type === 'payment' ? 'Payment Receipt' : 'Sale Receipt'}
+        </h3>
+        <div className="flex gap-2">
+          <Button variant="primary" size="md" onClick={handlePrint}>
+            Print (A4 Trifold)
+          </Button>
+          <Button variant="secondary" size="md" onClick={onClose}>
+            Close
+          </Button>
         </div>
       </div>
-    </div>
+
+      {/* Receipt preview — 3 copies (print markup untouched) */}
+      <div className="p-6 bg-slate-50 dark:bg-slate-950">
+        <div className="flex flex-col lg:flex-row gap-4 justify-center items-start">
+          <ReceiptCopy data={data} type={type} copyLabel="CUSTOMER COPY" />
+          <div className="hidden lg:block border-l border-dashed border-slate-300 self-stretch" />
+          <ReceiptCopy data={data} type={type} copyLabel="OFFICE COPY" />
+          <div className="hidden lg:block border-l border-dashed border-slate-300 self-stretch" />
+          <ReceiptCopy data={data} type={type} copyLabel="ACCOUNTS COPY" />
+        </div>
+      </div>
+    </Modal>
   );
 };
 

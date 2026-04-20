@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import { getErrorMessage } from '../services/errorHandler';
 import ConfirmModal from '../components/ConfirmModal';
+import Alert from '../components/Alert';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import FormField from '../components/ui/FormField';
+import Spinner from '../components/ui/Spinner';
+import EmptyState from '../components/ui/EmptyState';
 
 const DeviceManagement = () => {
   const [devices, setDevices] = useState([]);
@@ -30,8 +40,8 @@ const DeviceManagement = () => {
     try {
       const res = await api.get('/devices');
       setDevices(res.data.data);
-    } catch (error) {
-      console.error('Error fetching devices:', error);
+    } catch (err) {
+      console.error('Error fetching devices:', err);
     } finally {
       setLoading(false);
     }
@@ -52,8 +62,8 @@ const DeviceManagement = () => {
       ]);
       setDeviceUsers(usersRes.data.data);
       setMembers(membersRes.data.data);
-    } catch (error) {
-      console.error('Error fetching device users:', error);
+    } catch (err) {
+      console.error('Error fetching device users:', err);
       setError('Failed to fetch device users. Is the device online?');
       setViewingUsersDeviceId(null);
     } finally {
@@ -71,9 +81,9 @@ const DeviceManagement = () => {
       setLinkingUid(null);
       setLinkMemberId('');
       setSuccess('User linked to member successfully');
-      handleViewUsers(deviceId); // Refresh the users list
-    } catch (error) {
-      setError(error.response?.data?.message || 'Failed to link user');
+      handleViewUsers(deviceId);
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to link user'));
     }
   };
 
@@ -95,8 +105,8 @@ const DeviceManagement = () => {
       setEditingDevice(null);
       setFormData({ name: '', ip: '', port: '4370' });
       fetchDevices();
-    } catch (error) {
-      setError(error.response?.data?.message || 'Failed to save device');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to save device'));
     } finally {
       setSubmitting(false);
     }
@@ -114,8 +124,8 @@ const DeviceManagement = () => {
     try {
       await api.delete(`/devices/${id}`);
       fetchDevices();
-    } catch (error) {
-      console.error('Error deleting device:', error);
+    } catch (err) {
+      console.error('Error deleting device:', err);
     } finally {
       setDeletingDeviceId(null);
     }
@@ -125,8 +135,8 @@ const DeviceManagement = () => {
     try {
       await api.put(`/devices/${device._id}`, { isActive: !device.isActive });
       fetchDevices();
-    } catch (error) {
-      console.error('Error toggling device:', error);
+    } catch (err) {
+      console.error('Error toggling device:', err);
     }
   };
 
@@ -135,7 +145,7 @@ const DeviceManagement = () => {
     try {
       const res = await api.get(`/devices/${deviceId}/status`);
       setDeviceStatuses((prev) => ({ ...prev, [deviceId]: res.data.data }));
-    } catch (error) {
+    } catch (err) {
       setDeviceStatuses((prev) => ({
         ...prev,
         [deviceId]: { online: false, error: 'Connection check failed' },
@@ -150,8 +160,8 @@ const DeviceManagement = () => {
     try {
       await api.post(`/attendance/sync/${deviceId}`);
       fetchDevices();
-    } catch (error) {
-      console.error('Sync failed:', error);
+    } catch (err) {
+      console.error('Sync failed:', err);
     } finally {
       setSyncingDeviceId(null);
     }
@@ -161,33 +171,21 @@ const DeviceManagement = () => {
     const liveStatus = deviceStatuses[device._id];
 
     if (liveStatus) {
-      return liveStatus.online ? (
-        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-green-200 dark:border-green-800/60 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-          Online
-        </span>
-      ) : (
-        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-          Offline
-        </span>
+      return (
+        <Badge variant={liveStatus.online ? 'success' : 'danger'}>
+          {liveStatus.online ? 'Online' : 'Offline'}
+        </Badge>
       );
     }
 
     if (device.lastSyncStatus === 'never') {
-      return (
-        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-slate-200 bg-slate-50 text-slate-600 dark:bg-slate-950 dark:text-slate-400 dark:border-slate-700">
-          Never Synced
-        </span>
-      );
+      return <Badge variant="neutral">Never Synced</Badge>;
     }
 
-    return device.lastSyncStatus === 'success' ? (
-      <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-green-200 dark:border-green-800/60 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-        Last Sync OK
-      </span>
-    ) : (
-      <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-        Sync Failed
-      </span>
+    return (
+      <Badge variant={device.lastSyncStatus === 'success' ? 'success' : 'danger'}>
+        {device.lastSyncStatus === 'success' ? 'Last Sync OK' : 'Sync Failed'}
+      </Badge>
     );
   };
 
@@ -205,24 +203,28 @@ const DeviceManagement = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-600"></div>
+        <Spinner size="lg" />
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <section className="bg-white border border-slate-200 p-8 shadow-sm dark:bg-slate-900 dark:border-slate-700">
+      <Card padding="lg">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Configuration</p>
-            <h1 className="text-3xl font-semibold text-slate-900 mt-3 dark:text-slate-100">Device Management</h1>
-            <p className="mt-2 text-sm text-slate-500 max-w-2xl dark:text-slate-400">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
+              Configuration
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">
+              Device Management
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
               Manage ZKTeco fingerprint devices connected to your gym.
             </p>
           </div>
-          <button
+          <Button
+            variant={showForm ? 'secondary' : 'primary'}
             onClick={() => {
               setShowForm(!showForm);
               setEditingDevice(null);
@@ -230,192 +232,173 @@ const DeviceManagement = () => {
               setError('');
               setSuccess('');
             }}
-            className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             {showForm ? 'Cancel' : '+ Add Device'}
-          </button>
+          </Button>
         </div>
-      </section>
+      </Card>
 
-      {/* Messages */}
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-300 px-4 py-3 rounded-[5px] text-sm">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800/60 text-green-700 dark:text-green-300 px-4 py-3 rounded-[5px] text-sm">
-          {success}
-        </div>
-      )}
+      {error && <Alert type="error">{error}</Alert>}
+      {success && <Alert type="success">{success}</Alert>}
 
-      {/* Add/Edit Form */}
       {showForm && (
-        <section className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">
+        <Card padding="md">
+          <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
             {editingDevice ? 'Edit Device' : 'Add New Device'}
           </h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Device Name</label>
-              <input
+            <FormField label="Device Name" required>
+              <Input
                 type="text"
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Main Entrance"
-                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">IP Address</label>
-              <input
+            </FormField>
+            <FormField label="IP Address" required>
+              <Input
                 type="text"
                 required
                 value={formData.ip}
                 onChange={(e) => setFormData({ ...formData, ip: e.target.value })}
                 placeholder="e.g., 192.168.1.201"
-                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1 dark:text-slate-400">Port</label>
-              <input
+            </FormField>
+            <FormField label="Port">
+              <Input
                 type="number"
                 value={formData.port}
                 onChange={(e) => setFormData({ ...formData, port: e.target.value })}
-                className="w-full rounded-[5px] border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
-            </div>
+            </FormField>
             <div className="sm:col-span-3">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-[5px] bg-slate-900 px-6 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-              >
-                {submitting ? 'Saving...' : editingDevice ? 'Update Device' : 'Add Device'}
-              </button>
+              <Button type="submit" variant="primary" loading={submitting}>
+                {editingDevice ? 'Update Device' : 'Add Device'}
+              </Button>
             </div>
           </form>
-        </section>
+        </Card>
       )}
 
-      {/* Device Cards */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {devices.length === 0 ? (
-          <div className="col-span-2 bg-white border border-slate-200 p-8 text-center text-slate-500 shadow-sm dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700">
-            No devices configured. Add a device to start tracking attendance.
+          <div className="col-span-2">
+            <EmptyState
+              title="No devices configured"
+              description="Add a device to start tracking attendance."
+            />
           </div>
         ) : (
           devices.map((device) => (
-            <div key={device._id} className="bg-white border border-slate-200 p-6 shadow-sm dark:bg-slate-900 dark:border-slate-700">
-              <div className="flex items-start justify-between mb-4">
+            <Card key={device._id} padding="md">
+              <div className="mb-4 flex items-start justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{device.name}</h3>
-                  <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    {device.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     {device.ip}:{device.port}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusBadge(device)}
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs rounded-[5px] border ${
-                      device.isActive
-                        ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800/60 dark:bg-green-900/30 dark:text-green-300'
-                        : 'border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300'
-                    }`}
-                  >
+                  <Badge variant={device.isActive ? 'success' : 'neutral'}>
                     {device.isActive ? 'Active' : 'Disabled'}
-                  </span>
+                  </Badge>
                 </div>
               </div>
 
-              <div className="space-y-2 text-sm text-slate-600 mb-4 dark:text-slate-400">
+              <div className="mb-4 space-y-2 text-sm text-slate-600 dark:text-slate-400">
                 <div className="flex justify-between">
                   <span>Last Sync</span>
                   <span>{timeAgo(device.lastSyncAt)}</span>
                 </div>
                 {device.lastError && (
-                  <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-100 rounded-[5px] px-3 py-2">
+                  <div className="rounded-control border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-600 dark:border-red-800/60 dark:bg-red-900/30 dark:text-red-400">
                     {device.lastError}
                   </div>
                 )}
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <button
+                <Button
+                  variant={viewingUsersDeviceId === device._id ? 'primary' : 'secondary'}
+                  size="sm"
                   onClick={() => handleViewUsers(device._id)}
-                  className={`rounded-[5px] border px-3 py-1.5 text-xs font-medium transition ${
-                    viewingUsersDeviceId === device._id
-                      ? 'border-blue-300 bg-blue-50 text-blue-700'
-                      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
                 >
                   {viewingUsersDeviceId === device._id ? 'Hide Users' : 'View Users'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => handleCheckStatus(device._id)}
-                  disabled={checkingStatusId === device._id}
-                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
+                  loading={checkingStatusId === device._id}
                 >
-                  {checkingStatusId === device._id ? 'Checking...' : 'Check Status'}
-                </button>
-                <button
+                  Check Status
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => handleSync(device._id)}
-                  disabled={syncingDeviceId === device._id}
-                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
+                  loading={syncingDeviceId === device._id}
                 >
-                  {syncingDeviceId === device._id ? 'Syncing...' : 'Sync Now'}
-                </button>
-                <button
-                  onClick={() => handleToggleActive(device)}
-                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
-                >
+                  Sync Now
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => handleToggleActive(device)}>
                   {device.isActive ? 'Disable' : 'Enable'}
-                </button>
-                <button
-                  onClick={() => handleEdit(device)}
-                  className="rounded-[5px] border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-100"
-                >
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => handleEdit(device)}>
                   Edit
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
                   onClick={() => setDeletingDeviceId(device._id)}
-                  className="rounded-[5px] border border-red-200 dark:border-red-800/60 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-300 transition hover:bg-red-50 dark:hover:bg-red-900/30"
                 >
                   Delete
-                </button>
+                </Button>
               </div>
 
-              {/* Device Users Panel */}
               {viewingUsersDeviceId === device._id && (
-                <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">
-                  <h4 className="text-sm font-semibold text-slate-800 mb-3 dark:text-slate-200">Users on Device</h4>
+                <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-800">
+                  <h4 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    Users on Device
+                  </h4>
                   {loadingUsers ? (
                     <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600"></div>
+                      <Spinner size="sm" />
                       Loading users from device...
                     </div>
                   ) : deviceUsers.length === 0 ? (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">No users found on this device.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      No users found on this device.
+                    </p>
                   ) : (
                     <div className="space-y-2">
                       {deviceUsers.map((u) => (
-                        <div key={u.uid} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-[5px] px-4 py-2.5 dark:bg-slate-950">
+                        <div
+                          key={u.uid}
+                          className="flex items-center justify-between rounded-control border border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-950"
+                        >
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-mono text-slate-500 dark:text-slate-400">UID: {u.uid}</span>
-                            <span className="text-sm text-slate-800 dark:text-slate-200">{u.name || 'Unnamed'}</span>
+                            <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                              UID: {u.uid}
+                            </span>
+                            <span className="text-sm text-slate-800 dark:text-slate-200">
+                              {u.name || 'Unnamed'}
+                            </span>
                           </div>
                           {u.member ? (
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-green-200 dark:border-green-800/60 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                            <Badge variant="success">
                               {u.member.name} ({u.member.memberId})
-                            </span>
+                            </Badge>
                           ) : linkingUid === u.uid ? (
                             <div className="flex items-center gap-2">
-                              <select
+                              <Select
                                 value={linkMemberId}
                                 onChange={(e) => setLinkMemberId(e.target.value)}
-                                className="rounded-[5px] border border-slate-200 px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                                className="py-1 text-xs"
                               >
                                 <option value="">Select member...</option>
                                 {members
@@ -425,16 +408,21 @@ const DeviceManagement = () => {
                                       {m.name} ({m.memberId})
                                     </option>
                                   ))}
-                              </select>
-                              <button
+                              </Select>
+                              <Button
+                                variant="primary"
+                                size="sm"
                                 onClick={() => handleLinkUser(device._id, u.uid)}
                                 disabled={!linkMemberId}
-                                className="rounded-[5px] bg-slate-900 px-3 py-1 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                               >
                                 Link
-                              </button>
+                              </Button>
                               <button
-                                onClick={() => { setLinkingUid(null); setLinkMemberId(''); }}
+                                type="button"
+                                onClick={() => {
+                                  setLinkingUid(null);
+                                  setLinkMemberId('');
+                                }}
                                 className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400"
                               >
                                 Cancel
@@ -442,10 +430,13 @@ const DeviceManagement = () => {
                             </div>
                           ) : (
                             <button
-                              onClick={() => { setLinkingUid(u.uid); setLinkMemberId(''); }}
-                              className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-yellow-200 dark:border-yellow-800/60 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 transition"
+                              type="button"
+                              onClick={() => {
+                                setLinkingUid(u.uid);
+                                setLinkMemberId('');
+                              }}
                             >
-                              Unlinked - Click to Link
+                              <Badge variant="warning">Unlinked — Click to Link</Badge>
                             </button>
                           )}
                         </div>
@@ -454,7 +445,7 @@ const DeviceManagement = () => {
                   )}
                 </div>
               )}
-            </div>
+            </Card>
           ))
         )}
       </section>
@@ -462,7 +453,9 @@ const DeviceManagement = () => {
       <ConfirmModal
         open={!!deletingDeviceId}
         title="Delete Device"
-        message={`Are you sure you want to delete ${devices.find(d => d._id === deletingDeviceId)?.name || 'this device'}?`}
+        message={`Are you sure you want to delete ${
+          devices.find((d) => d._id === deletingDeviceId)?.name || 'this device'
+        }?`}
         onConfirm={() => confirmDeleteDevice(deletingDeviceId)}
         onCancel={() => setDeletingDeviceId(null)}
       />

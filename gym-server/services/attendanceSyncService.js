@@ -2,8 +2,9 @@ const Device = require('../models/Device');
 const Attendance = require('../models/Attendance');
 const Member = require('../models/Member');
 const ZktecoService = require('./zktecoService');
+const config = require('../config');
 
-const POLL_INTERVAL = parseInt(process.env.ATTENDANCE_POLL_INTERVAL_MS, 10) || 60000;
+const POLL_INTERVAL = config.zkteco.pollIntervalMs;
 const MIN_SCAN_INTERVAL_MS = 60000; // Ignore scans within 60s of previous
 
 let intervalId = null;
@@ -148,7 +149,7 @@ async function syncAllDevices() {
 }
 
 async function seedDefaultDevice() {
-  const ip = process.env.ZKTECO_DEVICE_IP;
+  const { ip, port } = config.zkteco;
   if (!ip) return;
 
   const existing = await Device.findOne({ ip });
@@ -157,7 +158,7 @@ async function seedDefaultDevice() {
   await Device.create({
     name: 'Main Entrance',
     ip,
-    port: parseInt(process.env.ZKTECO_DEVICE_PORT, 10) || 4370,
+    port,
     isActive: true,
   });
   console.log(`[Sync] Seeded default device at ${ip}`);

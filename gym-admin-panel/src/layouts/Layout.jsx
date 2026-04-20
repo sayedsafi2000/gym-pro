@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { removeToken } from '../utils/auth';
+import { Menu } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar';
 
 const STORAGE_KEY = 'gym_pro_sidebar_collapsed';
@@ -37,6 +38,7 @@ const Layout = () => {
   const [installed, setInstalled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     try {
@@ -78,7 +80,7 @@ const Layout = () => {
   };
 
   const handleLogout = () => {
-    removeToken();
+    logout();
     navigate('/login');
   };
 
@@ -107,6 +109,7 @@ const Layout = () => {
               collapsed={false}
               mobile
               onNavigate={() => setMobileOpen(false)}
+              onClose={() => setMobileOpen(false)}
               onLogout={handleLogout}
               onInstall={handleInstall}
               canInstall={canInstall}
@@ -121,13 +124,11 @@ const Layout = () => {
           <div className="flex items-center gap-3 px-4 sm:px-6 h-14">
             <button
               type="button"
-              className="md:hidden p-2 rounded-[5px] text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="md:hidden p-2 rounded-control text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
               onClick={() => setMobileOpen(true)}
               aria-label="Open navigation"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
+              <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-base font-semibold text-slate-900 dark:text-slate-100 truncate">{pageTitle}</h1>
           </div>

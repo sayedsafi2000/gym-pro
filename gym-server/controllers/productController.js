@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const Sale = require('../models/Sale');
 const paginate = require('../utils/paginate');
+const config = require('../config');
 
 const seedProductData = [
   {
@@ -241,11 +242,7 @@ const getSaleReceipt = async (req, res) => {
 
     const receipt = {
       receiptId: `SL-${sale._id.toString().slice(-8).toUpperCase()}`,
-      gym: {
-        name: process.env.GYM_NAME || 'GymPro Fitness',
-        address: process.env.GYM_ADDRESS || 'Dhaka, Bangladesh',
-        phone: process.env.GYM_PHONE || '+880 1XXXXXXXXX',
-      },
+      gym: config.gym,
       product: {
         name: sale.productName,
       },

@@ -95,17 +95,4 @@ const memberSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Auto-generate memberId before saving (e.g., GYM-001)
-// memberSchema.pre('save', async function (next) {
-//   try {
-//     if (!this.memberId) {
-//       const count = await this.constructor.countDocuments();
-//       this.memberId = `GYM-${String(count + 1).padStart(3, '0')}`;
-//     }
-//     next();
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
 module.exports = mongoose.model('Member', memberSchema);

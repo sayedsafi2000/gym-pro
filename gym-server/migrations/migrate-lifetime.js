@@ -15,10 +15,10 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const Member = require('./models/Member');
-const Package = require('./models/Package');
-const Subscription = require('./models/Subscription');
-const GymConfig = require('./models/GymConfig');
+const Member = require('../models/Member');
+const Package = require('../models/Package');
+const Subscription = require('../models/Subscription');
+const GymConfig = require('../models/GymConfig');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gymdb';
 

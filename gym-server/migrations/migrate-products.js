@@ -4,9 +4,9 @@
 
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Product = require('./models/Product');
+const Product = require('../models/Product');
 const Sale = (() => {
-  try { return require('./models/Sale'); } catch { return null; }
+  try { return require('../models/Sale'); } catch { return null; }
 })();
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gymdb';
