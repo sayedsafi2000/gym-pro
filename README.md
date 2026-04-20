@@ -84,8 +84,7 @@ gym-pro/
     routes/                      # Express routers
     services/                    # ZKTeco sync, attendance
     middleware/                  # JWT auth + role checks
-    migrate-subscriptions.js     # Migration: members → subscriptions
-    migrate-lifetime.js          # Migration: lifetime membership fields
+    migrations/                  # One-off CLI scripts (node migrations/<file>.js)
   gym-admin-panel/               # React SPA
     src/
       pages/                     # Page components

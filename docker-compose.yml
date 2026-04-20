@@ -15,6 +15,10 @@ services:
       PORT: 5000
       MONGO_URI: mongodb://mongo:27017/gymdb
       JWT_SECRET: ${JWT_SECRET}
+      # Bootstrap super admin on first boot. Override in .env for production.
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@gym.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Password123}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
       ZKTECO_DEVICE_IP: ${ZKTECO_DEVICE_IP:-}
       ZKTECO_DEVICE_PORT: ${ZKTECO_DEVICE_PORT:-4370}
       ATTENDANCE_POLL_INTERVAL_MS: ${ATTENDANCE_POLL_INTERVAL_MS:-60000}

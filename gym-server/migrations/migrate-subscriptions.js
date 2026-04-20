@@ -10,8 +10,8 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const Member = require('./models/Member');
-const Subscription = require('./models/Subscription');
+const Member = require('../models/Member');
+const Subscription = require('../models/Subscription');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gymdb';
 
@@ -58,7 +58,7 @@ async function migrate() {
   }
 
   // Also link existing payments to subscriptions where possible
-  const Payment = require('./models/Payment');
+  const Payment = require('../models/Payment');
   const payments = await Payment.find({ subscriptionId: null });
   let linked = 0;
 
@@ -72,7 +72,7 @@ async function migrate() {
   }
 
   // Link installments to subscriptions
-  const Installment = require('./models/Installment');
+  const Installment = require('../models/Installment');
   const installments = await Installment.find({ subscriptionId: null });
   let linkedInst = 0;
 

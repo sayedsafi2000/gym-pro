@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
+const config = require('../config');
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '7d',
+  return jwt.sign({ id }, config.jwt.secret, {
+    expiresIn: config.jwt.expiresIn,
   });
 };
 
@@ -186,38 +187,43 @@ exports.getMe = async (req, res) => {
   });
 };
 
+const SUPER_ADMIN_PERMISSIONS = {
+  canViewAnalytics: true,
+  canManagePackages: true,
+  canManageDevices: true,
+  canManageStore: true,
+  canDeleteMembers: true,
+  canViewIncome: true,
+};
+
 exports.seedAdmin = async () => {
+  const { email, password } = config.seedAdmin;
+
+  if (!email || !password) {
+    if (config.env === 'production') {
+      console.error('[seedAdmin] SEED_ADMIN_EMAIL + SEED_ADMIN_PASSWORD required in production. Skipping seed.');
+      return;
+    }
+    console.warn('[seedAdmin] SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD unset — skipping seed. Set them in .env to bootstrap the super admin.');
+    return;
+  }
+
   try {
-    const existingAdmin = await Admin.findOne({ email: 'admin@gym.com' });
+    const existingAdmin = await Admin.findOne({ email });
     if (!existingAdmin) {
       await Admin.create({
-        email: 'admin@gym.com',
-        password: 'Password123',
+        email,
+        password,
         name: 'Super Admin',
         role: 'super_admin',
-        permissions: {
-          canViewAnalytics: true,
-          canManagePackages: true,
-          canManageDevices: true,
-          canManageStore: true,
-          canDeleteMembers: true,
-          canViewIncome: true,
-        },
+        permissions: SUPER_ADMIN_PERMISSIONS,
       });
-      console.log('Seeded default admin: admin@gym.com / Password123 (super_admin)');
+      console.log(`Seeded default admin: ${email} (super_admin) — change this password immediately.`);
     } else if (existingAdmin.role !== 'super_admin') {
-      // Upgrade existing admin to super_admin
       existingAdmin.role = 'super_admin';
-      existingAdmin.permissions = {
-        canViewAnalytics: true,
-        canManagePackages: true,
-        canManageDevices: true,
-        canManageStore: true,
-        canDeleteMembers: true,
-        canViewIncome: true,
-      };
+      existingAdmin.permissions = SUPER_ADMIN_PERMISSIONS;
       await existingAdmin.save();
-      console.log('Upgraded admin@gym.com to super_admin');
+      console.log(`Upgraded ${email} to super_admin`);
     }
   } catch (error) {
     console.error('Admin seed failed:', error.message);

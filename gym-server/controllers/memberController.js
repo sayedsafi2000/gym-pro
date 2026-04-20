@@ -3,12 +3,16 @@ const Package = require('../models/Package');
 const Payment = require('../models/Payment');
 const Installment = require('../models/Installment');
 const Subscription = require('../models/Subscription');
+const paginate = require('../utils/paginate');
+const { PACKAGE_FULL } = require('../utils/populateSelects');
+const { calcExpiry, reconcileExpiry } = require('../utils/expiry');
+const subscriptionService = require('../services/subscriptionService');
 
 // @desc    Get all members (with optional filters)
 // @route   GET /api/members
 const getMembers = async (req, res) => {
   try {
-    const { status, search } = req.query;
+    const { status, search, page, limit } = req.query;
     const now = new Date();
     const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -40,11 +44,15 @@ const getMembers = async (req, res) => {
       query.expiryDate = { $ne: null, $gte: now, $lte: threeDaysLater };
     }
 
-    const members = await Member.find(query)
-      .populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime')
-      .sort({ createdAt: -1 });
+    const result = await paginate(Member, {
+      filter: query,
+      page,
+      limit,
+      sort: { createdAt: -1 },
+      populate: { path: 'packageId', select: PACKAGE_FULL },
+    });
 
-    res.json({ success: true, count: members.length, data: members });
+    res.json({ success: true, count: result.data.length, data: result.data, pagination: result.pagination });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -56,7 +64,7 @@ const getMember = async (req, res) => {
   try {
     const member = await Member.findById(req.params.id).populate(
       'packageId',
-      'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime'
+      PACKAGE_FULL
     );
     if (!member) {
       return res.status(404).json({ success: false, message: 'Member not found' });
@@ -80,31 +88,18 @@ const createMember = async (req, res) => {
     }
 
     const join = joinDate ? new Date(joinDate) : new Date();
-    // Lifetime packages: expiry = end of free months (not null)
-    // Non-lifetime: expiry = join + duration days
-    const expiry = pkg.isLifetime
-      ? new Date(join.getTime() + (pkg.freeMonths || 0) * 30 * 24 * 60 * 60 * 1000)
-      : new Date(join.getTime() + pkg.duration * 24 * 60 * 60 * 1000);
+    const expiry = calcExpiry(pkg, join);
 
     // Generate memberId
     const count = await Member.countDocuments();
     const memberId = `GYM-${String(count + 1).padStart(3, '0')}`;
 
-    // Calculate total amount based on gender + admission fee
-    const packagePrice = pkg.getPriceForGender(gender);
     const totalPrice = pkg.getTotalForGender(gender);
-
-    // Calculate payment amounts
-    let paidAmount = 0;
-    let dueAmount = totalPrice;
-
-    if (paymentType === 'full') {
-      paidAmount = totalPrice;
-      dueAmount = 0;
-    } else if (paymentType === 'partial' && initialPayment) {
-      paidAmount = parseFloat(initialPayment);
-      dueAmount = totalPrice - paidAmount;
-    }
+    const { paidAmount, dueAmount } = subscriptionService.computePaymentSplit(
+      totalPrice,
+      paymentType,
+      initialPayment,
+    );
 
     // If admin (not super_admin), set status to pending
     const memberStatus = req.admin?.role === 'admin' ? 'pending' : 'approved';
@@ -207,21 +202,38 @@ const createMember = async (req, res) => {
         schedule,
       });
 
-      // Update member + subscription with first payment
+      // Update member + subscription with first payment. Independent docs —
+      // write in parallel to shave a round-trip.
       member.paidAmount = firstAmount;
       member.dueAmount = totalPrice - firstAmount;
-      await member.save();
-
       subscription.paidAmount = firstAmount;
       subscription.dueAmount = totalPrice - firstAmount;
-      await subscription.save();
+      await Promise.all([member.save(), subscription.save()]);
     }
 
-    const populated = await member.populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime');
+    const populated = await member.populate('packageId', PACKAGE_FULL);
     res.status(201).json({ success: true, data: populated });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
+};
+
+// Fields accepted via PUT /api/members/:id. The controller also writes
+// derived values (expiryDate, totals) into the same object after validating
+// the input — those are kept. Anything else (memberId, addedBy, timestamps,
+// lifetime flags, etc.) is stripped to prevent mass-assignment.
+const MEMBER_UPDATE_ALLOWED = [
+  'name', 'phone', 'emergencyPhone', 'address', 'gender',
+  'deviceUserId', 'joinDate', 'expiryDate', 'packageId', 'status',
+  'paidAmount', 'dueAmount', 'totalAmount',
+];
+
+const pickMemberUpdate = (body) => {
+  const out = {};
+  for (const key of MEMBER_UPDATE_ALLOWED) {
+    if (body[key] !== undefined) out[key] = body[key];
+  }
+  return out;
 };
 
 // @desc    Update a member
@@ -298,34 +310,50 @@ const updateMember = async (req, res) => {
       }
     }
 
-    // Recalculate expiry and payment amounts if package or joinDate changes
+    // Recalculate expiry + totals ONLY when package or joinDate truly changed.
+    // Prior bug: form always posts packageId+joinDate; branch fired on every edit
+    // and overwrote expiryDate, revoking monthly-renewal extensions on lifetime members.
     if (packageId || joinDate) {
       const member = await Member.findById(req.params.id);
       if (!member) {
         return res.status(404).json({ success: false, message: 'Member not found' });
       }
 
-      const pkgId = packageId || member.packageId;
-      const pkg = await Package.findById(pkgId);
-      if (!pkg) {
-        return res.status(404).json({ success: false, message: 'Package not found' });
+      const currentPkgId = member.packageId ? String(member.packageId) : null;
+      const incomingPkgId = packageId ? String(packageId) : currentPkgId;
+      const pkgChanged = incomingPkgId !== currentPkgId;
+
+      const currentJoinMs = member.joinDate ? new Date(member.joinDate).getTime() : null;
+      const incomingJoinMs = joinDate ? new Date(joinDate).getTime() : currentJoinMs;
+      const joinChanged = currentJoinMs !== incomingJoinMs;
+
+      if (pkgChanged || joinChanged) {
+        const pkg = await Package.findById(incomingPkgId);
+        if (!pkg) {
+          return res.status(404).json({ success: false, message: 'Package not found' });
+        }
+
+        const join = joinDate ? new Date(joinDate) : member.joinDate;
+        req.body.expiryDate = reconcileExpiry(member.expiryDate, pkg, join);
+        req.body.joinDate = join;
+
+        const memberGender = req.body.gender || member.gender;
+        const newTotal = pkg.getTotalForGender(memberGender);
+        req.body.totalAmount = newTotal;
+        req.body.dueAmount = newTotal - (req.body.paidAmount || member.paidAmount);
+      } else {
+        // Nothing actually changed — strip the noop fields so findByIdAndUpdate
+        // doesn't re-stamp joinDate and cause sync side effects.
+        delete req.body.joinDate;
+        delete req.body.packageId;
       }
-
-      const join = joinDate ? new Date(joinDate) : member.joinDate;
-      req.body.expiryDate = new Date(join.getTime() + pkg.duration * 24 * 60 * 60 * 1000);
-      req.body.joinDate = join;
-
-      // Update total amount and recalculate due amount using member gender
-      const memberGender = req.body.gender || member.gender;
-      const newTotal = pkg.getTotalForGender(memberGender);
-      req.body.totalAmount = newTotal;
-      req.body.dueAmount = newTotal - (req.body.paidAmount || member.paidAmount);
     }
 
-    const member = await Member.findByIdAndUpdate(req.params.id, req.body, {
+    const update = pickMemberUpdate(req.body);
+    const member = await Member.findByIdAndUpdate(req.params.id, update, {
       new: true,
       runValidators: true,
-    }).populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime');
+    }).populate('packageId', PACKAGE_FULL);
 
     if (!member) {
       return res.status(404).json({ success: false, message: 'Member not found' });
@@ -356,7 +384,7 @@ const deleteMember = async (req, res) => {
 const getPendingMembers = async (req, res) => {
   try {
     const members = await Member.find({ status: 'pending' })
-      .populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime')
+      .populate('packageId', PACKAGE_FULL)
       .populate('addedBy', 'name email')
       .sort({ createdAt: -1 });
     res.json({ success: true, data: members });
@@ -378,7 +406,7 @@ const approveMember = async (req, res) => {
     }
     member.status = 'approved';
     await member.save();
-    const populated = await member.populate('packageId', 'name duration priceGents priceLadies admissionFee includesAdmission freeMonths description benefits category isLifetime');
+    const populated = await member.populate('packageId', PACKAGE_FULL);
     res.json({ success: true, data: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

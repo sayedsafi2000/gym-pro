@@ -58,7 +58,7 @@ exports.getAttendances = async (req, res) => {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
         total,
-        pages: Math.ceil(total / parseInt(limit, 10)),
+        totalPages: Math.max(1, Math.ceil(total / parseInt(limit, 10))),
       },
     });
   } catch (error) {
@@ -135,7 +135,7 @@ exports.getMemberAttendance = async (req, res) => {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
         total,
-        pages: Math.ceil(total / parseInt(limit, 10)),
+        totalPages: Math.max(1, Math.ceil(total / parseInt(limit, 10))),
       },
     });
   } catch (error) {

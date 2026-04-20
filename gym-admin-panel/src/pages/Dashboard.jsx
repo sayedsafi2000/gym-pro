@@ -1,9 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import {
+  Fingerprint,
+  UserCheck,
+  Users,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  UserPlus,
+  Wallet,
+  AlertTriangle,
+  RefreshCw,
+  Package as PackageIcon,
+  PackageX,
+  TrendingUp,
+  ShoppingBag,
+  BarChart3,
+} from 'lucide-react';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
 import IncomeChart from '../components/IncomeChart';
 import { isSuperAdmin, hasPermission } from '../utils/auth';
+import Card from '../components/ui/Card';
+import StatCard from '../components/ui/StatCard';
+import Skeleton from '../components/ui/Skeleton';
+import Badge from '../components/ui/Badge';
+
+const DashboardSkeleton = () => (
+  <div className="space-y-8">
+    <Skeleton className="h-28 w-full" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {[0, 1].map((i) => (
+        <Skeleton key={i} className="h-28 w-full" />
+      ))}
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <Skeleton key={i} className="h-32 w-full" />
+      ))}
+    </div>
+    <Skeleton className="h-64 w-full" />
+  </div>
+);
 
 const Dashboard = () => {
   const { showError } = useToast();
@@ -26,178 +63,213 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-600"></div>
-      </div>
-    );
-  }
+  if (loading) return <DashboardSkeleton />;
 
   const { summary, chartData } = stats || {};
+  const formatTk = (n) => `৳${(n || 0).toLocaleString()}`;
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <section className="bg-white border border-slate-200 p-8 shadow-sm">
+      <Card padding="lg">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Overview</p>
-            <h1 className="text-3xl font-semibold text-slate-900 mt-3">Dashboard</h1>
-            <p className="mt-2 text-sm text-slate-500 max-w-2xl">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
+              Overview
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold text-slate-900 dark:text-slate-100">
+              Dashboard
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
               Real-time gym analytics and member management metrics.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 text-sm text-slate-600">
-            <div className="rounded-[5px] border border-slate-200 px-4 py-2">Updated just now</div>
-            <div className="rounded-[5px] border border-slate-200 px-4 py-2">Live dashboard</div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Badge variant="neutral">Updated just now</Badge>
+            <Badge variant="success">Live</Badge>
           </div>
         </div>
-      </section>
+      </Card>
 
-      {/* Attendance Stats */}
+      {/* Attendance */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Link to="/attendance" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
-          <p className="text-sm text-slate-500 uppercase tracking-wide">Check-ins Today</p>
-          <p className="mt-4 text-4xl font-semibold text-green-600">{summary?.todayCheckIns || 0}</p>
-          <p className="mt-2 text-xs text-slate-500">Fingerprint scans</p>
-        </Link>
-        <Link to="/attendance" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
-          <p className="text-sm text-slate-500 uppercase tracking-wide">Present Now</p>
-          <p className="mt-4 text-4xl font-semibold text-blue-600">{summary?.currentlyPresent || 0}</p>
-          <p className="mt-2 text-xs text-slate-500">Currently in gym</p>
-        </Link>
+        <StatCard
+          label="Check-ins Today"
+          value={summary?.todayCheckIns || 0}
+          hint="Fingerprint scans"
+          icon={<Fingerprint className="w-5 h-5" />}
+          accent="success"
+          to="/attendance"
+        />
+        <StatCard
+          label="Present Now"
+          value={summary?.currentlyPresent || 0}
+          hint="Currently in gym"
+          icon={<UserCheck className="w-5 h-5" />}
+          accent="brand"
+          to="/attendance"
+        />
       </section>
 
-      {/* Main Stats Grid */}
+      {/* Main stats */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Link to="/members" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
-          <p className="text-sm text-slate-500 uppercase tracking-wide">Total Members</p>
-          <p className="mt-4 text-4xl font-semibold text-slate-900">{summary?.totalMembers || 0}</p>
-        </Link>
-
-        <Link to="/members?status=active" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
-          <p className="text-sm text-slate-500 uppercase tracking-wide">Active</p>
-          <p className="mt-4 text-4xl font-semibold text-green-600">{summary?.activeMembers || 0}</p>
-          <p className="mt-2 text-xs text-slate-500">Valid membership</p>
-        </Link>
-
-        <Link to="/members?status=expiring" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
-          <p className="text-sm text-slate-500 uppercase tracking-wide">Expiring Soon</p>
-          <p className="mt-4 text-4xl font-semibold text-yellow-600">{summary?.expiringMembers || 0}</p>
-          <p className="mt-2 text-xs text-slate-500">Next 7 days</p>
-        </Link>
-
-        <Link to="/members?status=expired" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
-          <p className="text-sm text-slate-500 uppercase tracking-wide">Expired</p>
-          <p className="mt-4 text-4xl font-semibold text-red-600">{summary?.expiredMembers || 0}</p>
-          <p className="mt-2 text-xs text-slate-500">Action needed</p>
-        </Link>
+        <StatCard
+          label="Total Members"
+          value={summary?.totalMembers || 0}
+          icon={<Users className="w-5 h-5" />}
+          accent="neutral"
+          to="/members"
+        />
+        <StatCard
+          label="Active"
+          value={summary?.activeMembers || 0}
+          hint="Valid membership"
+          icon={<CheckCircle2 className="w-5 h-5" />}
+          accent="success"
+          to="/members?status=active"
+        />
+        <StatCard
+          label="Expiring Soon"
+          value={summary?.expiringMembers || 0}
+          hint="Next 7 days"
+          icon={<Clock className="w-5 h-5" />}
+          accent="warning"
+          to="/members?status=expiring"
+        />
+        <StatCard
+          label="Expired"
+          value={summary?.expiredMembers || 0}
+          hint="Action needed"
+          icon={<AlertCircle className="w-5 h-5" />}
+          accent="danger"
+          to="/members?status=expired"
+        />
 
         {isSuperAdmin() && (summary?.pendingMembers || 0) > 0 && (
-        <Link to="/members?tab=pending" className="bg-white border border-orange-200 p-6 shadow-sm hover:border-orange-300 transition cursor-pointer block">
-          <p className="text-sm text-orange-500 uppercase tracking-wide">Pending Approval</p>
-          <p className="mt-4 text-4xl font-semibold text-orange-600">{summary?.pendingMembers || 0}</p>
-          <p className="mt-2 text-xs text-orange-500">Awaiting approval</p>
-        </Link>
+          <StatCard
+            label="Pending Approval"
+            value={summary?.pendingMembers || 0}
+            hint="Awaiting approval"
+            icon={<UserPlus className="w-5 h-5" />}
+            accent="warning"
+            to="/members?tab=pending"
+          />
         )}
 
         {hasPermission('canViewIncome') && (
-        <Link to="/payments" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
-          <p className="text-sm text-slate-500 uppercase tracking-wide">This Month</p>
-          <p className="mt-4 text-3xl font-semibold text-slate-900">৳{summary?.monthlyIncome || 0}</p>
-          <p className="mt-2 text-xs text-slate-500">Total income</p>
-        </Link>
+          <StatCard
+            label="This Month"
+            value={formatTk(summary?.monthlyIncome)}
+            hint="Total income"
+            icon={<Wallet className="w-5 h-5" />}
+            accent="brand"
+            to="/payments"
+          />
         )}
 
         {hasPermission('canViewIncome') && (
-        <Link to="/payments" className="bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 transition cursor-pointer block">
-          <p className="text-sm text-slate-500 uppercase tracking-wide">Total Due</p>
-          <p className="mt-4 text-3xl font-semibold text-red-600">৳{summary?.totalDueAmount || 0}</p>
-          <p className="mt-2 text-xs text-slate-500">Outstanding payments</p>
-        </Link>
+          <StatCard
+            label="Total Due"
+            value={formatTk(summary?.totalDueAmount)}
+            hint="Outstanding payments"
+            icon={<AlertTriangle className="w-5 h-5" />}
+            accent="danger"
+            to="/payments"
+          />
         )}
+
         {(summary?.needsMonthlyRenewal || 0) > 0 && (
-        <Link to="/members?status=expired" className="bg-white border border-purple-200 p-6 shadow-sm hover:border-purple-300 transition cursor-pointer block">
-          <p className="text-sm text-purple-500 uppercase tracking-wide">Needs Monthly Payment</p>
-          <p className="mt-4 text-4xl font-semibold text-purple-600">{summary?.needsMonthlyRenewal || 0}</p>
-          <p className="mt-2 text-xs text-purple-500">Lifetime members with expired access</p>
-        </Link>
+          <StatCard
+            label="Needs Monthly Payment"
+            value={summary?.needsMonthlyRenewal || 0}
+            hint="Lifetime members with expired access"
+            icon={<RefreshCw className="w-5 h-5" />}
+            accent="warning"
+            to="/members?status=expired"
+          />
         )}
       </section>
 
-      {/* Product Analytics Section */}
-      <section className="space-y-4">
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Store Analytics</h2>
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-sm text-slate-500">Product inventory and sales performance</p>
-            <a
-              href="/store"
-              className="text-sm text-slate-600 hover:text-slate-900 underline"
-            >
-              Manage Store →
-            </a>
+      {/* Store analytics */}
+      <Card padding="md">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              Store Analytics
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Product inventory and sales performance
+            </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Total Products */}
-            <div className="bg-slate-50 border border-slate-200 p-4 rounded-[5px]">
-              <p className="text-sm text-slate-500 uppercase tracking-wide">Total Products</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-900">{summary?.totalProducts || 0}</p>
-            </div>
-
-            {/* Low Stock Products */}
-            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-[5px]">
-              <p className="text-sm text-yellow-600 uppercase tracking-wide">Low Stock</p>
-              <p className="mt-2 text-2xl font-semibold text-yellow-700">{summary?.lowStockProducts || 0}</p>
-              <p className="mt-1 text-xs text-yellow-600">Under 10 units</p>
-            </div>
-
-            {/* Out of Stock */}
-            <div className="bg-red-50 border border-red-200 p-4 rounded-[5px]">
-              <p className="text-sm text-red-600 uppercase tracking-wide">Out of Stock</p>
-              <p className="mt-2 text-2xl font-semibold text-red-700">{summary?.outOfStockProducts || 0}</p>
-              <p className="mt-1 text-xs text-red-600">Need restocking</p>
-            </div>
-
-            {/* Monthly Product Revenue */}
-            <div className="bg-green-50 border border-green-200 p-4 rounded-[5px]">
-              <p className="text-sm text-green-600 uppercase tracking-wide">Monthly Revenue</p>
-              <p className="mt-2 text-2xl font-semibold text-green-700">৳{summary?.monthlyProductRevenue || 0}</p>
-              <p className="mt-1 text-xs text-green-600">Store sales</p>
-            </div>
-          </div>
-
-          {/* Product Sales Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-[5px]">
-              <p className="text-sm text-blue-600 uppercase tracking-wide">Today Sold</p>
-              <p className="mt-2 text-xl font-semibold text-blue-700">{summary?.todayProductSold || 0}</p>
-              <p className="mt-1 text-xs text-blue-600">Units sold today</p>
-            </div>
-
-            <div className="bg-purple-50 border border-purple-200 p-4 rounded-[5px]">
-              <p className="text-sm text-purple-600 uppercase tracking-wide">Monthly Sold</p>
-              <p className="mt-2 text-xl font-semibold text-purple-700">{summary?.monthlyProductSold || 0}</p>
-              <p className="mt-1 text-xs text-purple-600">Units this month</p>
-            </div>
-
-            <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-[5px]">
-              <p className="text-sm text-indigo-600 uppercase tracking-wide">Total Revenue</p>
-              <p className="mt-2 text-xl font-semibold text-indigo-700">৳{summary?.totalProductRevenue || 0}</p>
-              <p className="mt-1 text-xs text-indigo-600">All time sales</p>
-            </div>
-          </div>
+          <a
+            href="/store"
+            className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
+          >
+            Manage Store →
+          </a>
         </div>
-      </section>
 
-      {/* Income Charts Section — super admin only */}
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="Total Products"
+            value={summary?.totalProducts || 0}
+            icon={<PackageIcon className="w-5 h-5" />}
+            accent="neutral"
+          />
+          <StatCard
+            label="Low Stock"
+            value={summary?.lowStockProducts || 0}
+            hint="Under 10 units"
+            icon={<AlertTriangle className="w-5 h-5" />}
+            accent="warning"
+          />
+          <StatCard
+            label="Out of Stock"
+            value={summary?.outOfStockProducts || 0}
+            hint="Need restocking"
+            icon={<PackageX className="w-5 h-5" />}
+            accent="danger"
+          />
+          <StatCard
+            label="Monthly Revenue"
+            value={formatTk(summary?.monthlyProductRevenue)}
+            hint="Store sales"
+            icon={<TrendingUp className="w-5 h-5" />}
+            accent="success"
+          />
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            label="Today Sold"
+            value={summary?.todayProductSold || 0}
+            hint="Units sold today"
+            icon={<ShoppingBag className="w-5 h-5" />}
+            accent="brand"
+          />
+          <StatCard
+            label="Monthly Sold"
+            value={summary?.monthlyProductSold || 0}
+            hint="Units this month"
+            icon={<BarChart3 className="w-5 h-5" />}
+            accent="info"
+          />
+          <StatCard
+            label="Total Revenue"
+            value={formatTk(summary?.totalProductRevenue)}
+            hint="All time sales"
+            icon={<TrendingUp className="w-5 h-5" />}
+            accent="success"
+          />
+        </div>
+      </Card>
+
+      {/* Income charts — super admin only */}
       {hasPermission('canViewAnalytics') && (
-      <section className="space-y-4">
-        <IncomeChart data={chartData?.dailyIncome} monthlyIncome={summary?.monthlyIncome} />
-      </section>
+        <section className="space-y-4">
+          <IncomeChart data={chartData?.dailyIncome} monthlyIncome={summary?.monthlyIncome} />
+        </section>
       )}
-
     </div>
   );
 };

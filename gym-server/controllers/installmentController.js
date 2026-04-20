@@ -1,13 +1,14 @@
 const Installment = require('../models/Installment');
 const Payment = require('../models/Payment');
 const Member = require('../models/Member');
+const { PACKAGE_SUMMARY } = require('../utils/populateSelects');
 
 // @desc    Get installment plan for a member
 // @route   GET /api/installments/member/:memberId
 exports.getMemberInstallment = async (req, res) => {
   try {
     const installment = await Installment.findOne({ memberId: req.params.memberId })
-      .populate('packageId', 'name priceGents priceLadies duration')
+      .populate('packageId', PACKAGE_SUMMARY)
       .sort({ createdAt: -1 });
 
     if (!installment) {
@@ -96,7 +97,7 @@ exports.getOverdueInstallments = async (req, res) => {
       'schedule.status': 'overdue',
     })
       .populate('memberId', 'name memberId phone')
-      .populate('packageId', 'name priceGents priceLadies');
+      .populate('packageId', PACKAGE_SUMMARY);
 
     res.json({ success: true, data: overdueInstallments });
   } catch (error) {

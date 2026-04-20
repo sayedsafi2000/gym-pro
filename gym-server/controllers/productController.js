@@ -1,5 +1,7 @@
 const Product = require('../models/Product');
 const Sale = require('../models/Sale');
+const paginate = require('../utils/paginate');
+const config = require('../config');
 
 const seedProductData = [
   {
@@ -48,8 +50,13 @@ const getProducts = async (req, res) => {
     if (req.query.category) {
       filter.category = req.query.category;
     }
-    const products = await Product.find(filter).sort({ createdAt: -1 });
-    res.json({ success: true, data: products });
+    const result = await paginate(Product, {
+      filter,
+      page: req.query.page,
+      limit: req.query.limit,
+      sort: { createdAt: -1 },
+    });
+    res.json({ success: true, data: result.data, pagination: result.pagination });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -179,6 +186,7 @@ const getStoreStats = async (req, res) => {
     const totalStockValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
     const lowStockCount = products.filter((p) => p.stock > 0 && p.stock < 10).length;
     const outOfStockCount = products.filter((p) => p.stock === 0).length;
+    const categories = [...new Set(products.map((p) => p.category).filter(Boolean))].sort();
 
     // Today's sales from Sale collection
     const todaySalesAgg = await Sale.aggregate([
@@ -217,6 +225,7 @@ const getStoreStats = async (req, res) => {
         todaySalesCount,
         todaySalesRevenue,
         totalRevenue,
+        categories,
       },
     });
   } catch (error) {
@@ -233,11 +242,7 @@ const getSaleReceipt = async (req, res) => {
 
     const receipt = {
       receiptId: `SL-${sale._id.toString().slice(-8).toUpperCase()}`,
-      gym: {
-        name: process.env.GYM_NAME || 'GymPro Fitness',
-        address: process.env.GYM_ADDRESS || 'Dhaka, Bangladesh',
-        phone: process.env.GYM_PHONE || '+880 1XXXXXXXXX',
-      },
+      gym: config.gym,
       product: {
         name: sale.productName,
       },

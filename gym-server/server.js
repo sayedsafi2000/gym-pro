@@ -1,19 +1,27 @@
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
+const config = require('./config');
 const connectDB = require('./config/db');
 const { seedProducts } = require('./controllers/productController');
 const { seedAdmin } = require('./controllers/authController');
 const { seedPackages } = require('./controllers/packageController');
 
-// Load env vars
-dotenv.config();
+config.assertValid();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS: whitelist from config. In production nginx serves UI + API
+// same-origin so the browser skips CORS entirely; the default list only
+// matters in dev (Vite on 5173, direct hits on nginx :80, etc.).
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (config.cors.allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error(`CORS: origin ${origin} not in ALLOWED_ORIGINS`));
+  },
+}));
 app.use(express.json());
+app.use(require('./middleware/requestLogger'));
 
 // Health check route
 app.get('/', (req, res) => {
@@ -21,6 +29,7 @@ app.get('/', (req, res) => {
 });
 
 const protect = require('./middleware/authMiddleware');
+const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -34,9 +43,21 @@ app.use('/api/devices', protect, require('./routes/deviceRoutes'));
 app.use('/api/installments', protect, require('./routes/installmentRoutes'));
 app.use('/api/subscriptions', protect, require('./routes/subscriptionRoutes'));
 
+// 404 + error handler must follow routes.
+app.use(notFound);
+app.use(errorHandler);
+
+// Safety nets: never crash the process on a stray rejection.
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+});
+
 const attendanceSyncService = require('./services/attendanceSyncService');
 
-const PORT = process.env.PORT || 5000;
+const PORT = config.port;
 
 connectDB()
   .then(async () => {

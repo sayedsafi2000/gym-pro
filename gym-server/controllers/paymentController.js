@@ -2,6 +2,9 @@ const Payment = require('../models/Payment');
 const Member = require('../models/Member');
 const Package = require('../models/Package');
 const Subscription = require('../models/Subscription');
+const paginate = require('../utils/paginate');
+const { PACKAGE_SUMMARY, PACKAGE_RECEIPT, PACKAGE_PRICING } = require('../utils/populateSelects');
+const config = require('../config');
 
 const calculateDiscountValue = (amount, discountAmount, discountType) => {
   if (!discountAmount || discountAmount <= 0) return 0;
@@ -12,7 +15,7 @@ const calculateDiscountValue = (amount, discountAmount, discountType) => {
 };
 
 const recalculateMemberFinancials = async (memberId) => {
-  const member = await Member.findById(memberId).populate('packageId', 'priceGents priceLadies admissionFee includesAdmission');
+  const member = await Member.findById(memberId).populate('packageId', PACKAGE_PRICING);
   if (!member) return null;
 
   const payments = await Payment.find({ memberId });
@@ -43,12 +46,29 @@ const getPayments = async (req, res) => {
     const filter = {};
     if (req.query.memberId) filter.memberId = req.query.memberId;
 
-    const payments = await Payment.find(filter)
-      .populate('memberId', 'name memberId phone totalAmount paidAmount dueAmount')
-      .populate('packageId', 'name priceGents priceLadies duration')
-      .sort({ date: -1 });
-    console.log('Fetched payments:', payments.length);
-    res.json({ success: true, data: payments });
+    // When caller scopes to a single member (nested list on MemberDetails) return full set.
+    // Otherwise paginate for the global Payments page.
+    const isScoped = !!req.query.memberId;
+    if (isScoped) {
+      const payments = await Payment.find(filter)
+        .populate('memberId', 'name memberId phone totalAmount paidAmount dueAmount')
+        .populate('packageId', PACKAGE_SUMMARY)
+        .sort({ date: -1 });
+      return res.json({ success: true, data: payments });
+    }
+
+    const result = await paginate(Payment, {
+      filter,
+      page: req.query.page,
+      limit: req.query.limit,
+      sort: { date: -1 },
+      populate: [
+        { path: 'memberId', select: 'name memberId phone totalAmount paidAmount dueAmount' },
+        { path: 'packageId', select: PACKAGE_SUMMARY },
+      ],
+    });
+
+    res.json({ success: true, data: result.data, pagination: result.pagination });
   } catch (error) {
     console.error('Error fetching payments:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -61,7 +81,7 @@ const getPayment = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
       .populate('memberId', 'name memberId phone totalAmount paidAmount dueAmount')
-      .populate('packageId', 'name priceGents priceLadies duration');
+      .populate('packageId', PACKAGE_SUMMARY);
 
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment not found' });
@@ -211,7 +231,7 @@ const updatePayment = async (req, res) => {
       },
       { new: true }
     ).populate('memberId', 'name memberId phone totalAmount paidAmount dueAmount')
-     .populate('packageId', 'name priceGents priceLadies duration');
+     .populate('packageId', PACKAGE_SUMMARY);
 
     // Reconcile member totals from source-of-truth payments
     if (finalAmount !== payment.finalAmount || newDiscountValue !== oldDiscountValue) {
@@ -284,32 +304,51 @@ const generateReceipt = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
       .populate('memberId', 'name memberId phone')
-      .populate('packageId', 'name priceGents priceLadies admissionFee includesAdmission duration description benefits');
+      .populate('packageId', PACKAGE_RECEIPT);
 
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment not found' });
     }
 
-    const receipt = {
-      receiptId: `RCP-${payment._id.toString().slice(-8).toUpperCase()}`,
-      gym: {
-        name: process.env.GYM_NAME || 'GymPro Fitness',
-        address: process.env.GYM_ADDRESS || 'Dhaka, Bangladesh',
-        phone: process.env.GYM_PHONE || '+880 1XXXXXXXXX',
-      },
-      member: {
-        name: payment.memberId.name,
-        memberId: payment.memberId.memberId,
-        phone: payment.memberId.phone
-      },
-      package: {
+    // Monthly renewals are not sales of the original package. Substitute a synthetic
+    // "Monthly Access" entry so the receipt matches what the member actually paid for.
+    const isMonthly = ['monthly', 'monthly_renewal'].includes(payment.paymentType);
+    let pkgBlock;
+    if (isMonthly) {
+      const GymConfig = require('../models/GymConfig');
+      const config = await GymConfig.findOne();
+      const accessDays = config?.monthlyAccessDays || 30;
+      pkgBlock = {
+        name: 'Monthly Access',
+        duration: accessDays,
+        description: 'Monthly gym access renewal',
+        benefits: [],
+        isLifetime: false,
+      };
+    } else if (payment.packageId) {
+      pkgBlock = {
         name: payment.packageId.name,
         priceGents: payment.packageId.priceGents,
         priceLadies: payment.packageId.priceLadies,
         duration: payment.packageId.duration,
         description: payment.packageId.description,
-        benefits: payment.packageId.benefits
+        benefits: payment.packageId.benefits,
+        isLifetime: payment.packageId.isLifetime,
+        freeMonths: payment.packageId.freeMonths,
+      };
+    } else {
+      pkgBlock = { name: '-', duration: 0, description: '', benefits: [] };
+    }
+
+    const receipt = {
+      receiptId: `RCP-${payment._id.toString().slice(-8).toUpperCase()}`,
+      gym: config.gym,
+      member: {
+        name: payment.memberId.name,
+        memberId: payment.memberId.memberId,
+        phone: payment.memberId.phone
       },
+      package: pkgBlock,
       payment: {
         originalAmount: payment.originalAmount,
         discountAmount: payment.discountAmount,

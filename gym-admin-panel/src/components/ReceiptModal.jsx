@@ -1,4 +1,6 @@
 import React from 'react';
+import Modal from './ui/Modal';
+import Button from './ui/Button';
 
 const formatDate = (date) =>
   new Date(date).toLocaleDateString('en-GB', {
@@ -13,11 +15,26 @@ const formatTime = (date) =>
     minute: '2-digit',
   });
 
+const PAYMENT_TYPE_LABEL = {
+  full: 'Full',
+  partial: 'Partial',
+  due: 'Due',
+  monthly: 'Monthly',
+  monthly_renewal: 'Monthly Renewal',
+};
+const labelPaymentType = (t) => PAYMENT_TYPE_LABEL[t] || 'Partial';
+
+const formatDuration = (pkg) => {
+  if (!pkg) return '-';
+  if (pkg.isLifetime || pkg.duration === 0) return 'Lifetime';
+  return `${pkg.duration} days`;
+};
+
 const ReceiptCopy = ({ data, type, copyLabel }) => {
   const gym = data.gym || { name: 'GymPro Fitness', address: 'Dhaka, Bangladesh', phone: '' };
 
   return (
-    <div className="receipt-copy w-full max-w-[260px] mx-auto border border-slate-300 bg-white p-5 text-[11px] font-mono">
+    <div className="receipt-copy w-full max-w-[260px] mx-auto border border-slate-300 bg-white p-5 text-[11px] font-mono text-slate-900">
       {/* Gym Header */}
       <div className="text-center mb-3">
         <h2 className="text-[13px] font-bold tracking-[2px] uppercase">{gym.name}</h2>
@@ -70,7 +87,7 @@ const ReceiptCopy = ({ data, type, copyLabel }) => {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Duration</span>
-            <span>{data.package?.duration} days</span>
+            <span>{formatDuration(data.package)}</span>
           </div>
           {data.package?.description && (
             <p className="text-[9px] text-slate-400 italic">{data.package.description}</p>
@@ -92,7 +109,7 @@ const ReceiptCopy = ({ data, type, copyLabel }) => {
           {data.payment?.discountAmount > 0 && (
             <div className="flex justify-between">
               <span className="text-slate-500">Discount</span>
-              <span className="text-green-700">
+              <span className="text-green-700 dark:text-green-300">
                 -{data.payment.discountAmount}{data.payment.discountType === 'percentage' ? '%' : '৳'}
               </span>
             </div>
@@ -113,7 +130,7 @@ const ReceiptCopy = ({ data, type, copyLabel }) => {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Type</span>
-            <span>{data.payment?.paymentType === 'full' ? 'Full' : 'Partial'}</span>
+            <span>{labelPaymentType(data.payment?.paymentType)}</span>
           </div>
           {data.payment?.note && (
             <div className="flex justify-between">
@@ -186,7 +203,7 @@ const buildReceiptHTML = (data, type) => {
     <tr><td style="color:#64748b">Phone</td><td style="text-align:right">${data.member?.phone}</td></tr>
     <tr><td colspan="2"><hr style="border:none;border-top:1px dotted #e2e8f0;margin:6px 0"></td></tr>
     <tr><td style="color:#64748b">Package</td><td style="text-align:right">${data.package?.name}</td></tr>
-    <tr><td style="color:#64748b">Duration</td><td style="text-align:right">${data.package?.duration} days</td></tr>
+    <tr><td style="color:#64748b">Duration</td><td style="text-align:right">${formatDuration(data.package)}</td></tr>
     ${data.package?.description ? `<tr><td colspan="2" style="font-size:9px;color:#94a3b8;font-style:italic;padding-top:2px">${data.package.description}</td></tr>` : ''}
     ${data.package?.benefits?.length ? `<tr><td colspan="2" style="padding-top:3px"><div style="font-size:9px;color:#94a3b8">${data.package.benefits.map(b => `<div>&#10003; ${b}</div>`).join('')}</div></td></tr>` : ''}
     <tr><td colspan="2"><hr style="border:none;border-top:1px dotted #e2e8f0;margin:6px 0"></td></tr>
@@ -196,7 +213,7 @@ const buildReceiptHTML = (data, type) => {
     <tr style="font-weight:700;font-size:14px"><td>TOTAL</td><td style="text-align:right">৳${data.payment?.finalAmount?.toLocaleString()}</td></tr>
     <tr><td colspan="2"><hr style="border:none;border-top:2px solid #0f172a;margin:6px 0"></td></tr>
     <tr><td style="color:#64748b">Method</td><td style="text-align:right">${data.payment?.paymentMethod}</td></tr>
-    <tr><td style="color:#64748b">Type</td><td style="text-align:right">${data.payment?.paymentType === 'full' ? 'Full' : 'Partial'}</td></tr>
+    <tr><td style="color:#64748b">Type</td><td style="text-align:right">${labelPaymentType(data.payment?.paymentType)}</td></tr>
     ${data.payment?.note ? `<tr><td style="color:#64748b">Note</td><td style="text-align:right;font-size:9px">${data.payment.note}</td></tr>` : ''}
   ` : `
     <tr style="font-weight:600"><td>Product</td><td style="text-align:right">${data.product?.name}</td></tr>
@@ -268,43 +285,32 @@ const ReceiptModal = ({ open, onClose, type, data }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-slate-900/50" onClick={onClose} />
-
-      <div className="relative bg-white rounded-[5px] border border-slate-200 shadow-lg max-w-4xl w-full mx-4 z-10 max-h-[95vh] overflow-y-auto">
-        {/* Action buttons */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-semibold text-slate-900">
-            {type === 'payment' ? 'Payment Receipt' : 'Sale Receipt'}
-          </h3>
-          <div className="flex gap-2">
-            <button
-              onClick={handlePrint}
-              className="rounded-[5px] bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition"
-            >
-              Print (A4 Trifold)
-            </button>
-            <button
-              onClick={onClose}
-              className="rounded-[5px] border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-
-        {/* Receipt preview — 3 copies */}
-        <div className="p-6 bg-slate-50">
-          <div className="flex flex-col lg:flex-row gap-4 justify-center items-start">
-            <ReceiptCopy data={data} type={type} copyLabel="CUSTOMER COPY" />
-            <div className="hidden lg:block border-l border-dashed border-slate-300 self-stretch" />
-            <ReceiptCopy data={data} type={type} copyLabel="OFFICE COPY" />
-            <div className="hidden lg:block border-l border-dashed border-slate-300 self-stretch" />
-            <ReceiptCopy data={data} type={type} copyLabel="ACCOUNTS COPY" />
-          </div>
+    <Modal open={open} onClose={onClose} size="4xl">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          {type === 'payment' ? 'Payment Receipt' : 'Sale Receipt'}
+        </h3>
+        <div className="flex gap-2">
+          <Button variant="primary" size="md" onClick={handlePrint}>
+            Print (A4 Trifold)
+          </Button>
+          <Button variant="secondary" size="md" onClick={onClose}>
+            Close
+          </Button>
         </div>
       </div>
-    </div>
+
+      {/* Receipt preview — 3 copies (print markup untouched) */}
+      <div className="p-6 bg-slate-50 dark:bg-slate-950">
+        <div className="flex flex-col lg:flex-row gap-4 justify-center items-start">
+          <ReceiptCopy data={data} type={type} copyLabel="CUSTOMER COPY" />
+          <div className="hidden lg:block border-l border-dashed border-slate-300 self-stretch" />
+          <ReceiptCopy data={data} type={type} copyLabel="OFFICE COPY" />
+          <div className="hidden lg:block border-l border-dashed border-slate-300 self-stretch" />
+          <ReceiptCopy data={data} type={type} copyLabel="ACCOUNTS COPY" />
+        </div>
+      </div>
+    </Modal>
   );
 };
 

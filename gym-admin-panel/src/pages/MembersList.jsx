@@ -1,9 +1,43 @@
 import React, { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Users } from 'lucide-react';
 import api from '../services/api';
 import useToast from '../hooks/useToast';
-import { Link, useSearchParams } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
+import Pagination from '../components/Pagination';
 import { isSuperAdmin } from '../utils/auth';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import FormField from '../components/ui/FormField';
+import EmptyState from '../components/ui/EmptyState';
+import Spinner from '../components/ui/Spinner';
+import Table from '../components/ui/Table';
+import { cn } from '../components/ui/cn';
+
+const getStatusBadge = (expiryDate) => {
+  if (!expiryDate) return { label: 'Lifetime', variant: 'info' };
+  const now = new Date();
+  const expiry = new Date(expiryDate);
+  const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  if (expiry < now) return { label: 'Expired', variant: 'danger' };
+  if (expiry <= sevenDaysLater) return { label: 'Expiring Soon', variant: 'warning' };
+  return { label: 'Active', variant: 'success' };
+};
+
+const getPaymentBadge = (member) => {
+  if (member.dueAmount === 0) return { label: 'Paid', variant: 'success' };
+  if (member.dueAmount === member.totalAmount) return { label: 'Unpaid', variant: 'danger' };
+  return { label: 'Partial', variant: 'warning' };
+};
+
+const PAYMENT_DOT = {
+  success: 'bg-accent-500',
+  warning: 'bg-amber-500',
+  danger: 'bg-red-500',
+};
 
 const MembersList = () => {
   const { showSuccess, showError } = useToast();
@@ -17,10 +51,17 @@ const MembersList = () => {
   const [pendingMembers, setPendingMembers] = useState([]);
   const [pendingLoading, setPendingLoading] = useState(false);
   const [rejectingId, setRejectingId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const LIMIT = 20;
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter]);
 
   useEffect(() => {
     fetchMembers();
-  }, [search, statusFilter]);
+  }, [search, statusFilter, page]);
 
   useEffect(() => {
     if (isSuperAdmin()) {
@@ -36,12 +77,13 @@ const MembersList = () => {
 
   const fetchMembers = async () => {
     try {
-      const params = {};
+      const params = { page, limit: LIMIT };
       if (search) params.search = search;
       if (statusFilter) params.status = statusFilter;
 
       const res = await api.get('/members', { params });
       setMembers(res.data.data);
+      setTotalPages(res.data.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching members:', error);
       showError('Failed to load members.');
@@ -99,28 +141,6 @@ const MembersList = () => {
     setSearchParams(params, { replace: true });
   };
 
-  const getStatusColor = (expiryDate) => {
-    if (!expiryDate) return 'bg-blue-100 text-blue-800 border-blue-200';
-    const now = new Date();
-    const expiry = new Date(expiryDate);
-    const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    if (expiry < now) return 'bg-red-100 text-red-800 border-red-200';
-    if (expiry <= threeDaysLater) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    return 'bg-green-100 text-green-800 border-green-200';
-  };
-
-  const getStatusText = (expiryDate) => {
-    if (!expiryDate) return 'Lifetime';
-    const now = new Date();
-    const expiry = new Date(expiryDate);
-    const threeDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    if (expiry < now) return 'Expired';
-    if (expiry <= threeDaysLater) return 'Expiring Soon';
-    return 'Active';
-  };
-
   const confirmDelete = async (id) => {
     try {
       await api.delete(`/members/${id}`);
@@ -137,308 +157,323 @@ const MembersList = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <Spinner size="lg" />
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      <div className="bg-white border border-slate-200 p-8 shadow-sm">
+      <Card padding="lg">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold text-slate-900 mb-1">Members</h1>
-            <p className="text-sm text-slate-500">View and manage your member list with clear controls.</p>
+            <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Members</h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              View and manage your member list with clear controls.
+            </p>
           </div>
-          <Link
-            to="/members/add"
-            className="inline-flex items-center justify-center rounded-[5px] border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
-          >
+          <Button variant="primary" to="/members/add">
             Add Member
-          </Link>
+          </Button>
         </div>
 
         {isSuperAdmin() && (
-          <div className="flex gap-1 mt-6 border-b border-slate-200">
+          <div className="mt-6 flex gap-1 border-b border-slate-200 dark:border-slate-800">
             <button
+              type="button"
               onClick={() => switchTab('all')}
-              className={`px-4 py-2.5 text-sm font-medium transition -mb-px ${
+              className={cn(
+                '-mb-px px-4 py-2.5 text-sm font-medium transition',
                 tab === 'all'
-                  ? 'border-b-2 border-slate-900 text-slate-900'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
+                  ? 'border-b-2 border-brand-600 text-brand-700 dark:border-brand-400 dark:text-brand-300'
+                  : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
+              )}
             >
               All Members
             </button>
             <button
+              type="button"
               onClick={() => switchTab('pending')}
-              className={`px-4 py-2.5 text-sm font-medium transition -mb-px flex items-center gap-2 ${
+              className={cn(
+                '-mb-px flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition',
                 tab === 'pending'
-                  ? 'border-b-2 border-orange-600 text-orange-600'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
+                  ? 'border-b-2 border-amber-600 text-amber-700 dark:border-amber-400 dark:text-amber-300'
+                  : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
+              )}
             >
               Pending Approval
               {pendingMembers.length > 0 && tab !== 'pending' && (
-                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
+                <Badge variant="warning" size="sm">
                   {pendingMembers.length}
-                </span>
+                </Badge>
               )}
             </button>
           </div>
         )}
-      </div>
+      </Card>
 
       {tab === 'pending' && isSuperAdmin() ? (
-        <div className="bg-white border border-slate-200 p-6 shadow-sm">
+        <Card padding="md">
           {pendingLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600"></div>
+              <Spinner size="lg" />
             </div>
           ) : pendingMembers.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No pending approvals</h3>
-              <p className="text-slate-500">All member requests have been reviewed.</p>
-            </div>
+            <EmptyState
+              title="No pending approvals"
+              description="All member requests have been reviewed."
+            />
           ) : (
-            <div className="overflow-hidden bg-white border border-slate-200 rounded-[5px]">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Package</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Join Date</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Added By</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-200">
-                    {pendingMembers.map((member) => (
-                      <tr key={member._id} className="hover:bg-slate-50 transition-colors duration-200">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Link to={`/members/${member._id}`} className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">
-                            {member.name}
-                          </Link>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-slate-600">{member.phone}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-slate-900">{member.packageId?.name || 'N/A'}</div>
-                          {member.packageId?.priceGents != null && (
-                            <div className="text-xs text-slate-500">৳{member.gender === 'Female' ? member.packageId.priceLadies : member.packageId.priceGents}</div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-slate-600">
-                            {member.joinDate ? new Date(member.joinDate).toLocaleDateString() : 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-slate-600">
-                            {member.addedBy?.name || member.addedBy?.email || 'Unknown'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => handleApprove(member._id)}
-                              className="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-[5px] transition-colors duration-200"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => setRejectingId(member._id)}
-                              className="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-[5px] transition-colors duration-200"
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      ) : (
-      <div className="bg-white border border-slate-200 p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Search Members</label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by name, phone, or ID..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-4 pr-4 py-3 border border-slate-300 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition duration-200"
-              />
-            </div>
-          </div>
-          <div className="md:w-48">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Filter by Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition duration-200"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="expired">Expired</option>
-              <option value="expiring">Expiring Soon</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="overflow-hidden bg-white border border-slate-200 rounded-[5px]">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Member ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Phone
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Package
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Payment Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Expiry
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Fingerprint
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {members.map((member) => (
-                  <tr key={member._id} className="hover:bg-slate-50 transition-colors duration-200">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-700">
-                          {member.memberId ? member.memberId.slice(-1) : member.name?.charAt(0).toUpperCase() || '-'}
-                        </div>
-                        <Link to={`/members/${member._id}`} className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">
-                          {member.memberId || 'N/A'}
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Link to={`/members/${member._id}`} className="text-sm text-slate-900 hover:text-blue-600 hover:underline transition-colors">
+            <Table>
+              <Table.Header>
+                <Table.Row>
+                  <Table.Heading>Name</Table.Heading>
+                  <Table.Heading>Phone</Table.Heading>
+                  <Table.Heading>Package</Table.Heading>
+                  <Table.Heading>Join Date</Table.Heading>
+                  <Table.Heading>Added By</Table.Heading>
+                  <Table.Heading>Actions</Table.Heading>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {pendingMembers.map((member) => (
+                  <Table.Row key={member._id} interactive>
+                    <Table.Cell>
+                      <Link
+                        to={`/members/${member._id}`}
+                        className="text-sm font-medium text-slate-900 hover:text-brand-600 dark:text-slate-100 dark:hover:text-brand-400"
+                      >
                         {member.name}
                       </Link>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-600">{member.phone}</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900">{member.packageId?.name}</div>
-                      <div className="text-xs text-slate-500">৳{member.gender === 'Female' ? member.packageId?.priceLadies : member.packageId?.priceGents}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="space-y-1">
-                        <div className="text-sm text-slate-900">
-                          Paid: <span className="font-semibold text-green-600">৳{member.paidAmount || 0}</span>
-                        </div>
-                        <div className="text-sm text-slate-900">
-                          Due: <span className={`font-semibold ${member.dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            ৳{member.dueAmount || 0}
-                          </span>
-                        </div>
-                        <div className={`inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border ${
-                          member.dueAmount === 0 ? 'border-green-200 bg-green-50 text-green-700' :
-                          member.dueAmount === member.totalAmount ? 'border-red-200 bg-red-50 text-red-700' :
-                          'border-yellow-200 bg-yellow-50 text-yellow-700'
-                        }`}>
-                          {member.dueAmount === 0 ? 'Paid' :
-                           member.dueAmount === member.totalAmount ? 'Unpaid' : 'Partial'}
-                        </div>
+                    </Table.Cell>
+                    <Table.Cell>{member.phone}</Table.Cell>
+                    <Table.Cell>
+                      <div className="text-slate-900 dark:text-slate-100">
+                        {member.packageId?.name || 'N/A'}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-900">{member.expiryDate ? new Date(member.expiryDate).toLocaleDateString() : 'Lifetime'}</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {member.status === 'pending' ? (
-                        <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-orange-200 bg-orange-50 text-orange-700">
-                          Pending Approval
-                        </span>
-                      ) : (
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border ${getStatusColor(member.expiryDate)}`}>
-                          {getStatusText(member.expiryDate)}
-                        </span>
+                      {member.packageId?.priceGents != null && (
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          ৳
+                          {member.gender === 'Female'
+                            ? member.packageId.priceLadies
+                            : member.packageId.priceGents}
+                        </div>
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {member.deviceUserId != null ? (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-green-200 bg-green-50 text-green-700" title={`Device User ID: ${member.deviceUserId}`}>
-                          Registered
-                        </span>
-                      ) : (
-                        <Link
-                          to={`/members/${member._id}/edit`}
-                          className="inline-flex px-2 py-1 text-xs font-semibold rounded-[5px] border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors"
+                    </Table.Cell>
+                    <Table.Cell>
+                      {member.joinDate ? new Date(member.joinDate).toLocaleDateString() : 'N/A'}
+                    </Table.Cell>
+                    <Table.Cell>
+                      {member.addedBy?.name || member.addedBy?.email || 'Unknown'}
+                    </Table.Cell>
+                    <Table.Cell className="whitespace-nowrap">
+                      <div className="inline-flex gap-2">
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={() => handleApprove(member._id)}
                         >
-                          Not Set
-                        </Link>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex flex-wrap gap-2">
-                        <Link
-                          to={`/members/${member._id}/edit`}
-                          className="text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-[5px] transition-colors duration-200"
+                          Approve
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setRejectingId(member._id)}
                         >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => setDeletingId(member._id)}
-                          className="text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-[5px] transition-colors duration-200"
-                        >
-                          Delete
-                        </button>
+                          Reject
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+              </Table.Body>
+            </Table>
+          )}
+        </Card>
+      ) : (
+        <Card padding="md">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row">
+            <div className="flex-1">
+              <FormField label="Search Members">
+                <Input
+                  type="text"
+                  placeholder="Search by name, phone, or ID..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </FormField>
+            </div>
+            <div className="md:w-48">
+              <FormField label="Filter by Status">
+                <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="expired">Expired</option>
+                  <option value="expiring">Expiring Soon</option>
+                </Select>
+              </FormField>
+            </div>
           </div>
-        </div>
 
-        {members.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No members found</h3>
-            <p className="text-slate-500">Get started by adding your first member.</p>
-          </div>
-        )}
-      </div>
-
+          {members.length === 0 ? (
+            <EmptyState
+              icon={<Users className="w-5 h-5" />}
+              title="No members found"
+              description="Get started by adding your first member."
+              action={
+                <Button variant="primary" to="/members/add">
+                  Add Member
+                </Button>
+              }
+            />
+          ) : (
+            <>
+              <Table>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.Heading className="whitespace-nowrap">Member ID</Table.Heading>
+                    <Table.Heading>Name</Table.Heading>
+                    <Table.Heading>Phone</Table.Heading>
+                    <Table.Heading>Package</Table.Heading>
+                    <Table.Heading className="whitespace-nowrap">Payment Status</Table.Heading>
+                    <Table.Heading>Expiry</Table.Heading>
+                    <Table.Heading>Status</Table.Heading>
+                    <Table.Heading>Fingerprint</Table.Heading>
+                    <Table.Heading>Actions</Table.Heading>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                  {members.map((member) => {
+                    const status =
+                      member.status === 'pending'
+                        ? { label: 'Pending Approval', variant: 'warning' }
+                        : getStatusBadge(member.expiryDate);
+                    const payment = getPaymentBadge(member);
+                    return (
+                      <Table.Row key={member._id} interactive>
+                        <Table.Cell>
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-control bg-slate-100 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              {member.memberId
+                                ? member.memberId.slice(-1)
+                                : member.name?.charAt(0).toUpperCase() || '-'}
+                            </div>
+                            <Link
+                              to={`/members/${member._id}`}
+                              className="text-sm font-medium text-slate-900 hover:text-brand-600 dark:text-slate-100 dark:hover:text-brand-400"
+                            >
+                              {member.memberId || 'N/A'}
+                            </Link>
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Link
+                            to={`/members/${member._id}`}
+                            className="text-slate-900 hover:text-brand-600 hover:underline dark:text-slate-100 dark:hover:text-brand-400"
+                          >
+                            {member.name}
+                          </Link>
+                        </Table.Cell>
+                        <Table.Cell>{member.phone}</Table.Cell>
+                        <Table.Cell>
+                          <div className="text-slate-900 dark:text-slate-100">
+                            {member.packageId?.name}
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            ৳
+                            {member.gender === 'Female'
+                              ? member.packageId?.priceLadies
+                              : member.packageId?.priceGents}
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                'h-2 w-2 shrink-0 rounded-full',
+                                PAYMENT_DOT[payment.variant],
+                              )}
+                              aria-hidden="true"
+                            />
+                            <div className="leading-tight">
+                              <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                {payment.label}
+                              </div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400">
+                                ৳{(member.paidAmount || 0).toLocaleString()}
+                                {member.dueAmount > 0 && (
+                                  <span className="text-red-600 dark:text-red-400">
+                                    {' · '}৳{member.dueAmount.toLocaleString()} due
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {member.expiryDate
+                            ? new Date(member.expiryDate).toLocaleDateString()
+                            : 'Lifetime'}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Badge variant={status.variant}>{status.label}</Badge>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {member.deviceUserId != null ? (
+                            <Badge
+                              variant="success"
+                              size="sm"
+                              title={`Device User ID: ${member.deviceUserId}`}
+                            >
+                              Registered
+                            </Badge>
+                          ) : (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              to={`/members/${member._id}/edit`}
+                            >
+                              Not Set
+                            </Button>
+                          )}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap">
+                          <div className="inline-flex gap-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              to={`/members/${member._id}/edit`}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => setDeletingId(member._id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    );
+                  })}
+                </Table.Body>
+              </Table>
+              <div className="mt-3 border-t border-slate-200 px-4 dark:border-slate-800">
+                <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+              </div>
+            </>
+          )}
+        </Card>
       )}
 
       <ConfirmModal
         open={!!deletingId}
         title="Delete Member"
-        message={`Are you sure you want to delete ${members.find(m => m._id === deletingId)?.name || 'this member'}? This removes all their records.`}
+        message={`Are you sure you want to delete ${
+          members.find((m) => m._id === deletingId)?.name || 'this member'
+        }? This removes all their records.`}
         onConfirm={() => confirmDelete(deletingId)}
         onCancel={() => setDeletingId(null)}
       />
@@ -446,7 +481,9 @@ const MembersList = () => {
       <ConfirmModal
         open={!!rejectingId}
         title="Reject Member"
-        message={`Are you sure you want to reject ${pendingMembers.find((m) => m._id === rejectingId)?.name || 'this member'}? This will permanently delete their request.`}
+        message={`Are you sure you want to reject ${
+          pendingMembers.find((m) => m._id === rejectingId)?.name || 'this member'
+        }? This will permanently delete their request.`}
         confirmLabel="Reject"
         onConfirm={() => handleReject(rejectingId)}
         onCancel={() => setRejectingId(null)}

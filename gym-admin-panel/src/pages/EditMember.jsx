@@ -1,12 +1,45 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import api from '../services/api';
+import { getErrorMessage } from '../services/errorHandler';
 import useToast from '../hooks/useToast';
+import useForm from '../hooks/useForm';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Alert from '../components/Alert';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Textarea from '../components/ui/Textarea';
+import FormField from '../components/ui/FormField';
+import Spinner from '../components/ui/Spinner';
+import { cn } from '../components/ui/cn';
+
+const PAYMENT_OPTIONS = [
+  { key: 'full', title: 'Pay Full Due', desc: (due) => `Pay remaining ৳${due || 0}`, accent: 'accent' },
+  { key: 'partial', title: 'Partial Payment', desc: () => 'Pay part of due amount', accent: 'brand' },
+  { key: 'none', title: 'No Payment', desc: () => 'Update info only', accent: 'neutral' },
+];
+
+const PAYMENT_STYLES = {
+  accent: 'peer-checked:border-accent-500 peer-checked:bg-accent-50 dark:peer-checked:bg-accent-900/30',
+  brand: 'peer-checked:border-brand-500 peer-checked:bg-brand-50 dark:peer-checked:bg-brand-900/30',
+  neutral: 'peer-checked:border-slate-500 peer-checked:bg-slate-100 dark:peer-checked:bg-slate-800',
+};
 
 const EditMember = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const {
+    formData,
+    setFormData,
+    handleChange,
+    errors,
+    setError,
+    clearError,
+    hasErrors,
+  } = useForm({
     name: '',
     phone: '',
     emergencyPhone: '',
@@ -22,10 +55,7 @@ const EditMember = () => {
   });
   const [packages, setPackages] = useState([]);
   const [devices, setDevices] = useState([]);
-  const [fingerprint, setFingerprint] = useState({
-    deviceUserId: null,
-    registered: false,
-  });
+  const [fingerprint, setFingerprint] = useState({ deviceUserId: null, registered: false });
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [registering, setRegistering] = useState(false);
   const [fpMessage, setFpMessage] = useState({ type: '', text: '' });
@@ -43,8 +73,8 @@ const EditMember = () => {
     try {
       const res = await api.get('/packages');
       setPackages(res.data.data);
-    } catch (error) {
-      console.error('Error fetching packages:', error);
+    } catch (err) {
+      console.error('Error fetching packages:', err);
     }
   };
 
@@ -55,8 +85,8 @@ const EditMember = () => {
       if (res.data.data.length > 0) {
         setSelectedDeviceId(res.data.data[0]._id);
       }
-    } catch (error) {
-      console.error('Error fetching devices:', error);
+    } catch (err) {
+      console.error('Error fetching devices:', err);
     }
   };
 
@@ -65,7 +95,6 @@ const EditMember = () => {
       const res = await api.get(`/members/${id}`);
       const member = res.data.data;
 
-      // Format date for input (YYYY-MM-DD)
       const joinDate = new Date(member.joinDate);
       const formattedDate = joinDate.toISOString().split('T')[0];
 
@@ -88,7 +117,7 @@ const EditMember = () => {
         paymentType: 'none',
         additionalPayment: '',
       });
-    } catch (error) {
+    } catch (err) {
       showError('Error loading member. Redirecting to members list.');
       navigate('/members');
     } finally {
@@ -96,352 +125,312 @@ const EditMember = () => {
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if ((formData.paymentType === 'partial' || formData.paymentType === 'full') && formData.additionalPayment) {
+      const paymentAmount = parseFloat(formData.additionalPayment) || 0;
+      if (paymentAmount <= 0) {
+        setError('additionalPayment', 'Enter a valid payment amount greater than 0');
+        return;
+      }
+      if (paymentAmount > formData.dueAmount) {
+        setError('additionalPayment', `Payment cannot exceed due amount of ৳${formData.dueAmount}`);
+        return;
+      }
+      clearError('additionalPayment');
+    }
+
     setSubmitting(true);
     try {
-      // Validate payment amount
-      if ((formData.paymentType === 'partial' || formData.paymentType === 'full') && formData.additionalPayment) {
-        const paymentAmount = parseFloat(formData.additionalPayment) || 0;
-        if (paymentAmount <= 0) {
-          showError('Please enter a valid payment amount greater than 0');
-          setSubmitting(false);
-          return;
-        }
-        if (paymentAmount > formData.dueAmount) {
-          showError(`Payment amount cannot exceed due amount of ৳${formData.dueAmount}`);
-          setSubmitting(false);
-          return;
-        }
-      }
-
       const submitData = {
         ...formData,
-        additionalPayment: (formData.paymentType === 'partial' || formData.paymentType === 'full') ? parseFloat(formData.additionalPayment) : undefined,
+        additionalPayment:
+          formData.paymentType === 'partial' || formData.paymentType === 'full'
+            ? parseFloat(formData.additionalPayment)
+            : undefined,
       };
 
       await api.put(`/members/${id}`, submitData);
       showSuccess('Member updated successfully');
       navigate('/members');
-    } catch (error) {
+    } catch (err) {
       showError('Error updating member. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  const registerFingerprint = async () => {
+    if (!selectedDeviceId) return;
+    setRegistering(true);
+    setFpMessage({ type: '', text: '' });
+    try {
+      const res = await api.post(`/devices/${selectedDeviceId}/register-user`, {
+        memberId: id,
+      });
+      setFingerprint({
+        deviceUserId: res.data.data.deviceUserId,
+        registered: true,
+      });
+      setFpMessage({
+        type: 'success',
+        text: `Registered as Device User #${res.data.data.deviceUserId} on ${res.data.data.deviceName}. Now have the member enroll their fingerprint at the device.`,
+      });
+    } catch (err) {
+      setFpMessage({
+        type: 'error',
+        text: getErrorMessage(err, 'Failed to register on device. Is the device online?'),
+      });
+    } finally {
+      setRegistering(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <Spinner size="lg" />
       </div>
     );
   }
 
+  const selectedPkg = packages.find((p) => p._id === formData.packageId);
+  const pkgPrice = selectedPkg
+    ? formData.gender === 'Female'
+      ? selectedPkg.priceLadies
+      : selectedPkg.priceGents
+    : 0;
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="bg-white border border-slate-200 p-8 shadow-sm rounded-[5px]">
-        <div className="flex items-center justify-between">
-          <div>
-            <Link to="/members" className="text-sm text-slate-500 hover:text-slate-700 transition-colors">&larr; Back to Members</Link>
-            <h1 className="text-3xl font-semibold mb-2 text-slate-900">Edit Member</h1>
-            <p className="text-slate-500">Update member information</p>
-          </div>
-        </div>
-      </div>
+      <Card padding="lg">
+        <Link
+          to="/members"
+          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition dark:text-slate-400"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Members
+        </Link>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-slate-100">
+          Edit Member
+        </h1>
+        <p className="mt-1 text-slate-500 dark:text-slate-400">Update member information</p>
+      </Card>
 
-      {/* Form */}
-      <div className="bg-white rounded-[5px] shadow-xl p-8">
+      <Card padding="lg">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Personal Information */}
-          <div>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+          {/* Personal */}
+          <section>
+            <h2 className="mb-6 text-xl font-semibold text-slate-900 dark:text-slate-100">
               Personal Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Full Name *
-                </label>
-                <input
+              <FormField label="Full Name" required>
+                <Input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter full name"
                   required
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Phone Number *
-                </label>
-                <input
+              </FormField>
+              <FormField label="Phone Number" required>
+                <Input
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter phone number"
                   required
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Emergency Phone</label>
-                <input
+              </FormField>
+              <FormField label="Emergency Phone">
+                <Input
                   type="tel"
                   name="emergencyPhone"
                   value={formData.emergencyPhone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
-                  placeholder="Emergency contact number (optional)"
                 />
-              </div>
+              </FormField>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Address
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  rows="3"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200 resize-none"
-                  placeholder="Enter address (optional)"
-                />
+                <FormField label="Address">
+                  <Textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    rows={3}
+                  />
+                </FormField>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Gender *
-                </label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
-                  required
-                >
+              <FormField label="Gender" required>
+                <Select name="gender" value={formData.gender} onChange={handleChange} required>
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
-                </select>
-              </div>
+                </Select>
+              </FormField>
             </div>
-          </div>
+          </section>
 
-          {/* Fingerprint Registration */}
-          <div>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+          {/* Fingerprint */}
+          <section>
+            <h2 className="mb-6 text-xl font-semibold text-slate-900 dark:text-slate-100">
               Fingerprint Registration
             </h2>
 
             {fpMessage.text && (
-              <div className={`mb-4 px-4 py-3 rounded-[5px] text-sm border ${
-                fpMessage.type === 'success'
-                  ? 'bg-green-50 border-green-200 text-green-700'
-                  : 'bg-red-50 border-red-200 text-red-700'
-              }`}>
-                {fpMessage.text}
+              <div className="mb-4">
+                <Alert type={fpMessage.type === 'success' ? 'success' : 'error'}>
+                  {fpMessage.text}
+                </Alert>
               </div>
             )}
 
             {fingerprint.registered ? (
-              <div className="bg-green-50 border border-green-200 rounded-[5px] p-5">
+              <div className="rounded-control border border-accent-200 bg-accent-50 p-5 dark:border-accent-800/60 dark:bg-accent-900/30">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-green-800">Fingerprint Registered</p>
-                    <p className="text-xs text-green-600 mt-1">
+                    <p className="text-sm font-semibold text-accent-800 dark:text-accent-200">
+                      Fingerprint Registered
+                    </p>
+                    <p className="mt-1 text-xs text-accent-600 dark:text-accent-300">
                       Device User ID: {fingerprint.deviceUserId}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       Member can scan fingerprint at the device for attendance.
                     </p>
                   </div>
-                  <span className="inline-flex px-3 py-1 text-xs font-semibold rounded-[5px] border border-green-300 bg-green-100 text-green-700">
-                    Active
-                  </span>
+                  <Badge variant="success">Active</Badge>
                 </div>
               </div>
             ) : (
-              <div className="bg-slate-50 border border-slate-200 rounded-[5px] p-5">
-                <p className="text-sm font-semibold text-slate-800 mb-1">No Fingerprint Registered</p>
-                <p className="text-xs text-slate-500 mb-4">
-                  Select a device and click register. Then have the member enroll their fingerprint at the device.
+              <div className="rounded-control border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  No Fingerprint Registered
+                </p>
+                <p className="mt-1 mb-4 text-xs text-slate-500 dark:text-slate-400">
+                  Select a device and click register. Then have the member enroll their
+                  fingerprint at the device.
                 </p>
                 {devices.length > 0 ? (
                   <div className="flex flex-wrap items-end gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Device</label>
-                      <select
-                        value={selectedDeviceId}
-                        onChange={(e) => setSelectedDeviceId(e.target.value)}
-                        className="px-4 py-2.5 border border-slate-200 rounded-[5px] text-sm focus:ring-2 focus:ring-slate-300 focus:border-transparent"
-                      >
-                        {devices.map((d) => (
-                          <option key={d._id} value={d._id}>
-                            {d.name} ({d.ip})
-                          </option>
-                        ))}
-                      </select>
+                    <div className="flex-1 min-w-[200px]">
+                      <FormField label="Device">
+                        <Select
+                          value={selectedDeviceId}
+                          onChange={(e) => setSelectedDeviceId(e.target.value)}
+                        >
+                          {devices.map((d) => (
+                            <option key={d._id} value={d._id}>
+                              {d.name} ({d.ip})
+                            </option>
+                          ))}
+                        </Select>
+                      </FormField>
                     </div>
-                    <button
+                    <Button
                       type="button"
-                      onClick={async () => {
-                        if (!selectedDeviceId) return;
-                        setRegistering(true);
-                        setFpMessage({ type: '', text: '' });
-                        try {
-                          const res = await api.post(`/devices/${selectedDeviceId}/register-user`, {
-                            memberId: id,
-                          });
-                          setFingerprint({
-                            deviceUserId: res.data.data.deviceUserId,
-                            registered: true,
-                          });
-                          setFpMessage({
-                            type: 'success',
-                            text: `Registered as Device User #${res.data.data.deviceUserId} on ${res.data.data.deviceName}. Now have the member enroll their fingerprint at the device.`,
-                          });
-                        } catch (error) {
-                          setFpMessage({
-                            type: 'error',
-                            text: error.response?.data?.message || 'Failed to register on device. Is the device online?',
-                          });
-                        } finally {
-                          setRegistering(false);
-                        }
-                      }}
-                      disabled={registering}
-                      className="px-5 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-[5px] hover:bg-slate-800 disabled:opacity-50 transition-all duration-200"
+                      variant="primary"
+                      onClick={registerFingerprint}
+                      loading={registering}
                     >
-                      {registering ? 'Registering...' : 'Register Fingerprint'}
-                    </button>
+                      Register Fingerprint
+                    </Button>
                   </div>
                 ) : (
-                  <p className="text-xs text-yellow-600">
+                  <Alert type="warning">
                     No devices configured. Add a device in the Device Management page first.
-                  </p>
+                  </Alert>
                 )}
               </div>
             )}
-          </div>
+          </section>
 
-          {/* Membership Details */}
-          <div>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+          {/* Membership */}
+          <section>
+            <h2 className="mb-6 text-xl font-semibold text-slate-900 dark:text-slate-100">
               Membership Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Join Date *
-                </label>
-                <input
+              <FormField label="Join Date" required>
+                <Input
                   type="date"
                   name="joinDate"
                   value={formData.joinDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                   required
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Package *
-                </label>
-                <select
+              </FormField>
+              <FormField label="Package" required>
+                <Select
                   name="packageId"
                   value={formData.packageId}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                   required
                 >
                   <option value="">Select Package</option>
                   {packages.map((pkg) => (
                     <option key={pkg._id} value={pkg._id}>
-                      {pkg.name} - ৳{formData.gender === 'Female' ? pkg.priceLadies : pkg.priceGents} ({pkg.isLifetime ? 'Lifetime' : `${pkg.duration} days`})
+                      {pkg.name} — ৳
+                      {formData.gender === 'Female' ? pkg.priceLadies : pkg.priceGents} (
+                      {pkg.isLifetime ? 'Lifetime' : `${pkg.duration} days`})
                     </option>
                   ))}
-                </select>
-              </div>
+                </Select>
+              </FormField>
             </div>
-          </div>
+          </section>
 
-          {/* Payment Options */}
-          <div>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+          {/* Payment */}
+          <section>
+            <h2 className="mb-6 text-xl font-semibold text-slate-900 dark:text-slate-100">
               Payment Options
             </h2>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-3">
-                  Add Payment
-                </label>
+              <FormField label="Add Payment">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <label className="relative">
-                    <input
-                      type="radio"
-                      name="paymentType"
-                      value="full"
-                      checked={formData.paymentType === 'full'}
-                      onChange={handleChange}
-                      className="sr-only peer"
-                    />
-                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-200 hover:border-green-300">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-slate-800">Pay Full Due</div>
-                        <div className="text-sm text-slate-600">Pay remaining ৳{formData.dueAmount || 0}</div>
+                  {PAYMENT_OPTIONS.map((opt) => (
+                    <label key={opt.key} className="relative cursor-pointer">
+                      <input
+                        type="radio"
+                        name="paymentType"
+                        value={opt.key}
+                        checked={
+                          opt.key === 'none'
+                            ? !formData.paymentType || formData.paymentType === 'none'
+                            : formData.paymentType === opt.key
+                        }
+                        onChange={handleChange}
+                        className="sr-only peer"
+                      />
+                      <div
+                        className={cn(
+                          'rounded-control border-2 border-slate-200 p-4 transition',
+                          'hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900',
+                          PAYMENT_STYLES[opt.accent],
+                        )}
+                      >
+                        <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                          {opt.title}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          {opt.desc(formData.dueAmount)}
+                        </div>
                       </div>
-                    </div>
-                  </label>
-                  <label className="relative">
-                    <input
-                      type="radio"
-                      name="paymentType"
-                      value="partial"
-                      checked={formData.paymentType === 'partial'}
-                      onChange={handleChange}
-                      className="sr-only peer"
-                    />
-                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-200 hover:border-blue-300">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-slate-800">Partial Payment</div>
-                        <div className="text-sm text-slate-600">Pay part of due amount</div>
-                      </div>
-                    </div>
-                  </label>
-                  <label className="relative">
-                    <input
-                      type="radio"
-                      name="paymentType"
-                      value="none"
-                      checked={!formData.paymentType || formData.paymentType === 'none'}
-                      onChange={handleChange}
-                      className="sr-only peer"
-                    />
-                    <div className="p-4 border-2 border-slate-200 rounded-[5px] cursor-pointer peer-checked:border-slate-500 peer-checked:bg-slate-50 transition-all duration-200 hover:border-slate-200">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-slate-800">No Payment</div>
-                        <div className="text-sm text-slate-600">Update info only</div>
-                      </div>
-                    </div>
-                  </label>
+                    </label>
+                  ))}
                 </div>
-              </div>
+              </FormField>
 
               {(formData.paymentType === 'partial' || formData.paymentType === 'full') && (
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Payment Amount *
-                  </label>
-                  <input
+                <FormField
+                  label="Payment Amount"
+                  required
+                  error={errors.additionalPayment}
+                  hint={`Maximum amount: ৳${formData.dueAmount || 0}`}
+                >
+                  <Input
                     type="number"
                     name="additionalPayment"
                     value={formData.additionalPayment || ''}
@@ -449,47 +438,54 @@ const EditMember = () => {
                     min="0"
                     step="0.01"
                     max={formData.dueAmount || 0}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-[5px] focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all duration-200"
                     placeholder="Enter payment amount"
-                    required={formData.paymentType === 'partial' || formData.paymentType === 'full'}
+                    required
+                    error={Boolean(errors.additionalPayment)}
                   />
-                  <p className="text-sm text-slate-600 mt-1">
-                    Maximum amount: ৳{formData.dueAmount || 0}
-                  </p>
-                </div>
+                </FormField>
               )}
             </div>
-          </div>
+          </section>
+
           {formData.packageId && (
-            <div className="bg-slate-50 rounded-[5px] p-6 border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">
+            <div className="rounded-card border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950">
+              <h3 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
                 Membership Preview
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">Expiry Date:</span>
-                  <span className="font-semibold text-slate-800 ml-2">
-                    {formData.joinDate && packages.find(p => p._id === formData.packageId) ?
-                      new Date(new Date(formData.joinDate).getTime() + packages.find(p => p._id === formData.packageId).duration * 24 * 60 * 60 * 1000).toLocaleDateString()
-                      : 'Select join date and package'
-                    }
+                <div className="rounded-control bg-white p-4 dark:bg-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">Expiry Date:</span>
+                  <span className="ml-2 font-semibold text-slate-800 dark:text-slate-200">
+                    {formData.joinDate && selectedPkg
+                      ? new Date(
+                          new Date(formData.joinDate).getTime() +
+                            selectedPkg.duration * 24 * 60 * 60 * 1000,
+                        ).toLocaleDateString()
+                      : 'Select join date and package'}
                   </span>
                 </div>
-                <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">Package Price:</span>
-                  <span className="font-semibold text-green-600 ml-2">
-                    ৳{(() => { const p = packages.find(p => p._id === formData.packageId); return p ? (formData.gender === 'Female' ? p.priceLadies : p.priceGents) : 0; })()}
+                <div className="rounded-control bg-white p-4 dark:bg-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">Package Price:</span>
+                  <span className="ml-2 font-semibold text-accent-600 dark:text-accent-400">
+                    ৳{pkgPrice}
                   </span>
                 </div>
-                <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">Paid Amount:</span>
-                  <span className="font-semibold text-blue-600 ml-2">
+                <div className="rounded-control bg-white p-4 dark:bg-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">Paid Amount:</span>
+                  <span className="ml-2 font-semibold text-brand-600 dark:text-brand-400">
                     ৳{formData.paidAmount || 0}
                   </span>
                 </div>
-                <div className="bg-white p-4 rounded-[5px]">
-                  <span className="text-slate-500">Due Amount:</span>
-                  <span className={`font-semibold ml-2 ${formData.dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <div className="rounded-control bg-white p-4 dark:bg-slate-900">
+                  <span className="text-slate-500 dark:text-slate-400">Due Amount:</span>
+                  <span
+                    className={cn(
+                      'ml-2 font-semibold',
+                      formData.dueAmount > 0
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-accent-600 dark:text-accent-400',
+                    )}
+                  >
                     ৳{formData.dueAmount || 0}
                   </span>
                 </div>
@@ -497,32 +493,22 @@ const EditMember = () => {
             </div>
           )}
 
-          {/* Submit Button */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-slate-200">
-            <button
-              type="button"
-              onClick={() => navigate('/members')}
-              className="px-6 py-3 border border-slate-200 text-slate-700 rounded-[5px] hover:bg-slate-50 transition-all duration-200"
-            >
+          <div className="flex justify-end gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
+            <Button variant="secondary" onClick={() => navigate('/members')}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={submitting}
-              className="px-8 py-3 bg-slate-900 text-white rounded-[5px] hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              variant="primary"
+              size="lg"
+              loading={submitting}
+              disabled={hasErrors}
             >
-              {submitting ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Updating Member...
-                </div>
-              ) : (
-                'Update Member'
-              )}
-            </button>
+              {submitting ? 'Updating Member…' : 'Update Member'}
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 };
