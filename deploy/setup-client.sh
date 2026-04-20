@@ -25,8 +25,14 @@ echo ""
 read -p "Gym Name: " GYM_NAME
 read -p "Gym Phone: " GYM_PHONE
 read -p "Gym Address: " GYM_ADDRESS
-read -p "Image Tag (e.g., client-abc-gym or latest): " IMAGE_TAG
+read -p "Branch (e.g., main, client/alpha-gym) [main]: " BRANCH
+BRANCH=${BRANCH:-main}
+read -p "Image Tag (e.g., latest, client-alpha-gym) [latest]: " IMAGE_TAG
 IMAGE_TAG=${IMAGE_TAG:-latest}
+read -p "Seed super-admin email [admin@gym.com]: " SEED_ADMIN_EMAIL
+SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-admin@gym.com}
+read -p "Seed super-admin password [Password123]: " SEED_ADMIN_PASSWORD
+SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-Password123}
 
 # GHCR login
 GITHUB_OWNER="sayedsafi2000"
@@ -46,12 +52,10 @@ INSTALL_DIR="$HOME/gym-pro"
 mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 
-# Download docker-compose.deploy.yml if not present
-if [ ! -f docker-compose.yml ]; then
-  echo "Downloading docker-compose.yml..."
-  curl -sL "https://raw.githubusercontent.com/$GITHUB_OWNER/gym-pro/main/docker-compose.deploy.yml" -o docker-compose.yml \
-    || echo "Could not download compose file. Please copy docker-compose.deploy.yml to $INSTALL_DIR/docker-compose.yml"
-fi
+# Download docker-compose.deploy.yml from chosen branch
+echo "Downloading compose file from $BRANCH branch..."
+curl -sfL "https://raw.githubusercontent.com/$GITHUB_OWNER/gym-pro/$BRANCH/docker-compose.deploy.yml" -o docker-compose.yml \
+  || { echo "ERROR: could not download compose file from branch '$BRANCH'. Aborting."; exit 1; }
 
 # Create .env
 cat > .env << EOF
@@ -59,7 +63,11 @@ cat > .env << EOF
 JWT_SECRET=$JWT_SECRET
 
 GITHUB_OWNER=$GITHUB_OWNER
+BRANCH=$BRANCH
 IMAGE_TAG=$IMAGE_TAG
+
+SEED_ADMIN_EMAIL=$SEED_ADMIN_EMAIL
+SEED_ADMIN_PASSWORD=$SEED_ADMIN_PASSWORD
 
 GYM_NAME=$GYM_NAME
 GYM_ADDRESS=$GYM_ADDRESS
@@ -103,11 +111,12 @@ echo "  GymPro Setup Complete!"
 echo "======================================"
 echo ""
 echo "  URL:      http://localhost"
-echo "  Login:    admin@gym.com"
-echo "  Password: Password123"
+echo "  Login:    $SEED_ADMIN_EMAIL"
+echo "  Password: $SEED_ADMIN_PASSWORD"
 echo ""
 echo "  Gym Name: $GYM_NAME"
 echo "  Install:  $INSTALL_DIR"
+echo "  Branch:   $BRANCH"
 echo "  Tag:      $IMAGE_TAG"
 echo ""
 echo "  To update: ./update-client.sh"

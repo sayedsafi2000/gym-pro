@@ -16,10 +16,21 @@ fi
 
 cd "$INSTALL_DIR"
 
-# Read current tag
-IMAGE_TAG=$(grep IMAGE_TAG .env | cut -d= -f2)
-echo "Current tag: $IMAGE_TAG"
+# Read branch + tag + owner from .env
+BRANCH=$(grep ^BRANCH= .env | cut -d= -f2)
+BRANCH=${BRANCH:-main}
+IMAGE_TAG=$(grep ^IMAGE_TAG= .env | cut -d= -f2)
+GITHUB_OWNER=$(grep ^GITHUB_OWNER= .env | cut -d= -f2)
+GITHUB_OWNER=${GITHUB_OWNER:-sayedsafi2000}
+
+echo "Branch: $BRANCH"
+echo "Tag:    $IMAGE_TAG"
 echo ""
+
+# Re-download compose file (structure may have changed on that branch)
+echo "Refreshing compose file..."
+curl -sfL "https://raw.githubusercontent.com/$GITHUB_OWNER/gym-pro/$BRANCH/docker-compose.deploy.yml" -o docker-compose.yml \
+  || echo "WARNING: could not refresh compose file, using existing one."
 
 # Pull latest images
 echo "Pulling latest images..."
@@ -38,8 +49,9 @@ echo "======================================"
 echo "  Update Complete!"
 echo "======================================"
 echo ""
-echo "  URL:  http://localhost"
-echo "  Tag:  $IMAGE_TAG"
+echo "  URL:    http://localhost"
+echo "  Branch: $BRANCH"
+echo "  Tag:    $IMAGE_TAG"
 echo ""
 echo "  Your data (members, payments, etc.) is preserved."
 echo "======================================"

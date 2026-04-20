@@ -179,17 +179,34 @@ Each client gets their own branch. Only `.env` values differ (gym name, phone, a
 ```
 
 **Client machine (first-time setup):**
+
+Linux / macOS / Git Bash:
 ```bash
 bash setup-client.sh
-# Prompts: gym name, phone, address
+# Prompts: gym name, phone, address, branch, image tag, seed admin creds, GHCR token
 # Auto: generates JWT, pulls images, starts app
 # App at http://localhost
 ```
 
+Windows (PowerShell — no bash needed):
+```powershell
+Invoke-WebRequest -UseBasicParsing `
+  https://raw.githubusercontent.com/sayedsafi2000/gym-pro/main/deploy/setup-client.ps1 `
+  -OutFile setup-client.ps1
+powershell -ExecutionPolicy Bypass -File .\setup-client.ps1
+```
+
 **Client machine (update):**
+
+Linux / macOS / Git Bash:
 ```bash
 bash update-client.sh
-# Pulls latest images, restarts, data preserved
+# Re-downloads compose from recorded branch, pulls latest images, restarts, data preserved
+```
+
+Windows:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\update-client.ps1
 ```
 
 ### Auto-Start on PC Boot
