@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
 import api from '../services/api';
 import { getErrorMessage } from '../services/errorHandler';
 import useForm from '../hooks/useForm';
@@ -8,13 +7,13 @@ import { useAuth } from '../contexts/AuthContext';
 import Alert from '../components/Alert';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import PasswordInput from '../components/ui/PasswordInput';
 import FormField from '../components/ui/FormField';
 
 const Login = () => {
   const { formData, handleChange: onFieldChange } = useForm({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
 
@@ -71,25 +70,13 @@ const Login = () => {
           </FormField>
 
           <FormField label="Password" required>
-            <div className="relative">
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                autoComplete="current-password"
-                required
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-control p-1 text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-slate-400 dark:hover:text-slate-200"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
+            <PasswordInput
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+              required
+            />
           </FormField>
 
           <Button type="submit" variant="primary" size="lg" loading={loading} fullWidth>

@@ -79,7 +79,12 @@ const getMember = async (req, res) => {
 // @route   POST /api/members
 const createMember = async (req, res) => {
   try {
-    const { name, phone, emergencyPhone, address, gender, joinDate, packageId, paymentType, initialPayment } = req.body;
+    const { memberId, name, phone, emergencyPhone, address, gender, joinDate, packageId, paymentType, initialPayment } = req.body;
+
+    const trimmedMemberId = typeof memberId === 'string' ? memberId.trim() : '';
+    if (!trimmedMemberId) {
+      return res.status(400).json({ success: false, message: 'Member ID is required' });
+    }
 
     // Get package to calculate expiry date and total amount
     const pkg = await Package.findById(packageId);
@@ -89,10 +94,6 @@ const createMember = async (req, res) => {
 
     const join = joinDate ? new Date(joinDate) : new Date();
     const expiry = calcExpiry(pkg, join);
-
-    // Generate memberId
-    const count = await Member.countDocuments();
-    const memberId = `GYM-${String(count + 1).padStart(3, '0')}`;
 
     const totalPrice = pkg.getTotalForGender(gender);
     const { paidAmount, dueAmount } = subscriptionService.computePaymentSplit(
@@ -105,7 +106,7 @@ const createMember = async (req, res) => {
     const memberStatus = req.admin?.role === 'admin' ? 'pending' : 'approved';
 
     const member = await Member.create({
-      memberId,
+      memberId: trimmedMemberId,
       name,
       phone,
       emergencyPhone: emergencyPhone || '',
@@ -214,7 +215,21 @@ const createMember = async (req, res) => {
     const populated = await member.populate('packageId', PACKAGE_FULL);
     res.status(201).json({ success: true, data: populated });
   } catch (error) {
+    if (error && error.code === 11000 && error.keyPattern && error.keyPattern.memberId) {
+      return res.status(409).json({ success: false, message: 'Member ID already exists. Please use a different one.' });
+    }
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get the most-recently-created member's ID (UI hint)
+// @route   GET /api/members/last-id
+const getLastMemberId = async (req, res) => {
+  try {
+    const latest = await Member.findOne().sort({ createdAt: -1 }).select('memberId').lean();
+    res.json({ success: true, data: { lastMemberId: latest?.memberId || null } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -431,4 +446,4 @@ const rejectMember = async (req, res) => {
   }
 };
 
-module.exports = { getMembers, getMember, createMember, updateMember, deleteMember, getPendingMembers, approveMember, rejectMember };
+module.exports = { getMembers, getMember, createMember, getLastMemberId, updateMember, deleteMember, getPendingMembers, approveMember, rejectMember };

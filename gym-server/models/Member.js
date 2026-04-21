@@ -4,7 +4,9 @@ const memberSchema = new mongoose.Schema(
   {
     memberId: {
       type: String,
+      required: [true, 'Member ID is required'],
       unique: true,
+      trim: true,
     },
     name: {
       type: String,

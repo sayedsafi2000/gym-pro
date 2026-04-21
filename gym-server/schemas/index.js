@@ -17,6 +17,7 @@ const login = z.object({
 });
 
 const createMember = z.object({
+  memberId: z.string().trim().min(1, 'Member ID required'),
   name: z.string().trim().min(1, 'Name required'),
   phone,
   emergencyPhone: z.string().trim().optional().default(''),

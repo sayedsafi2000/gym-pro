@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
 import api from '../services/api';
 import { getErrorMessage } from '../services/errorHandler';
 import useToast from '../hooks/useToast';
@@ -8,6 +7,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Input from '../components/ui/Input';
+import PasswordInput from '../components/ui/PasswordInput';
 import FormField from '../components/ui/FormField';
 import Spinner from '../components/ui/Spinner';
 import Modal from '../components/ui/Modal';
@@ -34,7 +34,6 @@ const ManageAdmins = () => {
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -199,14 +198,20 @@ const ManageAdmins = () => {
       </section>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} size="md">
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4" autoComplete="off">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             {editingAdmin ? 'Edit Admin' : 'Add Admin'}
           </h3>
 
+          {/* Hidden decoys absorb Chrome's aggressive autofill for email+password pairs. */}
+          <input type="text" name="username" autoComplete="username" className="hidden" tabIndex={-1} aria-hidden="true" readOnly />
+          <input type="password" name="password" autoComplete="new-password" className="hidden" tabIndex={-1} aria-hidden="true" readOnly />
+
           <FormField label="Name">
             <Input
               type="text"
+              name="admin-display-name"
+              autoComplete="off"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Admin name"
@@ -216,35 +221,25 @@ const ManageAdmins = () => {
           <FormField label="Email" required>
             <Input
               type="email"
+              name="admin-login-email"
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               disabled={!!editingAdmin}
-              autoComplete="email"
+              autoComplete="off"
             />
           </FormField>
 
           {!editingAdmin && (
             <FormField label="Password (min 8 chars)" required>
-              <div className="relative">
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  minLength={8}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  autoComplete="new-password"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-control p-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+              <PasswordInput
+                name="admin-login-password"
+                required
+                minLength={8}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                autoComplete="new-password"
+              />
             </FormField>
           )}
 

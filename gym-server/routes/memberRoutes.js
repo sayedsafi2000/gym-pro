@@ -7,6 +7,7 @@ const {
   getMembers,
   getMember,
   createMember,
+  getLastMemberId,
   updateMember,
   deleteMember,
   getPendingMembers,
@@ -15,6 +16,7 @@ const {
 } = require('../controllers/memberController');
 
 router.route('/').get(getMembers).post(validate(schemas.createMember), createMember);
+router.get('/last-id', getLastMemberId);
 router.get('/pending', requireRole('super_admin'), getPendingMembers);
 router.put('/:id/approve', requireRole('super_admin'), approveMember);
 router.delete('/:id/reject', requireRole('super_admin'), rejectMember);

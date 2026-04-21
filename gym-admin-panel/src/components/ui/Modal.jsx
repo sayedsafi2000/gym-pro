@@ -27,6 +27,11 @@ const Modal = ({
 }) => {
   const dialogRef = useRef(null);
   const previouslyFocused = useRef(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -42,7 +47,7 @@ const Modal = ({
 
     const onKey = (e) => {
       if (e.key === 'Escape') {
-        onClose?.();
+        onCloseRef.current?.();
         return;
       }
       if (e.key !== 'Tab' || !node) return;
@@ -67,7 +72,7 @@ const Modal = ({
         previouslyFocused.current.focus();
       }
     };
-  }, [open, onClose, initialFocusRef]);
+  }, [open]);
 
   if (!open) return null;
 

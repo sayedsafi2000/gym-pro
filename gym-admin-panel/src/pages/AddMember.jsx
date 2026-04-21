@@ -43,6 +43,7 @@ const AddMember = () => {
     clearError,
     hasErrors,
   } = useForm({
+    memberId: '',
     name: '',
     phone: '',
     emergencyPhone: '',
@@ -55,12 +56,14 @@ const AddMember = () => {
     installmentMonths: '',
   });
   const [packages, setPackages] = useState([]);
+  const [lastMemberId, setLastMemberId] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     fetchPackages();
+    fetchLastMemberId();
   }, []);
 
   const fetchPackages = async () => {
@@ -72,6 +75,15 @@ const AddMember = () => {
     }
   };
 
+  const fetchLastMemberId = async () => {
+    try {
+      const res = await api.get('/members/last-id');
+      setLastMemberId(res.data.data?.lastMemberId || null);
+    } catch (err) {
+      console.error('Error fetching last member ID:', err);
+    }
+  };
+
   const selectedPkg = packages.find((p) => p._id === formData.packageId);
   const total = getEffectivePrice(selectedPkg, formData.gender);
 
@@ -80,6 +92,12 @@ const AddMember = () => {
 
     // Inline validation
     let valid = true;
+    if (!formData.memberId.trim()) {
+      setError('memberId', 'Member ID is required');
+      valid = false;
+    } else {
+      clearError('memberId');
+    }
     if (formData.paymentType === 'partial') {
       const paymentAmount = parseFloat(formData.initialPayment) || 0;
       if (paymentAmount <= 0) {
@@ -139,6 +157,22 @@ const AddMember = () => {
               Personal Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                label="Member ID"
+                required
+                error={errors.memberId}
+                hint={lastMemberId ? `Last used: ${lastMemberId}` : undefined}
+              >
+                <Input
+                  type="text"
+                  name="memberId"
+                  value={formData.memberId}
+                  onChange={handleChange}
+                  placeholder={lastMemberId ? `e.g. ${lastMemberId}` : 'Enter Member ID'}
+                  required
+                />
+              </FormField>
+
               <FormField label="Full Name" required error={errors.name}>
                 <Input
                   type="text"
@@ -399,7 +433,9 @@ const AddMember = () => {
                 <div className="rounded-control bg-white p-4 dark:bg-slate-900">
                   <span className="text-slate-500 dark:text-slate-400">Member ID:</span>
                   <span className="ml-2 font-semibold text-slate-800 dark:text-slate-200">
-                    Auto-generated on creation
+                    {formData.memberId.trim() || (
+                      <span className="italic text-slate-400 dark:text-slate-500">Not set</span>
+                    )}
                   </span>
                 </div>
                 <div className="rounded-control bg-white p-4 dark:bg-slate-900">
