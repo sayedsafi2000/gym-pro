@@ -26,6 +26,9 @@ git pull origin main
 # Switch to client branch (create if doesn't exist)
 if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
   git checkout "$BRANCH"
+  # Sync with remote first so client-side compose edits aren't lost and push
+  # doesn't get rejected as non-fast-forward.
+  git pull origin "$BRANCH" --no-rebase --no-edit || true
 else
   echo "Branch $BRANCH doesn't exist. Creating from main..."
   git checkout -b "$BRANCH"
@@ -33,7 +36,7 @@ fi
 
 # Merge main into client branch
 echo "Merging main → $BRANCH..."
-git merge main -m "chore: merge main into $BRANCH"
+git merge main --no-edit -m "chore: merge main into $BRANCH"
 
 # Push
 echo "Pushing $BRANCH..."
