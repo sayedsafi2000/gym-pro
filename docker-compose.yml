@@ -22,6 +22,13 @@ services:
       ZKTECO_DEVICE_IP: ${ZKTECO_DEVICE_IP:-}
       ZKTECO_DEVICE_PORT: ${ZKTECO_DEVICE_PORT:-4370}
       ATTENDANCE_POLL_INTERVAL_MS: ${ATTENDANCE_POLL_INTERVAL_MS:-60000}
+      # Surface branch + tag so the in-app update UI can show current version.
+      BRANCH: ${BRANCH:-main}
+      IMAGE_TAG: ${IMAGE_TAG:-latest}
+    volumes:
+      # Shared folder with host — server writes update-requested.json,
+      # host watcher reads it and writes update-status.json back.
+      - ./system:/app/system
     depends_on:
       - mongo
 
