@@ -1,4 +1,4 @@
-# GymPro — Update (Windows PowerShell)
+# GymPro - Update (Windows PowerShell)
 # Mirrors deploy/update-client.sh.
 # Run: powershell -ExecutionPolicy Bypass -File .\update-client.ps1
 
@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Stop'
 
 Write-Host ''
 Write-Host '======================================'
-Write-Host '  GymPro — Update'
+Write-Host '  GymPro - Update'
 Write-Host '======================================'
 Write-Host ''
 

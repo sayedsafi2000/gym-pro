@@ -1,4 +1,4 @@
-# GymPro — Host Updater (Windows)
+# GymPro - Host Updater (Windows)
 #
 # Installed by setup-client.ps1 to $HOME\gym-pro\host-updater.ps1.
 # Launched every 60s by Windows Task Scheduler.
@@ -60,7 +60,7 @@ try {
 } catch {
     $Finished = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
     $err = ($_.Exception.Message -replace '"', '\"' -replace '\\', '\\')
-    Write-Status "{`"state`":`"failed`",`"startedAt`":`"$Started`",`"finishedAt`":`"$Finished`",`"error`":`"$err — see update.log`"}"
+    Write-Status "{`"state`":`"failed`",`"startedAt`":`"$Started`",`"finishedAt`":`"$Finished`",`"error`":`"$err - see update.log`"}"
     Append-Log "Update FAILED: $($_.Exception.Message)"
 } finally {
     Remove-Item $Lock -Force -ErrorAction SilentlyContinue

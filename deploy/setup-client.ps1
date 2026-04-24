@@ -1,4 +1,4 @@
-# GymPro — Client Setup (Windows PowerShell)
+# GymPro - Client Setup (Windows PowerShell)
 # Mirrors deploy/setup-client.sh for clients without bash.
 # Run: powershell -ExecutionPolicy Bypass -File .\setup-client.ps1
 
@@ -12,7 +12,7 @@ function Write-Banner($title) {
     Write-Host ''
 }
 
-Write-Banner 'GymPro — Client Setup'
+Write-Banner 'GymPro - Client Setup'
 
 # --- Docker checks ---
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
@@ -81,7 +81,7 @@ try {
 
 # --- Write .env ---
 $envContent = @"
-# GymPro Configuration — $(Get-Date -Format 'yyyy-MM-dd HH:mm')
+# GymPro Configuration - $(Get-Date -Format 'yyyy-MM-dd HH:mm')
 JWT_SECRET=$JWT_SECRET
 
 GITHUB_OWNER=$GITHUB_OWNER
@@ -157,7 +157,7 @@ Register-ScheduledTask `
     -Action $Action `
     -Trigger $Trigger `
     -Settings $Settings `
-    -Description 'GymPro host updater — polls trigger file and runs update-client.ps1 when the in-app Update button is pressed.' `
+    -Description 'GymPro host updater - polls trigger file and runs update-client.ps1 when the in-app Update button is pressed.' `
     -RunLevel Limited | Out-Null
 
 Write-Host "Task Scheduler entry installed: $TaskName (runs every minute)."
