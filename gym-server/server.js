@@ -42,6 +42,7 @@ app.use('/api/attendance', protect, require('./routes/attendanceRoutes'));
 app.use('/api/devices', protect, require('./routes/deviceRoutes'));
 app.use('/api/installments', protect, require('./routes/installmentRoutes'));
 app.use('/api/subscriptions', protect, require('./routes/subscriptionRoutes'));
+app.use('/api/system', protect, require('./routes/systemRoutes'));
 
 // 404 + error handler must follow routes.
 app.use(notFound);

@@ -90,7 +90,19 @@
       "Bash(wait)",
       "Bash(npx eslint *)",
       "Bash(grep -rn \"setFormData\\({ \\\\.\\\\.\\\\.formData,\" gym-admin-panel/src)",
-      "Bash(sort -t: -k2 -n -r)"
+      "Bash(sort -t: -k2 -n -r)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(where gh *)",
+      "Bash(git remote *)",
+      "Bash(git commit *)",
+      "Bash(git config *)",
+      "Bash(bash *)",
+      "Bash(git fetch *)",
+      "Bash(git merge *)",
+      "Bash(git checkout *)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec gym-server *)"
     ]
   }
 }

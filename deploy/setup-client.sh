@@ -89,7 +89,36 @@ echo "Config saved to $INSTALL_DIR/.env"
 echo ""
 
 # Create data directories
-mkdir -p data/db backups
+mkdir -p data/db backups system
+
+# --- Install host-updater (watcher that enables the in-app Update button) ---
+echo ""
+echo "Installing host-updater..."
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cp "$SCRIPT_DIR/host-updater.sh" "$INSTALL_DIR/host-updater.sh"
+cp "$SCRIPT_DIR/update-client.sh" "$INSTALL_DIR/update-client.sh"
+chmod +x "$INSTALL_DIR/host-updater.sh" "$INSTALL_DIR/update-client.sh"
+
+UNAME_S="$(uname -s)"
+if [ "$UNAME_S" = "Darwin" ]; then
+  # macOS — register launchd agent.
+  PLIST_SRC="$SCRIPT_DIR/com.gympro.updater.plist"
+  PLIST_DST="$HOME/Library/LaunchAgents/com.gympro.updater.plist"
+  mkdir -p "$HOME/Library/LaunchAgents"
+  sed "s|{{USER_HOME}}|$HOME|g" "$PLIST_SRC" > "$PLIST_DST"
+  launchctl unload "$PLIST_DST" 2>/dev/null || true
+  launchctl load "$PLIST_DST"
+  echo "launchd agent installed: $PLIST_DST (runs every 60s)."
+else
+  # Linux — register cron entry if not already present.
+  CRON_LINE="* * * * * $INSTALL_DIR/host-updater.sh >/dev/null 2>&1"
+  if crontab -l 2>/dev/null | grep -Fq "$INSTALL_DIR/host-updater.sh"; then
+    echo "cron entry already present — skipping."
+  else
+    (crontab -l 2>/dev/null; echo "$CRON_LINE") | crontab -
+    echo "cron entry installed (runs every minute)."
+  fi
+fi
 
 # Pull images
 echo "Pulling images (this may take a few minutes)..."

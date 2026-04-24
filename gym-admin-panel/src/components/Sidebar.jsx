@@ -10,6 +10,7 @@ import {
   Fingerprint,
   ShieldCheck,
   Download,
+  RefreshCw,
   X,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { name: 'Attendance', href: '/attendance', Icon: CalendarCheck },
   { name: 'Devices', href: '/devices', Icon: Fingerprint, permission: 'canManageDevices' },
   { name: 'Admins', href: '/admins', Icon: ShieldCheck, superOnly: true },
+  { name: 'System', href: '/system', Icon: RefreshCw, superOnly: true },
 ];
 
 const ICON_CLS = 'w-5 h-5 shrink-0';

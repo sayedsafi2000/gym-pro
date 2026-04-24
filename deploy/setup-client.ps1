@@ -62,7 +62,11 @@ $JWT_SECRET = -join ((1..32) | ForEach-Object { '{0:x2}' -f (Get-Random -Max 256
 
 # --- Install dir ---
 $InstallDir = Join-Path $env:USERPROFILE 'gym-pro'
-New-Item -ItemType Directory -Force -Path $InstallDir, (Join-Path $InstallDir 'data\db'), (Join-Path $InstallDir 'backups') | Out-Null
+New-Item -ItemType Directory -Force -Path `
+    $InstallDir, `
+    (Join-Path $InstallDir 'data\db'), `
+    (Join-Path $InstallDir 'backups'), `
+    (Join-Path $InstallDir 'system') | Out-Null
 Set-Location $InstallDir
 
 # --- Download compose file from chosen branch ---
@@ -119,6 +123,44 @@ if ($LASTEXITCODE -ne 0) { Write-Host 'docker compose up failed.' -ForegroundCol
 Write-Host ''
 Write-Host 'Waiting for server to start...'
 Start-Sleep -Seconds 5
+
+# --- Install host-updater + register Task Scheduler ---
+Write-Host ''
+Write-Host 'Installing host-updater...'
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+Copy-Item -Path (Join-Path $ScriptDir 'host-updater.ps1')  -Destination (Join-Path $InstallDir 'host-updater.ps1')  -Force
+Copy-Item -Path (Join-Path $ScriptDir 'update-client.ps1') -Destination (Join-Path $InstallDir 'update-client.ps1') -Force
+
+$TaskName = 'GymProUpdater'
+$WatcherPath = Join-Path $InstallDir 'host-updater.ps1'
+
+# Unregister any previous version so re-running setup is idempotent.
+Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+
+$Action = New-ScheduledTaskAction `
+    -Execute 'powershell.exe' `
+    -Argument "-ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File `"$WatcherPath`""
+
+$Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
+    -RepetitionInterval (New-TimeSpan -Minutes 1) `
+    -RepetitionDuration ([TimeSpan]::FromDays(3650))
+
+$Settings = New-ScheduledTaskSettingsSet `
+    -StartWhenAvailable `
+    -DontStopOnIdleEnd `
+    -AllowStartIfOnBatteries `
+    -DontStopIfGoingOnBatteries `
+    -ExecutionTimeLimit ([TimeSpan]::FromMinutes(30))
+
+Register-ScheduledTask `
+    -TaskName $TaskName `
+    -Action $Action `
+    -Trigger $Trigger `
+    -Settings $Settings `
+    -Description 'GymPro host updater — polls trigger file and runs update-client.ps1 when the in-app Update button is pressed.' `
+    -RunLevel Limited | Out-Null
+
+Write-Host "Task Scheduler entry installed: $TaskName (runs every minute)."
 
 Write-Banner 'GymPro Setup Complete!'
 Write-Host "  URL:      http://localhost"

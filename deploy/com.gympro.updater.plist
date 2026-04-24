@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  GymPro host-updater launchd agent (macOS).
+  Template — setup-client.sh rewrites the {{USER_HOME}} placeholder.
+  Installed at ~/Library/LaunchAgents/com.gympro.updater.plist.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.gympro.updater</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>{{USER_HOME}}/gym-pro/host-updater.sh</string>
+  </array>
+
+  <key>StartInterval</key>
+  <integer>60</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>{{USER_HOME}}/gym-pro/system/launchd.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>{{USER_HOME}}/gym-pro/system/launchd.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>{{USER_HOME}}/gym-pro</string>
+</dict>
+</plist>

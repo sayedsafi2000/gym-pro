@@ -17,6 +17,7 @@ const Store = lazy(() => import('./pages/Store'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 const DeviceManagement = lazy(() => import('./pages/DeviceManagement'));
 const ManageAdmins = lazy(() => import('./pages/ManageAdmins'));
+const SystemUpdate = lazy(() => import('./pages/SystemUpdate'));
 
 const RouteFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center text-slate-400 dark:text-slate-500">
@@ -43,6 +44,7 @@ function App() {
               <Route path="attendance" element={<Attendance />} />
               <Route path="devices" element={<DeviceManagement />} />
               <Route path="admins" element={<ManageAdmins />} />
+              <Route path="system" element={<SystemUpdate />} />
             </Route>
           </Route>
         </Routes>
